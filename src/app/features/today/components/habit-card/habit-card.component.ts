@@ -94,6 +94,32 @@ const STREAK_MISS_TOLERANCE = 7;
       animation: habit-marquee-left 28s linear infinite;
     }
 
+    @keyframes mark-btn-shake {
+      0%,
+      100% {
+        transform: translateX(0) rotate(0deg);
+      }
+      15% {
+        transform: translateX(-3px) rotate(-2deg);
+      }
+      30% {
+        transform: translateX(3px) rotate(2deg);
+      }
+      45% {
+        transform: translateX(-2px) rotate(-1.5deg);
+      }
+      60% {
+        transform: translateX(2px) rotate(1.5deg);
+      }
+      75% {
+        transform: translateX(-1px) rotate(-0.5deg);
+      }
+    }
+
+    .habit-mark-btn:hover {
+      animation: mark-btn-shake 0.45s ease-in-out;
+    }
+
     @keyframes day-count-pulse {
       0%,
       100% {
@@ -422,6 +448,10 @@ const STREAK_MISS_TOLERANCE = 7;
         animation: none;
       }
 
+      .habit-mark-btn:hover {
+        animation: none;
+      }
+
       .habit-card[data-streak-tier='4'] .streak-status-title {
         animation: none;
         color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 28%, rgb(var(--accent-tint-current)));
@@ -450,7 +480,7 @@ const STREAK_MISS_TOLERANCE = 7;
       [class.border-l-brand-accent-purple]="!completed() && streakTier() === 0 && accent() === 'wellness'"
     >
       <div class="relative z-[1]">
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center justify-between gap-3">
           <div class="flex min-w-0 flex-1 gap-3">
             <div class="flex shrink-0 flex-col items-center gap-1.5">
               <span
@@ -594,7 +624,7 @@ const STREAK_MISS_TOLERANCE = 7;
           } @else {
             <button
               type="button"
-              class="shrink-0 rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              class="habit-mark-btn shrink-0 rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
               [attr.aria-label]="'Marcar ' + name() + ' como feito'"
               (click)="markToggle.emit()"
             >
@@ -606,10 +636,11 @@ const STREAK_MISS_TOLERANCE = 7;
         @if (completed()) {
           <button
             type="button"
-            class="mt-3 text-xs text-brand-light-text-secondary underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            class="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-light-text-secondary underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
             [attr.aria-label]="'Desmarcar ' + name()"
             (click)="markToggle.emit()"
           >
+            <i class="bi bi-arrow-counterclockwise text-[11px]" aria-hidden="true"></i>
             Desmarcar
           </button>
         }
@@ -670,7 +701,7 @@ export class HabitCardComponent {
     const remaining = STREAK_MISS_TOLERANCE - 1;
     const label = remaining === 1 ? 'falta' : 'faltas';
 
-    return `mais ${remaining} ${label} interrompem a streak`;
+    return `mais ${remaining} ${label} seguidas interrompem a streak`;
   });
 
   protected readonly streakAtRiskEncouragement = computed(() => {

@@ -18,9 +18,13 @@ export default {
         'brand-light-text-secondary': 'var(--brand-light-text-secondary)',
         'brand-light-primary': 'var(--accent-light)',
         'brand-light-secondary': '#1E40AF',
+        'brand-light-nav': 'var(--brand-light-nav)',
+        'brand-light-nav-border': 'var(--brand-light-nav-border)',
 
         // Tokens Dark (via modificador dark:)
         'brand-bg': 'var(--brand-bg)',
+        'brand-nav': 'var(--brand-nav)',
+        'brand-nav-border': 'var(--brand-nav-border)',
         'brand-surface': 'var(--brand-surface)',
         'brand-border': 'var(--brand-border)',
         'brand-text-primary': 'var(--brand-text-primary)',

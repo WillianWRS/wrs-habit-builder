@@ -18,7 +18,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
     <!-- Desktop navbar -->
     <header
-      class="sticky top-0 z-20 hidden border-b border-brand-light-border/80 bg-brand-light-bg/90 backdrop-blur dark:border-brand-border/80 dark:bg-brand-bg/90 md:block"
+      class="sticky top-0 z-20 hidden border-b border-brand-light-nav-border bg-brand-light-nav/95 shadow-[0_1px_3px_rgba(0,0,0,0.06)] backdrop-blur-md backdrop-saturate-150 dark:border-brand-nav-border dark:bg-brand-nav/95 dark:shadow-[0_1px_0_rgba(255,255,255,0.06),0_4px_16px_-4px_rgba(0,0,0,0.45)] md:block"
     >
       <div
         class="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-3 lg:px-8"
@@ -43,7 +43,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
               class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
               [class]="
                 activeTab() === 'today'
-                  ? 'bg-zinc-200/70 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
+                  ? 'bg-brand-light-bg/80 text-brand-light-primary dark:bg-brand-bg/60 dark:text-brand-primary'
                   : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
               "
               [attr.aria-current]="activeTab() === 'today' ? 'page' : null"
@@ -56,7 +56,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
               class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
               [class]="
                 activeTab() === 'habits'
-                  ? 'bg-zinc-200/70 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
+                  ? 'bg-brand-light-bg/80 text-brand-light-primary dark:bg-brand-bg/60 dark:text-brand-primary'
                   : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
               "
             >
@@ -92,7 +92,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
     <!-- Mobile bottom nav -->
     <nav
-      class="fixed inset-x-0 bottom-0 z-10 border-t border-brand-light-border bg-brand-light-bg/95 backdrop-blur dark:border-brand-border dark:bg-brand-bg/95 md:hidden"
+      class="fixed inset-x-0 bottom-0 z-10 border-t border-brand-light-nav-border bg-brand-light-nav/98 shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.1)] backdrop-blur-md backdrop-saturate-150 dark:border-brand-nav-border dark:bg-brand-nav/98 dark:shadow-[0_-1px_0_rgba(255,255,255,0.06),0_-8px_32px_-8px_rgba(0,0,0,0.55)] md:hidden"
       aria-label="Navegação principal"
     >
       <div

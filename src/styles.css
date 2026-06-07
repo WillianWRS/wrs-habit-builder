@@ -23,6 +23,12 @@
   --brand-text-primary: #fafafa;
   --brand-text-secondary: #a1a1aa;
 
+  /* Nav — chrome elevado acima do canvas da página */
+  --brand-light-nav: #ffffff;
+  --brand-light-nav-border: #d4d4d8;
+  --brand-nav: #27272a;
+  --brand-nav-border: #3f3f46;
+
   /* Cards — um tom acima do fundo da página (light) */
   --card-border-rgb-light: 228 228 231;
   --card-bg-light: var(--brand-light-surface);
@@ -49,6 +55,11 @@
   --brand-border: #44403c;
   --brand-text-primary: #fafaf9;
   --brand-text-secondary: #a8a29e;
+
+  --brand-light-nav: #ffffff;
+  --brand-light-nav-border: #d6d3d1;
+  --brand-nav: #292524;
+  --brand-nav-border: #44403c;
 
   --card-border-rgb-light: 231 229 228;
   --card-bg-light: var(--brand-light-surface);
