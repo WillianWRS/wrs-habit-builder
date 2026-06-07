@@ -56,31 +56,47 @@ export type HabitCardAccent = 'default' | 'physical' | 'wellness';
     >
       <div class="flex items-start justify-between gap-3">
         <div class="flex min-w-0 flex-1 gap-3">
-          <span
-            class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 motion-reduce:transition-none"
-            [class]="
-              completed()
-                ? 'border-brand-light-primary bg-brand-light-primary dark:border-brand-primary dark:bg-brand-primary'
-                : 'border-brand-light-text-secondary/40 dark:border-brand-text-secondary/50'
-            "
-            aria-hidden="true"
-          >
-            @if (completed()) {
-              <svg
-                class="size-3 text-white transition-transform duration-200 motion-reduce:transition-none dark:text-brand-bg"
-                viewBox="0 0 12 12"
-                fill="none"
+          <div class="flex shrink-0 flex-col items-center gap-1.5">
+            <span
+              class="flex size-5 items-center justify-center rounded-full border-2 transition-all duration-200 motion-reduce:transition-none"
+              [class]="
+                completed()
+                  ? 'border-brand-light-primary bg-brand-light-primary dark:border-brand-primary dark:bg-brand-primary'
+                  : 'border-brand-light-text-secondary/40 dark:border-brand-text-secondary/50'
+              "
+              aria-hidden="true"
+            >
+              @if (completed()) {
+                <svg
+                  class="size-3 text-white transition-transform duration-200 motion-reduce:transition-none dark:text-brand-bg"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                >
+                  <path
+                    d="M2.5 6L5 8.5L9.5 3.5"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              }
+            </span>
+
+            <div
+              class="flex flex-col items-center leading-none"
+              [attr.aria-label]="dayCount() + ' dias'"
+            >
+              <span
+                class="text-[10px] font-medium text-brand-light-text-secondary dark:text-brand-text-secondary"
+                >dia</span
               >
-                <path
-                  d="M2.5 6L5 8.5L9.5 3.5"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            }
-          </span>
+              <span
+                class="text-2xl font-bold tabular-nums text-brand-light-primary dark:text-brand-primary"
+                >{{ dayCount() }}</span
+              >
+            </div>
+          </div>
 
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
@@ -102,13 +118,37 @@ export type HabitCardAccent = 'default' | 'physical' | 'wellness';
               <div class="habit-marquee-track text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
                 @for (copy of [0, 1]; track copy) {
                   <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
-                    <span>{{ trigger1() }}</span>
+                    <span class="inline-flex items-center gap-1">
+                      <i
+                        class="bi bi-lightning-charge shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ trigger1() }}</span>
+                    </span>
                     <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                    <span>{{ trigger2() }}</span>
+                    <span class="inline-flex items-center gap-1">
+                      <i
+                        class="bi bi-lightning-charge shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ trigger2() }}</span>
+                    </span>
                     <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                    <span>{{ motivation1() }}</span>
+                    <span class="inline-flex items-center gap-1">
+                      <i
+                        class="bi bi-trophy shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ motivation1() }}</span>
+                    </span>
                     <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                    <span>{{ motivation2() }}</span>
+                    <span class="inline-flex items-center gap-1">
+                      <i
+                        class="bi bi-trophy shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ motivation2() }}</span>
+                    </span>
                   </span>
                 }
               </div>
@@ -161,6 +201,7 @@ export class HabitCardComponent {
   readonly motivation1 = input.required<string>();
   readonly motivation2 = input.required<string>();
   readonly minimumAction = input.required<string>();
+  readonly dayCount = input<number>(0);
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
 
