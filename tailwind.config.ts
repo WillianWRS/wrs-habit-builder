@@ -11,19 +11,21 @@ export default {
         'brand-accent-purple': '#7B2CBF',
 
         // Tokens Light (padrão sem prefixo dark:)
-        'brand-light-bg': '#F8FAFC',
-        'brand-light-surface': '#FFFFFF',
-        'brand-light-text-primary': '#0F172A',
-        'brand-light-text-secondary': '#475569',
-        'brand-light-primary': '#00C853',
+        'brand-light-bg': 'var(--brand-light-bg)',
+        'brand-light-surface': 'var(--brand-light-surface)',
+        'brand-light-border': 'var(--brand-light-border)',
+        'brand-light-text-primary': 'var(--brand-light-text-primary)',
+        'brand-light-text-secondary': 'var(--brand-light-text-secondary)',
+        'brand-light-primary': 'var(--accent-light)',
         'brand-light-secondary': '#1E40AF',
 
         // Tokens Dark (via modificador dark:)
-        'brand-bg': '#0F172A',
-        'brand-surface': '#1E293B',
-        'brand-text-primary': '#FFFFFF',
-        'brand-text-secondary': '#90A4AE',
-        'brand-primary': '#00E676',
+        'brand-bg': 'var(--brand-bg)',
+        'brand-surface': 'var(--brand-surface)',
+        'brand-border': 'var(--brand-border)',
+        'brand-text-primary': 'var(--brand-text-primary)',
+        'brand-text-secondary': 'var(--brand-text-secondary)',
+        'brand-primary': 'var(--accent-dark)',
         'brand-secondary': '#1565C0',
       },
       fontFamily: {

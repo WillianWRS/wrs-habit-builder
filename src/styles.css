@@ -2,6 +2,60 @@
 @config '../tailwind.config.ts';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
+:root {
+  /* Accent — laranja (padrão) */
+  --accent-light: #ff6d00;
+  --accent-dark: #ff9100;
+  --accent-rgb-light: 255 109 0;
+  --accent-rgb-dark: 255 145 0;
+  --accent-tint-light: 255 224 178;
+  --accent-tint-dark: 255 204 128;
+
+  /* Superfícies — cinza neutro */
+  --brand-light-bg: #f4f4f5;
+  --brand-light-surface: #ffffff;
+  --brand-light-border: #e4e4e7;
+  --brand-light-text-primary: #18181b;
+  --brand-light-text-secondary: #71717a;
+  --brand-bg: #18181b;
+  --brand-surface: #27272a;
+  --brand-border: #3f3f46;
+  --brand-text-primary: #fafafa;
+  --brand-text-secondary: #a1a1aa;
+
+  /* Cards — um tom acima do fundo da página */
+  --card-border-rgb-light: 228 228 231;
+  --card-bg-light: #ffffff;
+  --card-border-rgb-dark: 72 72 78;
+  --card-bg-dark: #323238;
+}
+
+:root.accent-emerald {
+  --accent-light: #00c853;
+  --accent-dark: #00e676;
+  --accent-rgb-light: 0 200 83;
+  --accent-rgb-dark: 0 230 118;
+  --accent-tint-light: 209 250 229;
+  --accent-tint-dark: 167 243 208;
+
+  /* Superfícies neutras (stone) — verde só no accent, não no texto/fundo */
+  --brand-light-bg: #fafaf9;
+  --brand-light-surface: #ffffff;
+  --brand-light-border: #e7e5e4;
+  --brand-light-text-primary: #1c1917;
+  --brand-light-text-secondary: #78716c;
+  --brand-bg: #1c1917;
+  --brand-surface: #292524;
+  --brand-border: #44403c;
+  --brand-text-primary: #fafaf9;
+  --brand-text-secondary: #a8a29e;
+
+  --card-border-rgb-light: 231 229 228;
+  --card-bg-light: #ffffff;
+  --card-border-rgb-dark: 87 83 78;
+  --card-bg-dark: #353330;
+}
+
 @layer base {
   html {
     @apply antialiased;

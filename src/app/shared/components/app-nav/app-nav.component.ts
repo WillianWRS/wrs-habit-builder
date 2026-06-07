@@ -1,22 +1,24 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
+import { AccentThemeToggleComponent } from '../accent-theme-toggle/accent-theme-toggle.component';
 
 export type AppNavTab = 'today' | 'habits' | 'create';
 
 @Component({
   selector: 'app-nav',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ThemeToggleComponent],
+  imports: [RouterLink, ThemeToggleComponent, AccentThemeToggleComponent],
   template: `
     <!-- Mobile: theme toggle fixo no canto superior direito -->
-    <div class="fixed top-4 right-4 z-30 md:hidden">
+    <div class="fixed top-4 right-4 z-30 flex items-center gap-2 md:hidden">
+      <app-accent-theme-toggle />
       <app-theme-toggle />
     </div>
 
     <!-- Desktop navbar -->
     <header
-      class="sticky top-0 z-20 hidden border-b border-slate-200/80 bg-brand-light-bg/90 backdrop-blur dark:border-brand-surface/80 dark:bg-brand-bg/90 md:block"
+      class="sticky top-0 z-20 hidden border-b border-brand-light-border/80 bg-brand-light-bg/90 backdrop-blur dark:border-brand-border/80 dark:bg-brand-bg/90 md:block"
     >
       <div
         class="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-3 lg:px-8"
@@ -41,7 +43,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
               class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
               [class]="
                 activeTab() === 'today'
-                  ? 'bg-slate-100 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
+                  ? 'bg-zinc-200/70 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
                   : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
               "
               [attr.aria-current]="activeTab() === 'today' ? 'page' : null"
@@ -54,7 +56,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
               class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
               [class]="
                 activeTab() === 'habits'
-                  ? 'bg-slate-100 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
+                  ? 'bg-zinc-200/70 text-brand-light-primary dark:bg-brand-surface/80 dark:text-brand-primary'
                   : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
               "
             >
@@ -82,6 +84,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
             </a>
           </nav>
 
+          <app-accent-theme-toggle />
           <app-theme-toggle />
         </div>
       </div>
@@ -89,7 +92,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
     <!-- Mobile bottom nav -->
     <nav
-      class="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-brand-light-bg/95 backdrop-blur dark:border-brand-surface dark:bg-brand-bg/95 md:hidden"
+      class="fixed inset-x-0 bottom-0 z-10 border-t border-brand-light-border bg-brand-light-bg/95 backdrop-blur dark:border-brand-border dark:bg-brand-bg/95 md:hidden"
       aria-label="Navegação principal"
     >
       <div

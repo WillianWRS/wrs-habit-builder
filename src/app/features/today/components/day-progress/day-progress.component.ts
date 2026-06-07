@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   template: `
     <div class="space-y-2">
       <div
-        class="h-2 w-full overflow-hidden rounded-full bg-slate-200 ring-1 ring-slate-300/60 dark:bg-brand-bg dark:ring-brand-surface"
+        class="h-2 w-full overflow-hidden rounded-full bg-brand-light-border/60 ring-1 ring-brand-light-border dark:bg-brand-bg dark:ring-brand-border"
         role="progressbar"
         [attr.aria-valuenow]="done()"
         [attr.aria-valuemin]="0"
@@ -14,7 +14,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
         [attr.aria-label]="'Progresso do dia: ' + done() + ' de ' + total() + ' hábitos'"
       >
         <div
-          class="h-full rounded-full bg-brand-light-secondary transition-all duration-300 motion-reduce:transition-none dark:bg-brand-secondary"
+          class="h-full rounded-full bg-brand-light-primary transition-all duration-300 motion-reduce:transition-none dark:bg-brand-primary"
           [style.width.%]="percent()"
         ></div>
       </div>
