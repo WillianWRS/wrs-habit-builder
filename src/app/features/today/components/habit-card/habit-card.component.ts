@@ -21,6 +21,20 @@ export function getStreakTier(dayCount: number): StreakTier {
   return 0;
 }
 
+const STREAK_TIER_MESSAGES: Record<
+  StreakTier,
+  { title: string; subtitle: string }
+> = {
+  0: { title: 'Sequência iniciada', subtitle: 'É só o começo' },
+  1: { title: 'Sequência boa', subtitle: 'Podemos mais' },
+  2: { title: 'Sequência ótima', subtitle: 'Vamos pra cima' },
+  3: { title: 'Sequência excelente', subtitle: 'Não desista agora' },
+  4: { title: 'Sequência perfeita', subtitle: 'Manteremos o topo' },
+};
+
+/** Faltas acumuladas até interromper a streak — preview fixo até persistência real */
+const STREAK_MISS_TOLERANCE = 7;
+
 @Component({
   selector: 'app-habit-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -386,11 +400,42 @@ export function getStreakTier(dayCount: number): StreakTier {
                 </div>
               </div>
 
-              <p
-                class="mt-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-              >
-                Mínimo: {{ minimumAction() }}
-              </p>
+              <div class="mt-1 flex items-start justify-between gap-3">
+                <p
+                  class="min-w-0 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                >
+                  Mínimo: {{ minimumAction() }}
+                </p>
+
+                <div
+                  class="shrink-0 text-right"
+                  [attr.aria-label]="streakStatusAriaLabel()"
+                >
+                  @if (showMissMessage()) {
+                    <p
+                      class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
+                    >
+                      {{ streakAtRiskHint() }}
+                    </p>
+                    <p
+                      class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                    >
+                      {{ streakAtRiskEncouragement() }}
+                    </p>
+                  } @else {
+                    <p
+                      class="text-sm font-medium text-brand-light-primary dark:text-brand-primary"
+                    >
+                      {{ streakTierMessage().title }}
+                    </p>
+                    <p
+                      class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                    >
+                      {{ streakTierMessage().subtitle }}
+                    </p>
+                  }
+                </div>
+              </div>
             </div>
           </div>
 
@@ -435,12 +480,23 @@ export class HabitCardComponent {
   readonly motivation2 = input.required<string>();
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
+  /** Preview: assume `false` até haver completions do dia anterior */
+  readonly previousDayCompleted = input(false);
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
 
   readonly markToggle = output<void>();
 
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));
+
+  /** Falta ontem e ainda não marcou hoje → mensagem de risco */
+  protected readonly showMissMessage = computed(
+    () => !this.previousDayCompleted() && !this.completed(),
+  );
+
+  protected readonly streakTierMessage = computed(
+    () => STREAK_TIER_MESSAGES[this.streakTier()],
+  );
 
   protected readonly dayCountStyleClass = computed(() => {
     const tier = this.streakTier();
@@ -462,4 +518,24 @@ export class HabitCardComponent {
     () =>
       `${this.trigger1()}. ${this.trigger2()}. ${this.motivation1()}. ${this.motivation2()}.`,
   );
+
+  protected readonly streakAtRiskHint = computed(() => {
+    const remaining = STREAK_MISS_TOLERANCE - 1;
+    const label = remaining === 1 ? 'falta' : 'faltas';
+
+    return `mais ${remaining} ${label} interrompem a streak`;
+  });
+
+  protected readonly streakAtRiskEncouragement = computed(() => {
+    return '1 falta, não desanime, complete a tarefa hoje';
+  });
+
+  protected readonly streakStatusAriaLabel = computed(() => {
+    if (this.showMissMessage()) {
+      return `${this.streakAtRiskHint()}. ${this.streakAtRiskEncouragement()}`;
+    }
+
+    const message = this.streakTierMessage();
+    return `${message.title}. ${message.subtitle}`;
+  });
 }
