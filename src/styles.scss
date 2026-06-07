@@ -1,1 +1,28 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'tailwindcss';
+@config '../tailwind.config.ts';
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  html,
+  body {
+    @apply transition-colors duration-200 motion-reduce:transition-none;
+  }
+
+  body {
+    @apply bg-brand-light-bg font-sans text-brand-light-text-primary dark:bg-brand-bg dark:text-brand-text-primary;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
