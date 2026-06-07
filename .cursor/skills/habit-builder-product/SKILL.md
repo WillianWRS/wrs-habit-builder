@@ -1,0 +1,158 @@
+---
+name: habit-builder-product
+description: >-
+  Domain rules, routes, and product decisions for WRS Habit Builder (Angular,
+  localStorage, no auth). Use when implementing features, business logic,
+  copy/microcopy, metrics, or validating behavior against product requirements.
+---
+
+# Habit Builder — Produto
+
+## Decisões fixas (não negociar)
+
+| Decisão | Valor |
+|---------|-------|
+| Autenticação | **Nenhuma** — app abre direto no fluxo principal |
+| Persistência | **localStorage** no browser (sem API/backend no MVP) |
+| Modo demo | **Não existe** — dados reais do usuário desde o primeiro uso |
+| Idioma | **PT-BR** em labels, copy e empty states |
+| Nome | **Habit Builder** (marca); repo `wrs-habit-builder` |
+
+Se o relatório de descoberta mencionar JWT, Spring ou PostgreSQL, **ignore** — escopo atual é frontend-only.
+
+## Tese de design (guia de decisão)
+
+| Princípio | Implicação no app |
+|-----------|-------------------|
+| Gatilho explícito | Todo hábito tem `triggerText` (formato "Se X, então Y") |
+| Ação mínima (Fogg) | Campo obrigatório `minimumAction`, máx. 140 caracteres |
+| Consistência > perfeição | Métrica principal = **taxa de adesão (%)**, não streak frágil |
+| Falha sem culpa | Copy neutra: "Recomeçar amanhã no mesmo gatilho" — nunca "Você falhou" |
+| Frequência flexível | Dias da semana configuráveis (ex.: seg/qua/sex) |
+
+## Modelo de domínio
+
+```typescript
+type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=dom … 6=sáb
+
+interface Habit {
+  id: string;           // UUID v4
+  name: string;
+  category: HabitCategory;
+  triggerText: string;  // intenção "Se … então …"
+  minimumAction: string;
+  scheduleDays: Weekday[];
+  optionalReminder?: string; // "HH:mm" ou omitido
+  archived: boolean;
+  createdAt: string;    // ISO 8601
+}
+
+interface HabitCompletion {
+  id: string;
+  habitId: string;
+  completedOn: string;  // "YYYY-MM-DD" (data local do usuário)
+}
+
+type HabitCategory =
+  | 'saude'
+  | 'estudo'
+  | 'corpo'
+  | 'mindfulness'
+  | 'outro';
+```
+
+Detalhes de persistência: skill `habit-builder-localstorage`.
+
+## Regras de negócio
+
+| ID | Regra |
+|----|-------|
+| RN-01 | Um hábito só pode ser marcado **uma vez por dia** |
+| RN-02 | Frequência respeita `scheduleDays` |
+| RN-03 | Fora do dia configurado, hábito **não aparece** em "Hoje" |
+| RN-04 | Adesão = dias concluídos ÷ dias **esperados** no período (7 ou 30 dias) |
+| RN-05 | Arquivar **não apaga** histórico de completions |
+| RN-06 | `minimumAction` limitado a **140 caracteres** |
+
+### Cálculo de adesão (RN-04)
+
+```
+diasEsperados = count(dias no período onde weekday ∈ habit.scheduleDays)
+diasConcluidos = count(completions no período para habitId)
+adesão = diasEsperados > 0 ? round(diasConcluidos / diasEsperados * 100) : 0
+```
+
+Períodos padrão na UI: **7 dias** e **30 dias** (rolling, incluindo hoje).
+
+### Streak (P2 — implementar quando pedido)
+
+- Contar dias consecutivos **esperados** concluídos, olhando para trás a partir de ontem/hoje.
+- **Não zerar histórico** ao falhar — streak pode pausar; heatmap e adesão permanecem.
+
+## Rotas
+
+| Rota | Tela |
+|------|------|
+| `/` ou `/today` | Hoje (dashboard) |
+| `/habits` | Lista de hábitos |
+| `/habits/new` | Criar hábito |
+| `/habits/:id` | Detalhe |
+| `/habits/:id/edit` | Editar hábito |
+
+**Não criar** `/auth`, guards de login ou rotas protegidas.
+
+Redirect padrão: `/` → dashboard Hoje.
+
+## Requisitos funcionais (prioridade)
+
+| ID | Requisito | Prioridade |
+|----|-----------|------------|
+| RF-01 | CRUD hábito: nome, categoria, frequência | P0 |
+| RF-02 | Gatilho + ação mínima no formulário | P0 |
+| RF-03 | Listar hábitos do **dia atual** (pendente/concluído) | P0 |
+| RF-04 | Marcar conclusão em **1 ação** | P0 |
+| RF-05 | Desmarcar conclusão do dia | P1 |
+| RF-06 | Editar e arquivar hábito | P1 |
+| RF-07 | Detalhe: heatmap 30–66 dias | P1 |
+| RF-08 | Taxa de adesão 7d / 30d | P1 |
+| RF-09 | Streak atual sem apagar histórico | P2 |
+
+## Fluxo principal (sem auth)
+
+```
+Abrir app → Dashboard Hoje
+  → sem hábitos? empty state + CTA criar
+  → com hábitos? listar do dia → marcar → feedback visual → atualizar métricas
+```
+
+## Copy e tom
+
+- Encorajador, objetivo, **sem culpa**
+- Empty state Hoje: exemplo "Se café, então 1 página"
+- Modal "Por que ação mínima?": citar Fogg (comportamento = motivação × habilidade × prompt)
+- Falha/neutro: "Recomeçar amanhã no mesmo gatilho"
+
+## Estrutura de pastas sugerida
+
+```
+src/app/
+├── core/           # serviços singleton, storage, date utils
+├── features/
+│   ├── today/
+│   ├── habits/
+│   └── habit-detail/
+├── shared/         # componentes reutilizáveis, pipes
+└── models/         # tipos de domínio
+```
+
+## Checklist antes de considerar feature pronta
+
+- [ ] Respeita RN-01 a RN-06
+- [ ] Sem auth, sem chamadas HTTP para persistência
+- [ ] Copy em PT-BR, tom sem culpa
+- [ ] Hábito fora de `scheduleDays` não aparece em Hoje
+- [ ] Arquivar preserva completions
+
+## Referência
+
+Brief completo de descoberta (contexto histórico): `docs/RELATORIO-DESCOBERTA-HABIT-BUILDER.md` se existir no workspace; decisões desta skill **prevalecem** sobre auth/backend do relatório.
