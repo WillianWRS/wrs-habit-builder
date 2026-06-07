@@ -1,3 +1,4 @@
+import { ALL_WEEKDAYS } from '../models/habit.model';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
 
 /** Fornece os 5 hábitos de preview para o modo demonstrativo. */
@@ -7,6 +8,8 @@ export class DemoHabitsData {
       {
         id: 'demo-5',
         name: 'Nível 5 · Lendário (66+ dias)',
+        displayMeta: 'Manter o topo',
+        scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
         trigger1: 'Borda 4px fixa laranja + claro',
@@ -22,6 +25,8 @@ export class DemoHabitsData {
       {
         id: 'demo-4',
         name: 'Nível 4 · Ouro (50 dias)',
+        displayMeta: '50 dias seguidos',
+        scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
         trigger1: 'Pulse animado no glow',
@@ -37,6 +42,8 @@ export class DemoHabitsData {
       {
         id: 'demo-3',
         name: 'Nível 3 · Prata (35 dias)',
+        displayMeta: '35 dias seguidos',
+        scheduleDays: [1, 2, 3, 4, 5],
         time: '08:00',
         category: 'Preview',
         trigger1: 'Borda laranja mais intensa',
@@ -52,6 +59,8 @@ export class DemoHabitsData {
       {
         id: 'demo-2',
         name: 'Nível 2 · Bronze (15 dias)',
+        displayMeta: '15 dias seguidos',
+        scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
         trigger1: 'Borda 2px com tom laranja',
@@ -67,6 +76,8 @@ export class DemoHabitsData {
       {
         id: 'demo-1',
         name: 'Nível 1 · Base (0 dias)',
+        displayMeta: 'Referência visual',
+        scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
         trigger1: 'Borda padrão atual',

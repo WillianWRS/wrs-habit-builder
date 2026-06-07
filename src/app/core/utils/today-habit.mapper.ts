@@ -1,7 +1,16 @@
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { Habit } from '../models/habit.model';
-import type { HabitCardAccent, TodayHabitCard } from '../models/today-habit-card.model';
+import type {
+  HabitCardAccent,
+  HabitListCardView,
+  TodayHabitCard,
+} from '../models/today-habit-card.model';
 import { addDays, parseDateKey, toDateKey } from './date.utils';
+import {
+  resolveHabitDisplayMeta,
+  resolveHabitDisplayMinimumAction,
+  resolveHabitDisplayReminder,
+} from './habit-meta.utils';
 
 function mapAccent(category: string): HabitCardAccent {
   const normalized = category.toLowerCase();
@@ -50,13 +59,15 @@ export function mapHabitToTodayCard(
   return {
     id: habit.id,
     name: habit.name,
-    time: habit.optionalReminder,
+    displayMeta: resolveHabitDisplayMeta(habit, date),
+    scheduleDays: [...habit.scheduleDays],
+    time: resolveHabitDisplayReminder(habit, date),
     category: habit.category,
     trigger1: habit.trigger1,
     trigger2: habit.trigger2,
     motivation1: habit.motivation1,
     motivation2: habit.motivation2,
-    minimumAction: habit.minimumAction,
+    minimumAction: resolveHabitDisplayMinimumAction(habit, date),
     dayCount: countStreakDays(habit.id, completions, parseDateKey(dateKey)),
     completed: completions.some(
       (completion) =>
@@ -68,5 +79,17 @@ export function mapHabitToTodayCard(
         completion.habitId === habit.id &&
         completion.completedOn === previousDateKey,
     ),
+  };
+}
+
+export function mapHabitToListCard(
+  habit: Habit,
+  completions: HabitCompletion[],
+  date: Date = new Date(),
+): HabitListCardView {
+  return {
+    ...mapHabitToTodayCard(habit, completions, date),
+    archived: habit.archived,
+    showOnToday: habit.showOnToday,
   };
 }

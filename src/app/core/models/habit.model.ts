@@ -1,3 +1,4 @@
+import type { HabitWeekdayGoal } from './habit-weekday-goal.model';
 import type { Weekday } from './weekday.model';
 
 export const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
@@ -5,6 +6,9 @@ export const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 export interface Habit {
   id: string;
   name: string;
+  metaGeral: string;
+  metasDinamicas: boolean;
+  weekdayGoals: HabitWeekdayGoal[];
   category: string;
   trigger1: string;
   trigger2: string;

@@ -7,12 +7,16 @@ import {
 } from '../models/app-storage.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { CreateHabitDto } from '../models/create-habit.dto';
+import type { UpdateHabitDto } from '../models/update-habit.dto';
 import type { Habit } from '../models/habit.model';
-import type { TodayHabitCard } from '../models/today-habit-card.model';
+import type {
+  HabitListCardView,
+  TodayHabitCard,
+} from '../models/today-habit-card.model';
 import { ALL_WEEKDAYS } from '../models/habit.model';
 import { normalizeHabit } from '../utils/habit-normalizer';
 import { getWeekday, toDateKey } from '../utils/date.utils';
-import { mapHabitToTodayCard } from '../utils/today-habit.mapper';
+import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 
 @Injectable({ providedIn: 'root' })
 export class HabitStorageService {
@@ -25,6 +29,7 @@ export class HabitStorageService {
   readonly completionsReadonly = this.completions.asReadonly();
 
   readonly todayHabitCards = computed(() => this.buildTodayCards());
+  readonly habitListCards = computed(() => this.buildAllHabitListCards());
 
   constructor() {
     this.load();
@@ -54,6 +59,66 @@ export class HabitStorageService {
     }
   }
 
+  getHabitById(id: string): Habit | undefined {
+    return this.habits().find((habit) => habit.id === id);
+  }
+
+  getActiveHabits(): Habit[] {
+    return this.habits().filter((habit) => !habit.archived);
+  }
+
+  getArchivedHabits(): Habit[] {
+    return this.habits().filter((habit) => habit.archived);
+  }
+
+  isHabitOnToday(habitId: string, date: Date = new Date()): boolean {
+    return this.getTodayHabits(date).some((habit) => habit.id === habitId);
+  }
+
+  archiveHabit(id: string): void {
+    const habit = this.getHabitById(id);
+
+    if (!habit || habit.archived) {
+      return;
+    }
+
+    this.habits.update((list) =>
+      list.map((item) =>
+        item.id === id ? { ...item, archived: true } : item,
+      ),
+    );
+    this.persist();
+  }
+
+  restoreHabit(id: string): void {
+    const habit = this.getHabitById(id);
+
+    if (!habit || !habit.archived) {
+      return;
+    }
+
+    this.habits.update((list) =>
+      list.map((item) =>
+        item.id === id ? { ...item, archived: false } : item,
+      ),
+    );
+    this.persist();
+  }
+
+  permanentlyDeleteHabit(id: string): void {
+    const habit = this.getHabitById(id);
+
+    if (!habit || !habit.archived) {
+      return;
+    }
+
+    this.habits.update((list) => list.filter((item) => item.id !== id));
+    this.completions.update((list) =>
+      list.filter((completion) => completion.habitId !== id),
+    );
+    this.persist();
+  }
+
   getTodayHabits(date: Date = new Date()): Habit[] {
     const weekday = getWeekday(date);
 
@@ -72,17 +137,64 @@ export class HabitStorageService {
     );
   }
 
-  createHabit(dto: CreateHabitDto): Habit {
-    const habit: Habit = {
-      id: crypto.randomUUID(),
+  updateHabit(id: string, dto: UpdateHabitDto): Habit | undefined {
+    const existing = this.getHabitById(id);
+
+    if (!existing) {
+      return undefined;
+    }
+
+    const updated: Habit = {
+      ...existing,
       name: dto.name.trim(),
+      metaGeral: dto.metaGeral.trim(),
+      metasDinamicas: dto.metasDinamicas,
+      weekdayGoals: dto.weekdayGoals.map((entry) => ({
+        weekday: entry.weekday,
+        meta: entry.meta.trim(),
+        minimumAction: entry.minimumAction.trim(),
+        optionalReminder: entry.optionalReminder.trim(),
+      })),
       category: dto.category.trim(),
       trigger1: dto.trigger1.trim(),
       trigger2: dto.trigger2.trim(),
       motivation1: dto.motivation1.trim(),
       motivation2: dto.motivation2.trim(),
       minimumAction: dto.minimumAction.trim(),
-      scheduleDays: [...ALL_WEEKDAYS],
+      scheduleDays:
+        dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS],
+      optionalReminder: dto.optionalReminder.trim(),
+      showOnToday: dto.showOnToday ?? existing.showOnToday,
+    };
+
+    this.habits.update((list) =>
+      list.map((habit) => (habit.id === id ? updated : habit)),
+    );
+    this.persist();
+
+    return updated;
+  }
+
+  createHabit(dto: CreateHabitDto): Habit {
+    const habit: Habit = {
+      id: crypto.randomUUID(),
+      name: dto.name.trim(),
+      metaGeral: dto.metaGeral.trim(),
+      metasDinamicas: dto.metasDinamicas,
+      weekdayGoals: dto.weekdayGoals.map((entry) => ({
+        weekday: entry.weekday,
+        meta: entry.meta.trim(),
+        minimumAction: entry.minimumAction.trim(),
+        optionalReminder: entry.optionalReminder.trim(),
+      })),
+      category: dto.category.trim(),
+      trigger1: dto.trigger1.trim(),
+      trigger2: dto.trigger2.trim(),
+      motivation1: dto.motivation1.trim(),
+      motivation2: dto.motivation2.trim(),
+      minimumAction: dto.minimumAction.trim(),
+      scheduleDays:
+        dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS],
       optionalReminder: dto.optionalReminder.trim(),
       archived: false,
       createdAt: new Date().toISOString(),
@@ -124,6 +236,14 @@ export class HabitStorageService {
 
     return this.getTodayHabits(date).map((habit) =>
       mapHabitToTodayCard(habit, completions, date),
+    );
+  }
+
+  private buildAllHabitListCards(date: Date = new Date()): HabitListCardView[] {
+    const completions = this.completions();
+
+    return this.habits().map((habit) =>
+      mapHabitToListCard(habit, completions, date),
     );
   }
 

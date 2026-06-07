@@ -5,6 +5,9 @@ import {
   input,
   output,
 } from '@angular/core';
+import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
+import type { Weekday } from '../../../../core/models/weekday.model';
+import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
 
 export type HabitCardAccent = 'default' | 'physical' | 'wellness';
 
@@ -38,6 +41,7 @@ const STREAK_MISS_TOLERANCE = 7;
 @Component({
   selector: 'app-habit-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [WeekdayScheduleComponent],
   styles: `
     @keyframes habit-marquee-left {
       from {
@@ -530,13 +534,19 @@ const STREAK_MISS_TOLERANCE = 7;
                 <h2
                   class="font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                 >
-                  {{ name() }}
+                  {{ displayTitle() }}
                 </h2>
                 <span
                   class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
                   >{{ time() }} · {{ category() }}</span
                 >
               </div>
+
+              <app-weekday-schedule
+                class="mt-2"
+                [selectedDays]="scheduleDays()"
+                [readonly]="true"
+              />
 
               <div
                 class="habit-marquee-viewport mt-1 overflow-hidden"
@@ -650,6 +660,8 @@ const STREAK_MISS_TOLERANCE = 7;
 })
 export class HabitCardComponent {
   readonly name = input.required<string>();
+  readonly displayMeta = input('');
+  readonly scheduleDays = input.required<Weekday[]>();
   readonly time = input.required<string>();
   readonly category = input.required<string>();
   readonly trigger1 = input.required<string>();
@@ -664,6 +676,10 @@ export class HabitCardComponent {
   readonly accent = input<HabitCardAccent>('default');
 
   readonly markToggle = output<void>();
+
+  protected readonly displayTitle = computed(() =>
+    formatHabitCardTitle(this.name(), this.displayMeta()),
+  );
 
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));
 

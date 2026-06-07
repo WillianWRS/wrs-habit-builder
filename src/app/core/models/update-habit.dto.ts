@@ -1,7 +1,7 @@
 import type { HabitWeekdayGoal } from './habit-weekday-goal.model';
 import type { Weekday } from './weekday.model';
 
-export interface CreateHabitDto {
+export interface UpdateHabitDto {
   name: string;
   metaGeral: string;
   metasDinamicas: boolean;

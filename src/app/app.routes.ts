@@ -8,4 +8,11 @@ export const routes: Routes = [
         (m) => m.TodayPageComponent,
       ),
   },
+  {
+    path: 'habits',
+    loadComponent: () =>
+      import('./features/habits/pages/habits-page/habits-page.component').then(
+        (m) => m.HabitsPageComponent,
+      ),
+  },
 ];
