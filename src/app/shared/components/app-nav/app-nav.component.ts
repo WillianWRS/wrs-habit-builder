@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DemoModeService } from '../../../core/services/demo-mode.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { AccentThemeToggleComponent } from '../accent-theme-toggle/accent-theme-toggle.component';
 
@@ -10,10 +11,20 @@ export type AppNavTab = 'today' | 'habits' | 'create';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, ThemeToggleComponent, AccentThemeToggleComponent],
   template: `
-    <!-- Mobile: theme toggle fixo no canto superior direito -->
+    <!-- Mobile: toggles fixos no topo -->
     <div class="fixed top-4 right-4 z-30 flex items-center gap-2 md:hidden">
       <app-accent-theme-toggle />
       <app-theme-toggle />
+    </div>
+
+    <div class="fixed top-4 left-4 z-30 md:hidden">
+      <button
+        type="button"
+        class="rounded-lg border border-brand-light-nav-border bg-brand-light-nav/95 px-3 py-1.5 text-xs font-medium text-brand-light-text-secondary shadow-sm backdrop-blur-md transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-nav-border dark:bg-brand-nav/95 dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+        (click)="toggleDemoMode()"
+      >
+        {{ demoModeLabel() }}
+      </button>
     </div>
 
     <!-- Desktop navbar -->
@@ -38,6 +49,14 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
         <div class="flex items-center gap-3">
           <nav class="flex items-center gap-1" aria-label="Navegação principal">
+            <button
+              type="button"
+              class="rounded-lg border border-brand-light-border px-3 py-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+              (click)="toggleDemoMode()"
+            >
+              {{ demoModeLabel() }}
+            </button>
+
             <a
               routerLink="/"
               class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
@@ -51,37 +70,65 @@ export type AppNavTab = 'today' | 'habits' | 'create';
               Hoje
             </a>
 
-            <a
-              routerLink="/habits"
-              class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-              [class]="
-                activeTab() === 'habits'
-                  ? 'bg-brand-light-bg/80 text-brand-light-primary dark:bg-brand-bg/60 dark:text-brand-primary'
-                  : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-              "
-            >
-              Hábitos
-            </a>
+            @if (demoMode.isActive()) {
+              <span
+                class="cursor-not-allowed rounded-lg px-4 py-2 text-sm font-medium text-brand-light-text-secondary/40 dark:text-brand-text-secondary/40"
+                aria-disabled="true"
+                title="Indisponível no modo demonstrativo"
+              >
+                Hábitos
+              </span>
+            } @else {
+              <a
+                routerLink="/habits"
+                class="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                [class]="
+                  activeTab() === 'habits'
+                    ? 'bg-brand-light-bg/80 text-brand-light-primary dark:bg-brand-bg/60 dark:text-brand-primary'
+                    : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
+                "
+              >
+                Hábitos
+              </a>
+            }
 
-            <a
-              routerLink="/habits/new"
-              [class]="
-                'ml-2 inline-flex items-center gap-2 rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg' +
-                (activeTab() === 'create'
-                  ? ' ring-2 ring-brand-light-primary/40 dark:ring-brand-primary/40'
-                  : '')
-              "
-            >
-              <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
-              Novo hábito
-            </a>
+            @if (demoMode.isActive()) {
+              <span
+                class="ml-2 inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-brand-light-primary/40 px-4 py-2 text-sm font-semibold text-white/70 dark:bg-brand-primary/40 dark:text-brand-bg/70"
+                aria-disabled="true"
+                title="Indisponível no modo demonstrativo"
+              >
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Novo hábito
+              </span>
+            } @else if (!hideNewHabit()) {
+              <a
+                routerLink="/habits/new"
+                [class]="
+                  'ml-2 inline-flex items-center gap-2 rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg' +
+                  (activeTab() === 'create'
+                    ? ' ring-2 ring-brand-light-primary/40 dark:ring-brand-primary/40'
+                    : '')
+                "
+              >
+                <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Novo hábito
+              </a>
+            }
           </nav>
 
           <app-accent-theme-toggle />
@@ -119,53 +166,102 @@ export type AppNavTab = 'today' | 'habits' | 'create';
           Hoje
         </a>
 
-        <a
-          routerLink="/habits"
-          class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-          [class]="
-            activeTab() === 'habits'
-              ? 'text-brand-light-primary dark:text-brand-primary'
-              : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-          "
-        >
-          <svg class="size-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M4 6h16M4 12h16M4 18h10"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-          Hábitos
-        </a>
-
-        <a
-          routerLink="/habits/new"
-          class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
-          [class]="
-            activeTab() === 'create'
-              ? 'text-brand-light-primary dark:text-brand-primary'
-              : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-          "
-          aria-label="Criar novo hábito"
-        >
+        @if (demoMode.isActive()) {
           <span
-            class="flex size-10 items-center justify-center rounded-full bg-brand-light-primary text-white transition-transform hover:scale-105 motion-reduce:transform-none dark:bg-brand-primary dark:text-brand-bg"
+            class="flex cursor-not-allowed flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-brand-light-text-secondary/40 dark:text-brand-text-secondary/40"
+            aria-disabled="true"
           >
-            <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg class="size-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
-                d="M12 5v14M5 12h14"
+                d="M4 6h16M4 12h16M4 18h10"
                 stroke="currentColor"
-                stroke-width="2"
+                stroke-width="1.5"
                 stroke-linecap="round"
               />
             </svg>
+            Hábitos
           </span>
-        </a>
+        } @else {
+          <a
+            routerLink="/habits"
+            class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+            [class]="
+              activeTab() === 'habits'
+                ? 'text-brand-light-primary dark:text-brand-primary'
+                : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
+            "
+          >
+            <svg class="size-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 6h16M4 12h16M4 18h10"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            Hábitos
+          </a>
+        }
+
+        @if (demoMode.isActive()) {
+          <span
+            class="flex cursor-not-allowed flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-brand-light-text-secondary/40 dark:text-brand-text-secondary/40"
+            aria-disabled="true"
+          >
+            <span
+              class="flex size-10 items-center justify-center rounded-full bg-brand-light-primary/40 text-white/70 dark:bg-brand-primary/40 dark:text-brand-bg/70"
+            >
+              <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+          </span>
+        } @else if (!hideNewHabit()) {
+          <a
+            routerLink="/habits/new"
+            class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
+            [class]="
+              activeTab() === 'create'
+                ? 'text-brand-light-primary dark:text-brand-primary'
+                : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
+            "
+            aria-label="Criar novo hábito"
+          >
+            <span
+              class="flex size-10 items-center justify-center rounded-full bg-brand-light-primary text-white transition-transform hover:scale-105 motion-reduce:transform-none dark:bg-brand-primary dark:text-brand-bg"
+            >
+              <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+          </a>
+        }
       </div>
     </nav>
   `,
 })
 export class AppNavComponent {
+  private readonly demoModeService = inject(DemoModeService);
+
   readonly activeTab = input<AppNavTab>('today');
+  readonly hideNewHabit = input(false);
+  protected readonly demoMode = this.demoModeService;
+
+  protected demoModeLabel(): string {
+    return this.demoMode.isActive() ? 'Dados reais' : 'Dados demonstrativos';
+  }
+
+  protected toggleDemoMode(): void {
+    this.demoMode.toggle();
+  }
 }

@@ -533,7 +533,7 @@ const STREAK_MISS_TOLERANCE = 7;
                   {{ name() }}
                 </h2>
                 <span
-                  class="shrink-0 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary"
+                  class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
                   >{{ time() }} · {{ category() }}</span
                 >
               </div>
