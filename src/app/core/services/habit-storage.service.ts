@@ -6,8 +6,11 @@ import {
   type AppStorage,
 } from '../models/app-storage.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { CreateHabitDto } from '../models/create-habit.dto';
 import type { Habit } from '../models/habit.model';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
+import { ALL_WEEKDAYS } from '../models/habit.model';
+import { normalizeHabit } from '../utils/habit-normalizer';
 import { getWeekday, toDateKey } from '../utils/date.utils';
 import { mapHabitToTodayCard } from '../utils/today-habit.mapper';
 
@@ -69,6 +72,29 @@ export class HabitStorageService {
     );
   }
 
+  createHabit(dto: CreateHabitDto): Habit {
+    const habit: Habit = {
+      id: crypto.randomUUID(),
+      name: dto.name.trim(),
+      category: dto.category.trim(),
+      trigger1: dto.trigger1.trim(),
+      trigger2: dto.trigger2.trim(),
+      motivation1: dto.motivation1.trim(),
+      motivation2: dto.motivation2.trim(),
+      minimumAction: dto.minimumAction.trim(),
+      scheduleDays: [...ALL_WEEKDAYS],
+      optionalReminder: dto.optionalReminder.trim(),
+      archived: false,
+      createdAt: new Date().toISOString(),
+      showOnToday: dto.showOnToday ?? true,
+    };
+
+    this.habits.update((list) => [...list, habit]);
+    this.persist();
+
+    return habit;
+  }
+
   toggleCompletion(habitId: string, date: string = toDateKey()): void {
     const exists = this.isCompleted(habitId, date);
 
@@ -111,18 +137,7 @@ export class HabitStorageService {
     }
 
     const data = raw as Partial<AppStorage>;
-    const habits = (data.habits ?? []).map((habit) => ({
-      ...habit,
-      showOnToday: habit.showOnToday ?? true,
-    }));
-
-    if ((data.version ?? 0) < 1) {
-      return {
-        version: CURRENT_STORAGE_VERSION,
-        habits,
-        completions: data.completions ?? [],
-      };
-    }
+    const habits = (data.habits ?? []).map((habit) => normalizeHabit(habit));
 
     return {
       version: CURRENT_STORAGE_VERSION,

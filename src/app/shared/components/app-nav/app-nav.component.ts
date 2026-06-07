@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../core/services/demo-mode.service';
+import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { AccentThemeToggleComponent } from '../accent-theme-toggle/accent-theme-toggle.component';
 
@@ -109,14 +110,10 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                 Novo hábito
               </span>
             } @else if (!hideNewHabit()) {
-              <a
-                routerLink="/habits/new"
-                [class]="
-                  'ml-2 inline-flex items-center gap-2 rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg' +
-                  (activeTab() === 'create'
-                    ? ' ring-2 ring-brand-light-primary/40 dark:ring-brand-primary/40'
-                    : '')
-                "
+              <button
+                type="button"
+                class="ml-2 inline-flex items-center gap-2 rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+                (click)="openHabitForm()"
               >
                 <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
@@ -127,7 +124,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                   />
                 </svg>
                 Novo hábito
-              </a>
+              </button>
             }
           </nav>
 
@@ -222,15 +219,11 @@ export type AppNavTab = 'today' | 'habits' | 'create';
             </span>
           </span>
         } @else if (!hideNewHabit()) {
-          <a
-            routerLink="/habits/new"
-            class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
-            [class]="
-              activeTab() === 'create'
-                ? 'text-brand-light-primary dark:text-brand-primary'
-                : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-            "
+          <button
+            type="button"
+            class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-brand-light-text-secondary transition-colors hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
             aria-label="Criar novo hábito"
+            (click)="openHabitForm()"
           >
             <span
               class="flex size-10 items-center justify-center rounded-full bg-brand-light-primary text-white transition-transform hover:scale-105 motion-reduce:transform-none dark:bg-brand-primary dark:text-brand-bg"
@@ -244,7 +237,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                 />
               </svg>
             </span>
-          </a>
+          </button>
         }
       </div>
     </nav>
@@ -252,6 +245,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 })
 export class AppNavComponent {
   private readonly demoModeService = inject(DemoModeService);
+  private readonly habitFormModal = inject(HabitFormModalService);
 
   readonly activeTab = input<AppNavTab>('today');
   readonly hideNewHabit = input(false);
@@ -263,5 +257,9 @@ export class AppNavComponent {
 
   protected toggleDemoMode(): void {
     this.demoMode.toggle();
+  }
+
+  protected openHabitForm(): void {
+    this.habitFormModal.open();
   }
 }

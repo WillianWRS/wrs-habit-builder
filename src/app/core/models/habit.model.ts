@@ -1,16 +1,19 @@
-import type { HabitCategory } from './habit-category.model';
 import type { Weekday } from './weekday.model';
+
+export const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
 export interface Habit {
   id: string;
   name: string;
-  category: HabitCategory;
-  triggerText: string;
+  category: string;
+  trigger1: string;
+  trigger2: string;
+  motivation1: string;
+  motivation2: string;
   minimumAction: string;
   scheduleDays: Weekday[];
-  optionalReminder?: string;
+  optionalReminder: string;
   archived: boolean;
   createdAt: string;
-  /** Indica se o hábito deve aparecer na tela Hoje (respeitando também scheduleDays). */
   showOnToday: boolean;
 }

@@ -4,8 +4,8 @@ import {
   computed,
   inject,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../../core/services/demo-mode.service';
+import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { DayProgressComponent } from '../../components/day-progress/day-progress.component';
@@ -14,12 +14,7 @@ import { HabitCardComponent } from '../../components/habit-card/habit-card.compo
 @Component({
   selector: 'app-today-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    RouterLink,
-    AppNavComponent,
-    DayProgressComponent,
-    HabitCardComponent,
-  ],
+  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent],
   template: `
     <app-nav activeTab="today" [hideNewHabit]="showEmpty()" />
 
@@ -69,13 +64,14 @@ import { HabitCardComponent } from '../../components/habit-card/habit-card.compo
               Construa hábitos agora
             </h2>
 
-            <a
-              routerLink="/habits/new"
+            <button
+              type="button"
               class="relative mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              (click)="openHabitForm()"
             >
               <i class="bi bi-plus-lg text-xs" aria-hidden="true"></i>
               Criar primeiro hábito
-            </a>
+            </button>
         </section>
       } @else {
         @if (demoMode.isActive()) {
@@ -113,6 +109,7 @@ import { HabitCardComponent } from '../../components/habit-card/habit-card.compo
 })
 export class TodayPageComponent {
   private readonly storage = inject(HabitStorageService);
+  private readonly habitFormModal = inject(HabitFormModalService);
   protected readonly demoMode = inject(DemoModeService);
 
   protected readonly habits = computed(() =>
@@ -138,6 +135,10 @@ export class TodayPageComponent {
   );
 
   protected readonly totalCount = computed(() => this.habits().length);
+
+  protected openHabitForm(): void {
+    this.habitFormModal.open();
+  }
 
   protected toggleHabit(id: string): void {
     if (this.demoMode.isActive()) {
