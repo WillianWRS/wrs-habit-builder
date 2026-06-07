@@ -17,6 +17,10 @@ interface MockTodayHabit {
   name: string;
   time: string;
   category: string;
+  trigger1: string;
+  trigger2: string;
+  motivation1: string;
+  motivation2: string;
   minimumAction: string;
   completed: boolean;
   accent: HabitCardAccent;
@@ -28,6 +32,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
     name: 'Estudar inglês',
     time: '08:00',
     category: 'Saúde',
+    trigger1: 'Se terminar o café da manhã',
+    trigger2: 'Quando sentar na mesa de trabalho',
+    motivation1: 'Quero me sentir confiante em reuniões em inglês',
+    motivation2: 'Cada flashcard me aproxima do fluente',
     minimumAction: '1 flashcard',
     completed: false,
     accent: 'default',
@@ -37,6 +45,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
     name: 'Treino',
     time: '07:00',
     category: 'Corpo',
+    trigger1: 'Se vestir a roupa de treino',
+    trigger2: 'Quando o alarme das 07:00 tocar',
+    motivation1: 'Energia para sustentar o dia inteiro',
+    motivation2: 'Corpo forte deixa a mente mais clara',
     minimumAction: '10 min mobilidade',
     completed: true,
     accent: 'physical',
@@ -46,6 +58,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
     name: 'Leitura',
     time: '21:30',
     category: 'Estudo',
+    trigger1: 'Se deitar na cama à noite',
+    trigger2: 'Quando desligar todas as telas',
+    motivation1: 'Dormir com a mente mais calma',
+    motivation2: 'Uma página por dia vira muitos livros no ano',
     minimumAction: '1 página',
     completed: false,
     accent: 'default',
@@ -55,6 +71,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
     name: 'Meditação',
     time: '06:30',
     category: 'Mindfulness',
+    trigger1: 'Se acordar e a casa ainda estiver em silêncio',
+    trigger2: 'Antes de pegar o celular',
+    motivation1: 'Começar o dia com presença e foco',
+    motivation2: 'Menos ansiedade nas primeiras horas',
     minimumAction: '3 respirações profundas',
     completed: true,
     accent: 'wellness',
@@ -64,6 +84,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
     name: 'Água ao acordar',
     time: '06:00',
     category: 'Saúde',
+    trigger1: 'Se levantar da cama',
+    trigger2: 'Quando passar pela cozinha',
+    motivation1: 'Hidratar o corpo antes de qualquer café',
+    motivation2: 'Acordar o metabolismo desde cedo',
     minimumAction: '1 copo',
     completed: false,
     accent: 'default',
@@ -128,6 +152,10 @@ const MOCK_TODAY_HABITS: MockTodayHabit[] = [
                 [name]="habit.name"
                 [time]="habit.time"
                 [category]="habit.category"
+                [trigger1]="habit.trigger1"
+                [trigger2]="habit.trigger2"
+                [motivation1]="habit.motivation1"
+                [motivation2]="habit.motivation2"
                 [minimumAction]="habit.minimumAction"
                 [completed]="habit.completed"
                 [accent]="habit.accent"

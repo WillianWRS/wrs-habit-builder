@@ -1,10 +1,47 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from '@angular/core';
 
 export type HabitCardAccent = 'default' | 'physical' | 'wellness';
 
 @Component({
   selector: 'app-habit-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    @keyframes habit-marquee-left {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    .habit-marquee-track {
+      display: flex;
+      width: max-content;
+      animation: habit-marquee-left 28s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .habit-marquee-track {
+        animation: none;
+      }
+
+      .habit-marquee-viewport {
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .habit-marquee-viewport::-webkit-scrollbar {
+        display: none;
+      }
+    }
+  `,
   template: `
     <article
       class="rounded-xl border p-4 transition-colors duration-200 motion-reduce:transition-none"
@@ -57,6 +94,26 @@ export type HabitCardAccent = 'default' | 'physical' | 'wellness';
                 >{{ time() }} · {{ category() }}</span
               >
             </div>
+
+            <div
+              class="habit-marquee-viewport mt-1 overflow-hidden"
+              [attr.aria-label]="marqueeLabel()"
+            >
+              <div class="habit-marquee-track text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
+                @for (copy of [0, 1]; track copy) {
+                  <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
+                    <span>{{ trigger1() }}</span>
+                    <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                    <span>{{ trigger2() }}</span>
+                    <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                    <span>{{ motivation1() }}</span>
+                    <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                    <span>{{ motivation2() }}</span>
+                  </span>
+                }
+              </div>
+            </div>
+
             <p
               class="mt-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
             >
@@ -99,9 +156,18 @@ export class HabitCardComponent {
   readonly name = input.required<string>();
   readonly time = input.required<string>();
   readonly category = input.required<string>();
+  readonly trigger1 = input.required<string>();
+  readonly trigger2 = input.required<string>();
+  readonly motivation1 = input.required<string>();
+  readonly motivation2 = input.required<string>();
   readonly minimumAction = input.required<string>();
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
 
   readonly markToggle = output<void>();
+
+  protected readonly marqueeLabel = computed(
+    () =>
+      `${this.trigger1()}. ${this.trigger2()}. ${this.motivation1()}. ${this.motivation2()}.`,
+  );
 }
