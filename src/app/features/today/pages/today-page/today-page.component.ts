@@ -184,7 +184,7 @@ export class TodayPageComponent {
 
   protected readonly todayLabel = computed(() => {
     return new Intl.DateTimeFormat('pt-BR', {
-      weekday: 'short',
+      weekday: 'long',
       day: 'numeric',
       month: 'short',
     }).format(new Date());

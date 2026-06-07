@@ -94,17 +94,159 @@ const STREAK_MISS_TOLERANCE = 7;
       animation: habit-marquee-left 28s linear infinite;
     }
 
+    @keyframes day-count-pulse {
+      0%,
+      100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0 transparent);
+      }
+      50% {
+        transform: scale(var(--day-pulse-scale, 1.08));
+        filter: drop-shadow(0 0 var(--day-pulse-glow, 0) rgb(var(--accent-rgb-current) / 0.5));
+      }
+    }
+
+    .habit-card--completed .day-count-value {
+      display: inline-block;
+      transform-origin: center center;
+      animation: day-count-pulse var(--day-pulse-duration, 2s) ease-in-out infinite;
+    }
+
+    .habit-card--completed[data-streak-tier='0'] {
+      --day-pulse-duration: 2.3s;
+      --day-pulse-scale: 1.06;
+      --day-pulse-glow: 0;
+    }
+
+    .habit-card--completed[data-streak-tier='1'] {
+      --day-pulse-duration: 1.75s;
+      --day-pulse-scale: 1.07;
+      --day-pulse-glow: 0;
+    }
+
+    .habit-card--completed[data-streak-tier='2'] {
+      --day-pulse-duration: 1.25s;
+      --day-pulse-scale: 1.09;
+      --day-pulse-glow: 2px;
+    }
+
+    .habit-card--completed[data-streak-tier='3'] {
+      --day-pulse-duration: 0.85s;
+      --day-pulse-scale: 1.11;
+      --day-pulse-glow: 4px;
+    }
+
+    .habit-card--completed[data-streak-tier='4'] {
+      --day-pulse-duration: 0.45s;
+      --day-pulse-scale: 1.15;
+      --day-pulse-glow: 8px;
+    }
+
     /* ── Base idle (nível 0) ── */
     .habit-card {
+      --accent-rgb-current: var(--accent-rgb-light);
+      --accent-tint-current: var(--accent-tint-light);
+      --streak-subtitle-accent: 0%;
       --streak-border: rgb(var(--card-border-rgb-light));
-      --streak-bg: var(--card-bg-light);
+      --streak-bg: var(--brand-light-surface);
       border: 1px solid var(--streak-border);
       background-color: var(--streak-bg);
     }
 
     :host-context(.dark) .habit-card {
+      --accent-rgb-current: var(--accent-rgb-dark);
+      --accent-tint-current: var(--accent-tint-dark);
       --streak-border: rgb(var(--card-border-rgb-dark) / 0.85);
       --streak-bg: var(--card-bg-dark);
+    }
+
+    .habit-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background-color: rgb(255 255 255 / 0);
+      pointer-events: none;
+      z-index: 0;
+      transition: background-color 200ms ease-out;
+    }
+
+    .habit-card:hover::after {
+      background-color: rgb(255 255 255 / 0.05);
+    }
+
+    :host-context(.dark) .habit-card:hover::after {
+      background-color: rgb(255 255 255 / 0.06);
+    }
+
+    /* ── Texto de streak por tier (título) ── */
+    .streak-status-title {
+      color: rgb(var(--accent-rgb-current));
+    }
+
+    .habit-card[data-streak-tier='1'] .streak-status-title {
+      color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 82%, rgb(var(--accent-tint-current)));
+    }
+
+    .habit-card[data-streak-tier='2'] .streak-status-title {
+      color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 64%, rgb(var(--accent-tint-current)));
+    }
+
+    .habit-card[data-streak-tier='3'] .streak-status-title {
+      color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 46%, rgb(var(--accent-tint-current)));
+    }
+
+    .habit-card[data-streak-tier='3'] .streak-status-title,
+    .habit-card[data-streak-tier='4'] .streak-status-title,
+    .habit-card[data-streak-tier='3'] .streak-status-subtitle,
+    .habit-card[data-streak-tier='4'] .streak-status-subtitle {
+      font-weight: 700;
+    }
+
+    .habit-card[data-streak-tier='4'] .streak-status-title {
+      animation: streak-status-text-pulse 0.45s ease-in-out infinite;
+    }
+
+    @keyframes streak-status-text-pulse {
+      0%,
+      100% {
+        color: rgb(var(--accent-rgb-current));
+      }
+      50% {
+        color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 28%, rgb(var(--accent-tint-current)));
+      }
+    }
+
+    .streak-status-subtitle {
+      color: color-mix(
+        in srgb,
+        rgb(var(--accent-rgb-current)) var(--streak-subtitle-accent, 0%),
+        var(--brand-light-text-secondary) calc(100% - var(--streak-subtitle-accent, 0%))
+      );
+    }
+
+    :host-context(.dark) .streak-status-subtitle {
+      color: color-mix(
+        in srgb,
+        rgb(var(--accent-rgb-current)) var(--streak-subtitle-accent, 0%),
+        var(--brand-text-secondary) calc(100% - var(--streak-subtitle-accent, 0%))
+      );
+    }
+
+    .habit-card[data-streak-tier='1'] {
+      --streak-subtitle-accent: 18%;
+    }
+
+    .habit-card[data-streak-tier='2'] {
+      --streak-subtitle-accent: 32%;
+    }
+
+    .habit-card[data-streak-tier='3'] {
+      --streak-subtitle-accent: 46%;
+    }
+
+    .habit-card[data-streak-tier='4'] {
+      --streak-subtitle-accent: 58%;
     }
 
     /* ── Nível 1 · 15+ dias ── */
@@ -276,6 +418,15 @@ const STREAK_MISS_TOLERANCE = 7;
         animation: none;
       }
 
+      .habit-card--completed .day-count-value {
+        animation: none;
+      }
+
+      .habit-card[data-streak-tier='4'] .streak-status-title {
+        animation: none;
+        color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 28%, rgb(var(--accent-tint-current)));
+      }
+
       .habit-card[data-streak-tier='3']:not(.habit-card--completed) {
         box-shadow:
           0 0 0 1px rgb(var(--accent-rgb-light) / 0.25),
@@ -337,7 +488,7 @@ const STREAK_MISS_TOLERANCE = 7;
                   >dia</span
                 >
                 <span
-                  class="text-2xl font-bold tabular-nums transition-all duration-200"
+                  class="day-count-value text-2xl font-bold tabular-nums"
                   [class]="dayCountStyleClass()"
                   >{{ dayCount() }}</span
                 >
@@ -423,14 +574,10 @@ const STREAK_MISS_TOLERANCE = 7;
                       {{ streakAtRiskEncouragement() }}
                     </p>
                   } @else {
-                    <p
-                      class="text-sm font-medium text-brand-light-primary dark:text-brand-primary"
-                    >
+                    <p class="streak-status-title text-sm font-medium">
                       {{ streakTierMessage().title }}
                     </p>
-                    <p
-                      class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-                    >
+                    <p class="streak-status-subtitle mt-0.5 text-sm">
                       {{ streakTierMessage().subtitle }}
                     </p>
                   }
