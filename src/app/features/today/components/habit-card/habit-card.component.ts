@@ -992,10 +992,10 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
               >
             </div>
           } @else {
-            <div class="flex justify-center">
+            <div class="flex justify-end">
               <button
                 type="button"
-                class="habit-mark-btn shrink-0 rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+                class="habit-mark-btn w-[30%] rounded-lg bg-brand-light-primary px-3 py-1.5 text-center text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
                 [attr.aria-label]="'Marcar ' + name() + ' como feito'"
                 (click)="markToggle.emit()"
               >
