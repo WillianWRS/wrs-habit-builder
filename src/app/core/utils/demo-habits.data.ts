@@ -1,9 +1,24 @@
 import { ALL_WEEKDAYS } from '../models/habit.model';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
+import { mapDemoPoolEntryToCard } from './demo-habit-card.mapper';
+import { buildDemoHabitPool } from './demo-habits-pool.data';
 
-/** Fornece os 5 hábitos de preview para o modo demonstrativo. */
+function shuffleIndices(length: number): number[] {
+  const indices = Array.from({ length }, (_, index) => index);
+
+  for (let index = indices.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [indices[index], indices[swapIndex]] = [indices[swapIndex], indices[index]];
+  }
+
+  return indices;
+}
+
+/** Fornece os 5 hábitos de preview visual para o modo demonstrativo pré-definido. */
 export class DemoHabitsData {
-  static getCards(): TodayHabitCard[] {
+  private static readonly pool = buildDemoHabitPool();
+
+  static getPredefinedCards(): TodayHabitCard[] {
     return [
       {
         id: 'demo-5',
@@ -91,5 +106,26 @@ export class DemoHabitsData {
         previousDayCompleted: false,
       },
     ];
+  }
+
+  static getRandomCards(count = 5): TodayHabitCard[] {
+    const picks = shuffleIndices(this.pool.length).slice(0, count);
+
+    return picks.map((poolIndex, pickIndex) =>
+      mapDemoPoolEntryToCard(
+        this.pool[poolIndex],
+        `demo-rand-${pickIndex}-${poolIndex}`,
+        poolIndex + pickIndex * 11,
+      ),
+    );
+  }
+
+  /** Mantém compatibilidade com chamadas antigas. */
+  static getCards(): TodayHabitCard[] {
+    return this.getPredefinedCards();
+  }
+
+  static getPoolSize(): number {
+    return this.pool.length;
   }
 }

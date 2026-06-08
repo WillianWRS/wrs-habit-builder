@@ -1,25 +1,28 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
 import { DemoHabitsData } from '../utils/demo-habits.data';
 
+export type DemoDataVariant = 'predefined' | 'random';
+
 @Injectable({ providedIn: 'root' })
 export class DemoModeService {
-  readonly isActive = signal(false);
-  readonly cards = signal<TodayHabitCard[]>(
-    DemoHabitsData.getCards().map((card) => ({ ...card })),
-  );
+  readonly variant = signal<DemoDataVariant | null>(null);
+  readonly isActive = computed(() => this.variant() !== null);
+  readonly cards = signal<TodayHabitCard[]>([]);
 
-  toggle(): void {
-    const next = !this.isActive();
-    this.isActive.set(next);
-
-    if (next) {
-      this.resetCards();
-    }
+  activatePredefined(): void {
+    this.variant.set('predefined');
+    this.cards.set(DemoHabitsData.getPredefinedCards().map((card) => ({ ...card })));
   }
 
-  resetCards(): void {
-    this.cards.set(DemoHabitsData.getCards().map((card) => ({ ...card })));
+  activateRandom(): void {
+    this.variant.set('random');
+    this.cards.set(DemoHabitsData.getRandomCards(5).map((card) => ({ ...card })));
+  }
+
+  deactivate(): void {
+    this.variant.set(null);
+    this.cards.set([]);
   }
 
   toggleHabit(id: string): void {

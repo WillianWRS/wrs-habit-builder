@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../core/services/demo-mode.service';
 import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
@@ -19,13 +25,46 @@ export type AppNavTab = 'today' | 'habits' | 'create';
     </div>
 
     <div class="fixed top-4 left-4 z-30 md:hidden">
-      <button
-        type="button"
-        class="rounded-lg border border-brand-light-nav-border bg-brand-light-nav/95 px-3 py-1.5 text-xs font-medium text-brand-light-text-secondary shadow-sm backdrop-blur-md transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-nav-border dark:bg-brand-nav/95 dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-        (click)="toggleDemoMode()"
-      >
-        {{ demoModeLabel() }}
-      </button>
+      <div class="relative">
+        @if (demoMode.isActive()) {
+          <button
+            type="button"
+            class="rounded-lg border border-brand-light-nav-border bg-brand-light-nav/95 px-3 py-1.5 text-xs font-medium text-brand-light-text-secondary shadow-sm backdrop-blur-md transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-nav-border dark:bg-brand-nav/95 dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            (click)="exitDemoMode()"
+          >
+            Dados reais
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="rounded-lg border border-brand-light-nav-border bg-brand-light-nav/95 px-3 py-1.5 text-xs font-medium text-brand-light-text-secondary shadow-sm backdrop-blur-md transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-nav-border dark:bg-brand-nav/95 dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            (click)="toggleDemoPicker()"
+          >
+            Dados demonstrativos
+          </button>
+
+          @if (showDemoPicker()) {
+            <div
+              class="absolute left-0 top-full z-40 mt-1 flex min-w-[11rem] flex-col overflow-hidden rounded-lg border border-brand-light-border bg-brand-light-surface shadow-lg dark:border-brand-border dark:bg-brand-surface"
+            >
+              <button
+                type="button"
+                class="px-3 py-2 text-left text-xs font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                (click)="activatePredefinedDemo()"
+              >
+                Dados pré-definidos
+              </button>
+              <button
+                type="button"
+                class="border-t border-brand-light-border px-3 py-2 text-left text-xs font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:border-brand-border dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                (click)="activateRandomDemo()"
+              >
+                Dados aleatórios
+              </button>
+            </div>
+          }
+        }
+      </div>
     </div>
 
     <!-- Desktop navbar -->
@@ -50,13 +89,46 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
         <div class="flex items-center gap-3">
           <nav class="flex items-center gap-1" aria-label="Navegação principal">
-            <button
-              type="button"
-              class="rounded-lg border border-brand-light-border px-3 py-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-              (click)="toggleDemoMode()"
-            >
-              {{ demoModeLabel() }}
-            </button>
+            <div class="relative">
+              @if (demoMode.isActive()) {
+                <button
+                  type="button"
+                  class="rounded-lg border border-brand-light-border px-3 py-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                  (click)="exitDemoMode()"
+                >
+                  Dados reais
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="rounded-lg border border-brand-light-border px-3 py-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                  (click)="toggleDemoPicker()"
+                >
+                  Dados demonstrativos
+                </button>
+
+                @if (showDemoPicker()) {
+                  <div
+                    class="absolute left-0 top-full z-40 mt-1 flex min-w-[12.5rem] flex-col overflow-hidden rounded-lg border border-brand-light-border bg-brand-light-surface shadow-lg dark:border-brand-border dark:bg-brand-surface"
+                  >
+                    <button
+                      type="button"
+                      class="px-3 py-2 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                      (click)="activatePredefinedDemo()"
+                    >
+                      Dados pré-definidos
+                    </button>
+                    <button
+                      type="button"
+                      class="border-t border-brand-light-border px-3 py-2 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:border-brand-border dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                      (click)="activateRandomDemo()"
+                    >
+                      Dados aleatórios
+                    </button>
+                  </div>
+                }
+              }
+            </div>
 
             <a
               routerLink="/"
@@ -250,13 +322,25 @@ export class AppNavComponent {
   readonly activeTab = input<AppNavTab>('today');
   readonly hideNewHabit = input(false);
   protected readonly demoMode = this.demoModeService;
+  protected readonly showDemoPicker = signal(false);
 
-  protected demoModeLabel(): string {
-    return this.demoMode.isActive() ? 'Dados reais' : 'Dados demonstrativos';
+  protected toggleDemoPicker(): void {
+    this.showDemoPicker.update((open) => !open);
   }
 
-  protected toggleDemoMode(): void {
-    this.demoMode.toggle();
+  protected activatePredefinedDemo(): void {
+    this.demoModeService.activatePredefined();
+    this.showDemoPicker.set(false);
+  }
+
+  protected activateRandomDemo(): void {
+    this.demoModeService.activateRandom();
+    this.showDemoPicker.set(false);
+  }
+
+  protected exitDemoMode(): void {
+    this.demoModeService.deactivate();
+    this.showDemoPicker.set(false);
   }
 
   protected openHabitForm(): void {
