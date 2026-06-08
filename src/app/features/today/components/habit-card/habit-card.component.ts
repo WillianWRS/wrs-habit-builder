@@ -702,9 +702,11 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
         </div>
       }
       <div class="relative z-[1]">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex items-start justify-between gap-3 md:items-center">
           <div class="flex min-w-0 flex-1 gap-3">
-            <div class="habit-card-day-count flex shrink-0 flex-col items-center gap-1.5">
+            <div
+              class="habit-card-day-count flex shrink-0 flex-col items-center gap-1.5 self-start"
+            >
               <span
                 class="flex size-5 items-center justify-center rounded-full border-2 transition-all duration-200 motion-reduce:transition-none"
                 [class]="
@@ -750,136 +752,263 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                 <h2
-                  class="habit-card-field habit-card-field--primary font-medium"
+                  class="habit-card-field habit-card-field--primary min-w-0 flex-1 font-medium"
                 >
                   {{ displayTitle() }}
                 </h2>
                 <span
-                  class="habit-card-field habit-card-field--secondary shrink-0 text-xs italic"
+                  class="habit-card-field habit-card-field--secondary hidden shrink-0 text-xs italic md:inline"
                   >{{ time() }} · {{ category() }}</span
                 >
               </div>
 
-              <app-weekday-schedule
-                class="habit-card-weekdays mt-2"
-                [selectedDays]="scheduleDays()"
-                [readonly]="true"
-              />
+              <p class="habit-card-field habit-card-field--secondary mt-1 text-sm md:hidden">
+                Min: {{ minimumAction() }}
+              </p>
 
-              <div
-                class="habit-marquee-viewport mt-1 overflow-hidden select-none"
-                role="button"
-                tabindex="0"
-                [attr.aria-label]="marqueeAriaLabel()"
-                (click)="cycleMarqueeSpeed($event)"
-                (keydown.enter)="cycleMarqueeSpeed($event)"
-                (keydown.space)="cycleMarqueeSpeed($event)"
-              >
+              <!-- Desktop -->
+              <div class="hidden md:block">
+                <app-weekday-schedule
+                  class="habit-card-weekdays mt-2"
+                  [selectedDays]="scheduleDays()"
+                  [readonly]="true"
+                />
+
                 <div
-                  #marqueeTrack
-                  class="habit-marquee-track habit-card-field habit-card-field--secondary text-sm"
+                  class="habit-marquee-viewport mt-1 overflow-hidden select-none"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="marqueeAriaLabel()"
+                  (click)="cycleMarqueeSpeed($event)"
+                  (keydown.enter)="cycleMarqueeSpeed($event)"
+                  (keydown.space)="cycleMarqueeSpeed($event)"
                 >
-                  @for (copy of [0, 1]; track copy) {
-                    <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
-                      <span class="inline-flex items-center gap-1">
-                        <i
-                          class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                          aria-hidden="true"
-                        ></i>
-                        <span>{{ trigger1() }}</span>
+                  <div
+                    #marqueeTrack
+                    class="habit-marquee-track habit-card-field habit-card-field--secondary text-sm"
+                  >
+                    @for (copy of [0, 1]; track copy) {
+                      <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
+                        <span class="inline-flex items-center gap-1">
+                          <i
+                            class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
+                            aria-hidden="true"
+                          ></i>
+                          <span>{{ trigger1() }}</span>
+                        </span>
+                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                        <span class="inline-flex items-center gap-1">
+                          <i
+                            class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
+                            aria-hidden="true"
+                          ></i>
+                          <span>{{ trigger2() }}</span>
+                        </span>
+                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                        <span class="inline-flex items-center gap-1">
+                          <i
+                            class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
+                            aria-hidden="true"
+                          ></i>
+                          <span>{{ motivation1() }}</span>
+                        </span>
+                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                        <span class="inline-flex items-center gap-1">
+                          <i
+                            class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
+                            aria-hidden="true"
+                          ></i>
+                          <span>{{ motivation2() }}</span>
+                        </span>
                       </span>
-                      <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                      <span class="inline-flex items-center gap-1">
-                        <i
-                          class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                          aria-hidden="true"
-                        ></i>
-                        <span>{{ trigger2() }}</span>
-                      </span>
-                      <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                      <span class="inline-flex items-center gap-1">
-                        <i
-                          class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                          aria-hidden="true"
-                        ></i>
-                        <span>{{ motivation1() }}</span>
-                      </span>
-                      <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                      <span class="inline-flex items-center gap-1">
-                        <i
-                          class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                          aria-hidden="true"
-                        ></i>
-                        <span>{{ motivation2() }}</span>
-                      </span>
-                    </span>
-                  }
+                    }
+                  </div>
                 </div>
-              </div>
 
-              <div class="mt-1 flex items-start justify-between gap-3">
-                <p
-                  class="habit-card-field habit-card-field--secondary min-w-0 text-sm"
-                >
-                  Mínimo: {{ minimumAction() }}
-                </p>
+                <div class="mt-1 flex items-start justify-between gap-3">
+                  <p
+                    class="habit-card-field habit-card-field--secondary min-w-0 text-sm"
+                  >
+                    Mínimo: {{ minimumAction() }}
+                  </p>
 
-                <div
-                  class="habit-card-streak-status shrink-0 text-right"
-                  [attr.aria-label]="streakStatusAriaLabel()"
-                >
-                  @if (isDayOne() && !completed()) {
-                    <p class="streak-status-title text-sm font-medium">
-                      {{ dayOneMessage.title }}
-                    </p>
-                    <p class="streak-status-subtitle mt-0.5 text-sm">
-                      {{ dayOneMessage.subtitle }}
-                    </p>
-                  } @else if (showMissMessage()) {
-                    <p
-                      class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
-                    >
-                      {{ streakAtRiskHint() }}
-                    </p>
-                    <p
-                      class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-                    >
-                      {{ streakAtRiskEncouragement() }}
-                    </p>
-                  } @else {
-                    <p class="streak-status-title text-sm font-medium">
-                      {{ streakTierMessage().title }}
-                    </p>
-                    <p class="streak-status-subtitle mt-0.5 text-sm">
-                      {{ streakTierMessage().subtitle }}
-                    </p>
-                  }
+                  <div
+                    class="habit-card-streak-status shrink-0 text-right"
+                    [attr.aria-label]="streakStatusAriaLabel()"
+                  >
+                    @if (isDayOne() && !completed()) {
+                      <p class="streak-status-title text-sm font-medium">
+                        {{ dayOneMessage.title }}
+                      </p>
+                      <p class="streak-status-subtitle mt-0.5 text-sm">
+                        {{ dayOneMessage.subtitle }}
+                      </p>
+                    } @else if (showMissMessage()) {
+                      <p
+                        class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
+                      >
+                        {{ streakAtRiskHint() }}
+                      </p>
+                      <p
+                        class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                      >
+                        {{ streakAtRiskEncouragement() }}
+                      </p>
+                    } @else {
+                      <p class="streak-status-title text-sm font-medium">
+                        {{ streakTierMessage().title }}
+                      </p>
+                      <p class="streak-status-subtitle mt-0.5 text-sm">
+                        {{ streakTierMessage().subtitle }}
+                      </p>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <div class="hidden shrink-0 md:block">
+            @if (completed()) {
+              <span
+                class="habit-card-field habit-card-field--accent text-sm font-medium"
+                >✓ Feito</span
+              >
+            } @else {
+              <button
+                type="button"
+                class="habit-mark-btn rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+                [attr.aria-label]="'Marcar ' + name() + ' como feito'"
+                (click)="markToggle.emit()"
+              >
+                Marcar ✓
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="mt-1 flex flex-col gap-1 md:hidden">
+          <app-weekday-schedule
+            class="habit-card-weekdays"
+            [selectedDays]="scheduleDays()"
+            [readonly]="true"
+          />
+
+          <div
+            class="habit-marquee-viewport overflow-hidden select-none"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="marqueeAriaLabel()"
+            (click)="cycleMarqueeSpeed($event)"
+            (keydown.enter)="cycleMarqueeSpeed($event)"
+            (keydown.space)="cycleMarqueeSpeed($event)"
+          >
+            <div
+              #marqueeTrackMobile
+              class="habit-marquee-track habit-card-field habit-card-field--secondary text-sm"
+            >
+              @for (copy of [0, 1]; track copy) {
+                <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
+                      aria-hidden="true"
+                    ></i>
+                    <span>{{ trigger1() }}</span>
+                  </span>
+                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
+                      aria-hidden="true"
+                    ></i>
+                    <span>{{ trigger2() }}</span>
+                  </span>
+                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
+                      aria-hidden="true"
+                    ></i>
+                    <span>{{ motivation1() }}</span>
+                  </span>
+                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                  <span class="inline-flex items-center gap-1">
+                    <i
+                      class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
+                      aria-hidden="true"
+                    ></i>
+                    <span>{{ motivation2() }}</span>
+                  </span>
+                </span>
+              }
+            </div>
+          </div>
+
+          <div
+            class="habit-card-streak-status text-right"
+            [attr.aria-label]="streakStatusAriaLabel()"
+          >
+            @if (showMissMessage()) {
+              <p
+                class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
+              >
+                {{ streakAtRiskHint() }}
+              </p>
+              <p
+                class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+              >
+                {{ streakAtRiskEncouragement() }}
+              </p>
+            } @else {
+              <p class="text-sm">
+                <span class="streak-status-title font-medium">{{ mobileSequenceTitle() }}</span>
+                <span class="streak-status-subtitle"> - {{ mobileSequenceSubtitle() }}</span>
+              </p>
+            }
+          </div>
+
+          <p
+            class="habit-card-field habit-card-field--secondary text-right text-xs italic"
+          >
+            {{ time() }} · {{ category() }}
+          </p>
+        </div>
+
+        <div class="mt-1 md:hidden">
           @if (completed()) {
-            <span
-              class="habit-card-field habit-card-field--accent shrink-0 text-sm font-medium"
-              >✓ Feito</span
-            >
+            <div class="relative flex items-center justify-center py-1.5">
+              <button
+                type="button"
+                class="habit-card-field habit-card-field--secondary absolute left-0 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                [attr.aria-label]="'Desmarcar ' + name()"
+                (click)="markToggle.emit()"
+              >
+                <i class="bi bi-arrow-counterclockwise text-[11px]" aria-hidden="true"></i>
+                Desmarcar
+              </button>
+              <span class="habit-card-field habit-card-field--accent text-sm font-medium"
+                >✓ Feito</span
+              >
+            </div>
           } @else {
-            <button
-              type="button"
-              class="habit-mark-btn shrink-0 rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-              [attr.aria-label]="'Marcar ' + name() + ' como feito'"
-              (click)="markToggle.emit()"
-            >
-              Marcar ✓
-            </button>
+            <div class="flex justify-center">
+              <button
+                type="button"
+                class="habit-mark-btn shrink-0 rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+                [attr.aria-label]="'Marcar ' + name() + ' como feito'"
+                (click)="markToggle.emit()"
+              >
+                Marcar ✓
+              </button>
+            </div>
           }
         </div>
 
         @if (completed()) {
           <button
             type="button"
-            class="habit-card-field habit-card-field--secondary mt-3 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            class="habit-card-field habit-card-field--secondary mt-3 hidden items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary md:inline-flex dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
             [attr.aria-label]="'Desmarcar ' + name()"
             (click)="markToggle.emit()"
           >
@@ -896,6 +1025,8 @@ export class HabitCardComponent {
   private previousCompleted = false;
 
   private readonly marqueeTrack = viewChild<ElementRef<HTMLElement>>('marqueeTrack');
+  private readonly marqueeTrackMobile =
+    viewChild<ElementRef<HTMLElement>>('marqueeTrackMobile');
 
   protected readonly completeSweepPhase = signal<CompleteSweepPhase>('idle');
   protected readonly marqueeSpeed = signal<MarqueeSpeed>('default');
@@ -1016,28 +1147,30 @@ export class HabitCardComponent {
   }
 
   private applyMarqueeSpeed(speed: MarqueeSpeed): void {
-    const track = this.marqueeTrack()?.nativeElement;
-    if (!track) {
-      return;
-    }
+    const tracks = [
+      this.marqueeTrack()?.nativeElement,
+      this.marqueeTrackMobile()?.nativeElement,
+    ].filter((track): track is HTMLElement => track != null);
 
-    const animation = track.getAnimations()[0];
-    if (!animation) {
-      return;
-    }
+    for (const track of tracks) {
+      const animation = track.getAnimations()[0];
+      if (!animation) {
+        continue;
+      }
 
-    switch (speed) {
-      case 'fast':
-        animation.playbackRate = MARQUEE_FAST_PLAYBACK_RATE;
-        animation.play();
-        break;
-      case 'paused':
-        animation.pause();
-        break;
-      default:
-        animation.playbackRate = 1;
-        animation.play();
-        break;
+      switch (speed) {
+        case 'fast':
+          animation.playbackRate = MARQUEE_FAST_PLAYBACK_RATE;
+          animation.play();
+          break;
+        case 'paused':
+          animation.pause();
+          break;
+        default:
+          animation.playbackRate = 1;
+          animation.play();
+          break;
+      }
     }
   }
 
@@ -1055,6 +1188,22 @@ export class HabitCardComponent {
     return `${misses} ${label}, não desanime, complete a tarefa hoje`;
   });
 
+  protected readonly mobileSequenceTitle = computed(() => {
+    if (this.isDayOne() && !this.completed()) {
+      return this.dayOneMessage.title;
+    }
+
+    return this.streakTierMessage().title;
+  });
+
+  protected readonly mobileSequenceSubtitle = computed(() => {
+    if (this.isDayOne() && !this.completed()) {
+      return this.dayOneMessage.subtitle;
+    }
+
+    return this.streakTierMessage().subtitle;
+  });
+
   protected readonly streakStatusAriaLabel = computed(() => {
     if (this.isDayOne() && !this.completed()) {
       return `${this.dayOneMessage.title}. ${this.dayOneMessage.subtitle}`;
@@ -1067,4 +1216,5 @@ export class HabitCardComponent {
     const message = this.streakTierMessage();
     return `${message.title}. ${message.subtitle}`;
   });
+
 }
