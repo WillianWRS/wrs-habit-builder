@@ -414,9 +414,181 @@ function intensifyMinimum(action: string): string {
   return action.replace(/\d+/g, (match) => String(Number(match) * 2));
 }
 
-/** Pool fixo com 100 hábitos realistas e preenchimentos variados. */
-export function buildDemoHabitPool(): DemoHabitPoolEntry[] {
-  const pool = BLUEPRINTS.flatMap((blueprint, index) => buildVariants(blueprint, index));
+const DEMO_POOL_CURATED_SIZE = 100;
+const DEMO_POOL_SYNTHETIC_SIZE = 900;
+export const DEMO_POOL_TARGET_SIZE = DEMO_POOL_CURATED_SIZE + DEMO_POOL_SYNTHETIC_SIZE;
 
-  return pool.slice(0, 100);
+const SYNTH_VERBS = [
+  'Praticar',
+  'Estudar',
+  'Revisar',
+  'Fazer',
+  'Completar',
+  'Registrar',
+  'Organizar',
+  'Limpar',
+  'Preparar',
+  'Caminhar',
+  'Correr',
+  'Meditar',
+  'Escrever',
+  'Ler',
+  'Ouvir',
+  'Assistir',
+  'Cozinhar',
+  'Hidratar',
+  'Descansar',
+  'Alongar',
+  'Treinar',
+  'Contemplar',
+  'Respirar',
+  'Anotar',
+  'Planejar',
+  'Refletir',
+  'Priorizar',
+  'Automatizar',
+  'Simplificar',
+  'Celebrar',
+] as const;
+
+const SYNTH_OBJECTS = [
+  'respiração profunda',
+  'vocabulário novo',
+  'postura no escritório',
+  'rotina de skincare',
+  'lista de compras',
+  'inbox de e-mails',
+  'tarefas da semana',
+  'refeição saudável',
+  'pausa ativa',
+  'journal matinal',
+  'série educativa',
+  'podcast curto',
+  'flexibilidade dos quadris',
+  'mobilidade de ombros',
+  'core e abdômen',
+  'cardio leve',
+  'mindfulness guiado',
+  'gratidão diária',
+  'metas trimestrais',
+  'orçamento pessoal',
+  'investimentos',
+  'networking',
+  'hobby criativo',
+  'idioma estrangeiro',
+  'algoritmos básicos',
+  'receita nova',
+  'organização da casa',
+  'descanso ocular',
+  'higiene do sono',
+  'conexão com amigos',
+] as const;
+
+const SYNTH_CATEGORIES = [
+  'Corpo',
+  'Estudo',
+  'Mindfulness',
+  'Saúde',
+  'Casa',
+  'Trabalho',
+  'Alimentação',
+  'Criatividade',
+  'Finanças',
+  'Relacionamentos',
+] as const;
+
+const SYNTH_CATEGORY_MOTIVATIONS: Record<
+  (typeof SYNTH_CATEGORIES)[number],
+  readonly [string, string]
+> = {
+  Corpo: ['Sentir o corpo mais presente', 'Ganhar energia ao longo do dia'],
+  Estudo: ['Aprender algo útil todo dia', 'Compostar conhecimento com calma'],
+  Mindfulness: ['Responder com mais clareza', 'Fechar o dia com leveza'],
+  Saúde: ['Cuidar da saúde de forma consistente', 'Evitar picos de cansaço'],
+  Casa: ['Viver em um ambiente mais leve', 'Reduzir atrito no dia a dia'],
+  Trabalho: ['Entregar com mais foco', 'Fechar pendências pequenas cedo'],
+  Alimentação: ['Comer melhor sem radicalismos', 'Manter energia estável'],
+  Criatividade: ['Criar mesmo em dias cheios', 'Treinar expressão pessoal'],
+  Finanças: ['Enxergar o dinheiro com clareza', 'Construir segurança aos poucos'],
+  Relacionamentos: ['Manter laços vivos', 'Não deixar semanas passarem'],
+};
+
+const SYNTH_SCHEDULE_ROTATION: Weekday[][] = [
+  [...ALL_WEEKDAYS],
+  [...WEEKDAYS],
+  [...WEEKEND],
+  [1, 3, 5],
+  [0, 2, 4, 6],
+  [1, 2, 3, 4, 5],
+  [0, 6],
+];
+
+function buildSyntheticBlueprint(index: number): HabitBlueprint {
+  const verb = SYNTH_VERBS[index % SYNTH_VERBS.length];
+  const object =
+    SYNTH_OBJECTS[Math.floor(index / SYNTH_VERBS.length) % SYNTH_OBJECTS.length];
+  const category = SYNTH_CATEGORIES[index % SYNTH_CATEGORIES.length];
+  const [motivation1, motivation2] = SYNTH_CATEGORY_MOTIVATIONS[category];
+  const hour = 6 + (index % 14);
+  const minute = (index * 7) % 60;
+  const durationMinutes = 5 + (index % 20);
+
+  return {
+    name: `${verb} ${object}`,
+    category,
+    trigger1: `Ao reservar um momento para ${verb.toLowerCase()} ${object}`,
+    trigger2: 'Depois de concluir a tarefa anterior',
+    motivation1,
+    motivation2,
+    minimumAction: `Dedicar ${1 + (index % 5)} minuto(s)`,
+    optionalReminder: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+    metaGeral: `${durationMinutes} minutos`,
+  };
+}
+
+function buildSyntheticPoolEntries(count: number): DemoHabitPoolEntry[] {
+  return Array.from({ length: count }, (_, index) => {
+    const blueprint = buildSyntheticBlueprint(index);
+    const scheduleDays = [...SYNTH_SCHEDULE_ROTATION[index % SYNTH_SCHEDULE_ROTATION.length]];
+
+    if (index % 7 === 0) {
+      return dynamicHabit(
+        { ...blueprint, metaGeral: '' },
+        scheduleDays,
+        withWeekdayGoals({
+          1: {
+            meta: 'Leve',
+            minimumAction: shortenMinimum(blueprint.minimumAction),
+            optionalReminder: '07:00',
+          },
+          3: {
+            meta: 'Moderado',
+            minimumAction: blueprint.minimumAction,
+            optionalReminder: blueprint.optionalReminder,
+          },
+          5: {
+            meta: 'Intenso',
+            minimumAction: intensifyMinimum(blueprint.minimumAction),
+            optionalReminder: shiftTime(blueprint.optionalReminder, 45),
+          },
+        }),
+      );
+    }
+
+    return generalHabit(
+      blueprint,
+      scheduleDays,
+      index % 4 === 0 ? { metaGeral: '' } : {},
+    );
+  });
+}
+
+/** Pool fixo com 1000 hábitos realistas e preenchimentos variados. */
+export function buildDemoHabitPool(): DemoHabitPoolEntry[] {
+  const curated = BLUEPRINTS.flatMap((blueprint, index) =>
+    buildVariants(blueprint, index),
+  ).slice(0, DEMO_POOL_CURATED_SIZE);
+  const synthetic = buildSyntheticPoolEntries(DEMO_POOL_SYNTHETIC_SIZE);
+
+  return [...curated, ...synthetic];
 }

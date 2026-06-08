@@ -15,6 +15,9 @@ import {
   type HabitSort,
 } from '../../../../core/utils/habit-sort.utils';
 import { HabitListCardComponent } from '../../components/habit-list-card/habit-list-card.component';
+import { HabitDeleteConfirmModalComponent } from '../../../../shared/components/habit-delete-confirm-modal/habit-delete-confirm-modal.component';
+
+type PendingDelete = { id: string; name: string };
 
 export type HabitsFilter = 'active' | 'archived' | 'today';
 
@@ -27,7 +30,7 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
 @Component({
   selector: 'app-habits-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, HabitListCardComponent],
+  imports: [AppNavComponent, HabitListCardComponent, HabitDeleteConfirmModalComponent],
   template: `
     <app-nav activeTab="habits" />
 
@@ -139,13 +142,21 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
                 (edit)="editHabit(habit.id)"
                 (archive)="archiveHabit(habit.id)"
                 (restore)="restoreHabit(habit.id)"
-                (deletePermanently)="deleteHabitPermanently(habit.id)"
+                (deletePermanently)="openDeleteConfirm(habit.id, habit.name)"
               />
             </li>
           }
         </ul>
       }
     </main>
+
+    @if (pendingDelete(); as pending) {
+      <app-habit-delete-confirm-modal
+        [habitName]="pending.name"
+        (confirmed)="confirmDelete()"
+        (dismissed)="cancelDelete()"
+      />
+    }
   `,
 })
 export class HabitsPageComponent {
@@ -156,6 +167,7 @@ export class HabitsPageComponent {
   protected readonly sortOptions = HABIT_SORT_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
   protected readonly sort = signal<HabitSort>('days-desc');
+  protected readonly pendingDelete = signal<PendingDelete | null>(null);
 
   protected readonly filterCounts = computed(() => {
     const all = this.storage.habitListCards();
@@ -232,7 +244,22 @@ export class HabitsPageComponent {
     this.storage.restoreHabit(habitId);
   }
 
-  protected deleteHabitPermanently(habitId: string): void {
-    this.storage.permanentlyDeleteHabit(habitId);
+  protected openDeleteConfirm(habitId: string, habitName: string): void {
+    this.pendingDelete.set({ id: habitId, name: habitName });
+  }
+
+  protected cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  protected confirmDelete(): void {
+    const pending = this.pendingDelete();
+
+    if (!pending) {
+      return;
+    }
+
+    this.storage.permanentlyDeleteHabit(pending.id);
+    this.pendingDelete.set(null);
   }
 }
