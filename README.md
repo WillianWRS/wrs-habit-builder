@@ -1,59 +1,91 @@
-# WrsHabitBuilder
+# WRS Habit Builder
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.13.
+App web para construir e acompanhar hábitos no dia a dia. Marque o que fez hoje, acompanhe sequências e organize sua rotina — sem login, com dados salvos no navegador.
 
-## Development server
+**Produção:** [https://wrs-habit-builder.web.app](https://wrs-habit-builder.web.app)
 
-To start a local development server, run:
+## Stack
 
-```bash
-ng serve
-```
+- [Angular](https://angular.dev) 21 (standalone, signals, SSR com prerender)
+- [Tailwind CSS](https://tailwindcss.com) 4
+- [Bootstrap Icons](https://icons.getbootstrap.com)
+- Persistência em `localStorage`
+- Deploy em [Firebase Hosting](https://firebase.google.com/docs/hosting)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Funcionalidades
 
-## Code scaffolding
+- **Hoje** — lista de hábitos esperados no dia, progresso, marcar/desmarcar com animações
+- **Hábitos** — lista completa com filtros (ativos, arquivados, na tela Hoje), ordenação e edição
+- **Criar / editar** — modal com metas gerais ou por dia da semana
+- **Sequência** — histórico de conclusões, faltas e reset após 7 faltas em dias agendados
+- **Gerenciar dados** — exportar e importar backup JSON
+- **Tema** — modo claro/escuro e cor de destaque (settings)
+- **Modo demo** — preview de níveis visuais e sorteio aleatório (settings)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Rotas
 
-```bash
-ng generate component component-name
-```
+| Rota | Tela |
+|------|------|
+| `/` | Hoje |
+| `/habits` | Lista de hábitos |
+| `/data` | Gerenciar dados (backup JSON) |
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Desenvolvimento
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Pré-requisitos: Node.js 20+ e npm.
 
 ```bash
-ng test
+npm install
+npm start
 ```
 
-## Running end-to-end tests
+Abra [http://localhost:4200](http://localhost:4200). O servidor recarrega ao salvar arquivos.
 
-For end-to-end (e2e) testing, run:
+## Build
 
 ```bash
-ng e2e
+npm run build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Artefatos em `dist/wrs-habit-builder/`. O bundle do browser (usado no deploy) fica em `dist/wrs-habit-builder/browser`.
 
-## Additional Resources
+Para rodar o servidor SSR localmente após o build:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+npm run serve:ssr:wrs-habit-builder
+```
+
+## Deploy (Firebase Hosting)
+
+O projeto já está configurado com `firebase.json` e `.firebaserc` (projeto `wrs-habit-builder`).
+
+```bash
+npm run build
+firebase deploy --only hosting
+```
+
+Requisitos: [Firebase CLI](https://firebase.google.com/docs/cli) instalada e autenticada (`firebase login`).
+
+## Testes
+
+```bash
+npm test
+```
+
+## Estrutura do projeto
+
+```
+src/app/
+├── core/           # modelos, serviços (storage, tema, demo), utils
+├── features/
+│   ├── today/      # tela Hoje e cards de hábito
+│   ├── habits/     # lista e cards da biblioteca
+│   └── data/       # export/import JSON
+└── shared/         # navbar, modais, selects reutilizáveis
+```
+
+Dados persistidos na chave `wrs-habit-builder` do `localStorage` (schema versionado em `AppStorage`).
+
+## Licença
+
+Projeto privado.

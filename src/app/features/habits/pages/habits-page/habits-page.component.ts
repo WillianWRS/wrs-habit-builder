@@ -10,12 +10,12 @@ import { HabitStorageService } from '../../../../core/services/habit-storage.ser
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import type { HabitListCardView } from '../../../../core/models/today-habit-card.model';
 import {
-  HABIT_SORT_OPTIONS,
   sortHabitsByPreference,
   type HabitSort,
 } from '../../../../core/utils/habit-sort.utils';
 import { HabitListCardComponent } from '../../components/habit-list-card/habit-list-card.component';
 import { HabitDeleteConfirmModalComponent } from '../../../../shared/components/habit-delete-confirm-modal/habit-delete-confirm-modal.component';
+import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
 
 type PendingDelete = { id: string; name: string };
 
@@ -30,7 +30,12 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
 @Component({
   selector: 'app-habits-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, HabitListCardComponent, HabitDeleteConfirmModalComponent],
+  imports: [
+    AppNavComponent,
+    HabitListCardComponent,
+    HabitDeleteConfirmModalComponent,
+    HabitSortSelectComponent,
+  ],
   template: `
     <app-nav activeTab="habits" />
 
@@ -89,16 +94,11 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
           >
             Ordenar
           </label>
-          <select
-            id="habits-sort"
-            class="min-w-[11rem] rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-1.5 text-xs text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
+          <app-habit-sort-select
+            controlId="habits-sort"
             [value]="sort()"
-            (change)="onSortChange($event)"
-          >
-            @for (option of sortOptions; track option.id) {
-              <option [value]="option.id">{{ option.label }}</option>
-            }
-          </select>
+            (valueChange)="sort.set($event)"
+          />
         </div>
       </div>
 
@@ -164,7 +164,6 @@ export class HabitsPageComponent {
   private readonly habitFormModal = inject(HabitFormModalService);
 
   protected readonly filterOptions = FILTER_OPTIONS;
-  protected readonly sortOptions = HABIT_SORT_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
   protected readonly sort = signal<HabitSort>('days-desc');
   protected readonly pendingDelete = signal<PendingDelete | null>(null);
@@ -225,11 +224,6 @@ export class HabitsPageComponent {
 
   protected setFilter(value: HabitsFilter): void {
     this.filter.set(value);
-  }
-
-  protected onSortChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as HabitSort;
-    this.sort.set(value);
   }
 
   protected editHabit(habitId: string): void {

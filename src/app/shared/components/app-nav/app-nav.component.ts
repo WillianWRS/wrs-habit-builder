@@ -112,6 +112,8 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
             @if (showSettingsMenu()) {
               <div
+                animate.enter="ui-dropdown-enter"
+                animate.leave="ui-dropdown-leave"
                 class="absolute right-0 top-full z-40 mt-2 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
                 role="menu"
                 aria-label="Configurações"
@@ -303,6 +305,8 @@ export type AppNavTab = 'today' | 'habits' | 'create';
 
           @if (showMobileSettingsMenu()) {
             <div
+              animate.enter="ui-dropdown-up-enter"
+              animate.leave="ui-dropdown-up-leave"
               class="absolute bottom-full right-0 z-40 mb-2 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
               role="menu"
               aria-label="Configurações"

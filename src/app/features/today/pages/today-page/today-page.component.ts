@@ -18,11 +18,11 @@ import {
   shouldAnimateHabitList,
 } from '../../../../core/utils/habit-list-flip.utils';
 import {
-  HABIT_SORT_OPTIONS,
   sortHabitsByPreference,
   type HabitSort,
 } from '../../../../core/utils/habit-sort.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
+import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
 import { DayProgressComponent } from '../../components/day-progress/day-progress.component';
 import { HabitCardComponent } from '../../components/habit-card/habit-card.component';
 
@@ -31,7 +31,7 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
 @Component({
   selector: 'app-today-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent],
+  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent, HabitSortSelectComponent],
   template: `
     <app-nav activeTab="today" [hideNewHabit]="emptyState() === 'no-habits'" />
 
@@ -118,16 +118,11 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
               >
                 Ordenar
               </label>
-              <select
-                id="today-sort"
-                class="min-w-[11rem] rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-1.5 text-xs text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
+              <app-habit-sort-select
+                controlId="today-sort"
                 [value]="sort()"
-                (change)="onSortChange($event)"
-              >
-                @for (option of sortOptions; track option.id) {
-                  <option [value]="option.id">{{ option.label }}</option>
-                }
-              </select>
+                (valueChange)="sort.set($event)"
+              />
             </div>
           }
 
@@ -183,7 +178,6 @@ export class TodayPageComponent {
   private readonly habitListRef = viewChild<ElementRef<HTMLUListElement>>('habitList');
   private pendingFlipPositions: Map<string, DOMRect> | null = null;
 
-  protected readonly sortOptions = HABIT_SORT_OPTIONS;
   protected readonly editMode = signal(false);
   protected readonly sort = signal<HabitSort>('days-desc');
 
@@ -245,11 +239,6 @@ export class TodayPageComponent {
 
   protected toggleEditMode(): void {
     this.editMode.update((active) => !active);
-  }
-
-  protected onSortChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as HabitSort;
-    this.sort.set(value);
   }
 
   protected openHabitForm(): void {
