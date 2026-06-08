@@ -1,13 +1,22 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import {
+  captureListItemPositions,
+  flipListItems,
+  shouldAnimateHabitList,
+} from '../../../../core/utils/habit-list-flip.utils';
 import {
   HABIT_SORT_OPTIONS,
   sortHabitsByPreference,
@@ -137,9 +146,9 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
           </button>
         </div>
 
-        <ul class="space-y-3" role="list">
+        <ul #habitList class="space-y-3" role="list">
           @for (habit of habits(); track habit.id) {
-            <li>
+            <li [attr.data-habit-id]="habit.id" class="will-change-transform">
               <app-habit-card
                 [name]="habit.name"
                 [displayMeta]="habit.displayMeta"
@@ -168,7 +177,11 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
 export class TodayPageComponent {
   private readonly storage = inject(HabitStorageService);
   private readonly habitFormModal = inject(HabitFormModalService);
+  private readonly injector = inject(Injector);
   protected readonly demoMode = inject(DemoModeService);
+
+  private readonly habitListRef = viewChild<ElementRef<HTMLUListElement>>('habitList');
+  private pendingFlipPositions: Map<string, DOMRect> | null = null;
 
   protected readonly sortOptions = HABIT_SORT_OPTIONS;
   protected readonly editMode = signal(false);
@@ -214,7 +227,7 @@ export class TodayPageComponent {
     return new Intl.DateTimeFormat('pt-BR', {
       weekday: 'long',
       day: 'numeric',
-      month: 'short',
+      month: 'long',
     }).format(new Date());
   });
 
@@ -244,11 +257,42 @@ export class TodayPageComponent {
   }
 
   protected toggleHabit(id: string): void {
+    if (shouldAnimateHabitList()) {
+      const list = this.habitListRef()?.nativeElement;
+
+      if (list) {
+        this.pendingFlipPositions = captureListItemPositions(list);
+      }
+    }
+
     if (this.demoMode.isActive()) {
       this.demoMode.toggleHabit(id);
+    } else {
+      this.storage.toggleCompletion(id);
+    }
+
+    this.scheduleListFlip();
+  }
+
+  private scheduleListFlip(): void {
+    if (!this.pendingFlipPositions) {
       return;
     }
 
-    this.storage.toggleCompletion(id);
+    const previousPositions = this.pendingFlipPositions;
+    this.pendingFlipPositions = null;
+
+    afterNextRender(
+      () => {
+        const list = this.habitListRef()?.nativeElement;
+
+        if (!list) {
+          return;
+        }
+
+        flipListItems(list, previousPositions);
+      },
+      { injector: this.injector },
+    );
   }
 }

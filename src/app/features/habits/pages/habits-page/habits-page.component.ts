@@ -66,7 +66,15 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
               [attr.aria-pressed]="filter() === option.id"
               (click)="setFilter(option.id)"
             >
-              {{ option.label }}
+              <span class="inline-flex items-center gap-1.5">
+                {{ option.label }}
+                <span
+                  class="tabular-nums"
+                  [class.opacity-75]="filter() === option.id"
+                >
+                  {{ filterCounts()[option.id] }}
+                </span>
+              </span>
             </button>
           }
         </div>
@@ -148,6 +156,18 @@ export class HabitsPageComponent {
   protected readonly sortOptions = HABIT_SORT_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
   protected readonly sort = signal<HabitSort>('days-desc');
+
+  protected readonly filterCounts = computed(() => {
+    const all = this.storage.habitListCards();
+
+    return {
+      active: all.filter((habit) => !habit.archived).length,
+      archived: all.filter((habit) => habit.archived).length,
+      today: all.filter(
+        (habit) => !habit.archived && this.storage.isHabitOnToday(habit.id),
+      ).length,
+    } satisfies Record<HabitsFilter, number>;
+  });
 
   protected readonly habits = computed(() => {
     const all = this.storage.habitListCards();

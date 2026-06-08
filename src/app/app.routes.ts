@@ -15,4 +15,11 @@ export const routes: Routes = [
         (m) => m.HabitsPageComponent,
       ),
   },
+  {
+    path: 'data',
+    loadComponent: () =>
+      import(
+        './features/data/pages/data-management-page/data-management-page.component'
+      ).then((m) => m.DataManagementPageComponent),
+  },
 ];

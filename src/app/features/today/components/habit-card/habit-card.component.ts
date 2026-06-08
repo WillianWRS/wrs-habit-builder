@@ -2,8 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
+  ElementRef,
   input,
   output,
+  signal,
+  viewChild,
 } from '@angular/core';
 import { STREAK_MISS_TOLERANCE } from '../../../../core/utils/habit-streak.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
@@ -41,6 +45,21 @@ const DAY_ONE_MESSAGE = {
   title: 'Dia um',
   subtitle: 'Marque hoje para começar a sequência',
 } as const;
+
+const COMPLETE_SWEEP_MS = 400;
+
+const COMPLETE_SWEEP_BANDS = [1, 2, 3, 4] as const;
+
+type CompleteSweepPhase = 'idle' | 'in' | 'out';
+type MarqueeSpeed = 'default' | 'fast' | 'paused';
+
+const MARQUEE_SPEED_CYCLE: Record<MarqueeSpeed, MarqueeSpeed> = {
+  default: 'fast',
+  fast: 'paused',
+  paused: 'default',
+};
+
+const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
 
 @Component({
   selector: 'app-habit-card',
@@ -100,6 +119,17 @@ const DAY_ONE_MESSAGE = {
       display: flex;
       width: max-content;
       animation: habit-marquee-left 28s linear infinite;
+    }
+
+    .habit-marquee-viewport {
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .habit-marquee-viewport * {
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     @keyframes mark-btn-shake {
@@ -177,14 +207,99 @@ const DAY_ONE_MESSAGE = {
     }
 
     /* ── Base idle (nível 0) ── */
+    @keyframes habit-complete-sweep-in {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes habit-complete-sweep-out {
+      from {
+        transform: scaleX(1);
+      }
+      to {
+        transform: scaleX(0);
+      }
+    }
+
     .habit-card {
       --accent-rgb-current: var(--accent-rgb-light);
       --accent-tint-current: var(--accent-tint-light);
       --streak-subtitle-accent: 0%;
       --streak-border: rgb(var(--card-border-rgb-light));
       --streak-bg: var(--brand-light-surface);
+      --completed-bg: rgb(var(--accent-rgb-light) / 0.1);
       border: 1px solid var(--streak-border);
       background-color: var(--streak-bg);
+      overflow: hidden;
+    }
+
+    .habit-card-complete-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .habit-card-complete-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 25%;
+      background-color: var(--completed-bg);
+      transform: scaleX(1);
+      transform-origin: right center;
+    }
+
+    .habit-card-complete-band--sweep-in {
+      transform: scaleX(0);
+      animation: habit-complete-sweep-in ease-out forwards;
+    }
+
+    .habit-card-complete-band--sweep-out {
+      transform: scaleX(1);
+      animation: habit-complete-sweep-out ease-out forwards;
+    }
+
+    .habit-card-complete-band[data-band='1'] {
+      bottom: 0;
+    }
+
+    .habit-card-complete-band[data-band='2'] {
+      bottom: 25%;
+    }
+
+    .habit-card-complete-band[data-band='3'] {
+      bottom: 50%;
+    }
+
+    .habit-card-complete-band[data-band='4'] {
+      bottom: 75%;
+    }
+
+    .habit-card-complete-band[data-band='1'].habit-card-complete-band--sweep-in,
+    .habit-card-complete-band[data-band='1'].habit-card-complete-band--sweep-out {
+      animation-duration: 0.1s;
+    }
+
+    .habit-card-complete-band[data-band='2'].habit-card-complete-band--sweep-in,
+    .habit-card-complete-band[data-band='2'].habit-card-complete-band--sweep-out {
+      animation-duration: 0.2s;
+    }
+
+    .habit-card-complete-band[data-band='3'].habit-card-complete-band--sweep-in,
+    .habit-card-complete-band[data-band='3'].habit-card-complete-band--sweep-out {
+      animation-duration: 0.3s;
+    }
+
+    .habit-card-complete-band[data-band='4'].habit-card-complete-band--sweep-in,
+    .habit-card-complete-band[data-band='4'].habit-card-complete-band--sweep-out {
+      animation-duration: 0.4s;
     }
 
     :host-context(.dark) .habit-card {
@@ -192,6 +307,7 @@ const DAY_ONE_MESSAGE = {
       --accent-tint-current: var(--accent-tint-dark);
       --streak-border: rgb(var(--card-border-rgb-dark) / 0.85);
       --streak-bg: var(--card-bg-dark);
+      --completed-bg: rgb(var(--accent-rgb-dark) / 0.1);
     }
 
     .habit-card::after {
@@ -206,11 +322,94 @@ const DAY_ONE_MESSAGE = {
     }
 
     .habit-card:hover::after {
-      background-color: rgb(255 255 255 / 0.05);
+      background-color: rgb(0 0 0 / 0.04);
     }
 
     :host-context(.dark) .habit-card:hover::after {
       background-color: rgb(255 255 255 / 0.06);
+    }
+
+    .habit-card-field {
+      transition:
+        color 200ms ease-out,
+        border-color 200ms ease-out,
+        filter 200ms ease-out;
+    }
+
+    .habit-card-field--primary {
+      color: var(--brand-light-text-primary);
+    }
+
+    .habit-card:hover .habit-card-field--primary {
+      color: color-mix(in srgb, var(--brand-light-text-primary) 88%, black);
+    }
+
+    :host-context(.dark) .habit-card-field--primary {
+      color: var(--brand-text-primary);
+    }
+
+    :host-context(.dark) .habit-card:hover .habit-card-field--primary {
+      color: color-mix(in srgb, var(--brand-text-primary) 82%, white);
+    }
+
+    .habit-card-field--secondary {
+      color: var(--brand-light-text-secondary);
+    }
+
+    .habit-card:hover .habit-card-field--secondary {
+      color: color-mix(
+        in srgb,
+        var(--brand-light-text-secondary) 72%,
+        var(--brand-light-text-primary)
+      );
+    }
+
+    :host-context(.dark) .habit-card-field--secondary {
+      color: var(--brand-text-secondary);
+    }
+
+    :host-context(.dark) .habit-card:hover .habit-card-field--secondary {
+      color: color-mix(in srgb, var(--brand-text-secondary) 50%, var(--brand-text-primary));
+    }
+
+    .habit-card-field--accent {
+      color: var(--accent-light);
+    }
+
+    .habit-card:hover .habit-card-field--accent {
+      color: color-mix(in srgb, var(--accent-light) 88%, black);
+    }
+
+    :host-context(.dark) .habit-card-field--accent {
+      color: var(--accent-dark);
+    }
+
+    :host-context(.dark) .habit-card:hover .habit-card-field--accent {
+      color: color-mix(in srgb, var(--accent-dark) 85%, white);
+    }
+
+    .habit-card:hover .habit-card-field--circle {
+      border-color: color-mix(
+        in srgb,
+        var(--brand-light-text-secondary) 65%,
+        var(--brand-light-text-primary)
+      ) !important;
+    }
+
+    :host-context(.dark) .habit-card:hover .habit-card-field--circle {
+      border-color: color-mix(
+        in srgb,
+        var(--brand-text-secondary) 40%,
+        var(--accent-dark)
+      ) !important;
+    }
+
+    .habit-card:hover ::ng-deep .habit-card-weekdays {
+      filter: brightness(0.9);
+    }
+
+    :host-context(.dark) .habit-card:hover ::ng-deep .habit-card-weekdays {
+      filter: brightness(1.18);
     }
 
     /* ── Texto de streak por tier (título) ── */
@@ -371,23 +570,13 @@ const DAY_ONE_MESSAGE = {
       mask-composite: exclude;
     }
 
-    .habit-card--completed[data-streak-tier='4'] {
-      background-color: rgb(var(--accent-rgb-light) / 0.1);
-    }
-
-    :host-context(.dark) .habit-card--completed[data-streak-tier='4'] {
-      background-color: rgb(var(--accent-rgb-dark) / 0.1);
-    }
-
-    /* ── Completed base (nível 0) ── */
+    /* ── Completed base (nível 0) — fundo via overlay .habit-card-complete-bg ── */
     .habit-card--completed {
       border: 1px solid rgb(var(--accent-rgb-light) / 0.3);
-      background-color: rgb(var(--accent-rgb-light) / 0.1);
     }
 
     :host-context(.dark) .habit-card--completed {
       border-color: rgb(var(--accent-rgb-dark) / 0.3);
-      background-color: rgb(var(--accent-rgb-dark) / 0.1);
     }
 
     /* ── Completed nível 1 ── */
@@ -460,6 +649,19 @@ const DAY_ONE_MESSAGE = {
         animation: none;
       }
 
+      .habit-card-complete-band--sweep-in,
+      .habit-card-complete-band--sweep-out {
+        animation: none;
+      }
+
+      .habit-card-complete-band--sweep-in {
+        transform: scaleX(1);
+      }
+
+      .habit-card-complete-band--sweep-out {
+        transform: scaleX(0);
+      }
+
       .habit-card[data-streak-tier='4'] .streak-status-title {
         animation: none;
         color: color-mix(in srgb, rgb(var(--accent-rgb-current)) 28%, rgb(var(--accent-tint-current)));
@@ -480,23 +682,35 @@ const DAY_ONE_MESSAGE = {
   `,
   template: `
     <article
-      class="habit-card relative rounded-xl p-4 transition-colors duration-200 motion-reduce:transition-none"
+      class="habit-card relative rounded-xl p-4 motion-reduce:transition-none"
       [class.habit-card--completed]="completed()"
       [attr.data-streak-tier]="streakTier()"
       [class.border-l-4]="!completed() && streakTier() === 0"
       [class.border-l-brand-accent-orange]="!completed() && streakTier() === 0 && accent() === 'physical'"
       [class.border-l-brand-accent-purple]="!completed() && streakTier() === 0 && accent() === 'wellness'"
     >
+      @if (showCompleteOverlay()) {
+        <div class="habit-card-complete-bg" aria-hidden="true">
+          @for (band of completeSweepBands; track band) {
+            <div
+              class="habit-card-complete-band"
+              [class.habit-card-complete-band--sweep-in]="completeSweepPhase() === 'in'"
+              [class.habit-card-complete-band--sweep-out]="completeSweepPhase() === 'out'"
+              [attr.data-band]="band"
+            ></div>
+          }
+        </div>
+      }
       <div class="relative z-[1]">
         <div class="flex items-center justify-between gap-3">
           <div class="flex min-w-0 flex-1 gap-3">
-            <div class="flex shrink-0 flex-col items-center gap-1.5">
+            <div class="habit-card-day-count flex shrink-0 flex-col items-center gap-1.5">
               <span
                 class="flex size-5 items-center justify-center rounded-full border-2 transition-all duration-200 motion-reduce:transition-none"
                 [class]="
                   completed()
                     ? 'border-brand-light-primary bg-brand-light-primary dark:border-brand-primary dark:bg-brand-primary'
-                    : 'border-brand-light-text-secondary/40 dark:border-brand-text-secondary/50'
+                    : 'habit-card-field habit-card-field--circle border-brand-light-text-secondary/40 dark:border-brand-text-secondary/50'
                 "
                 aria-hidden="true"
               >
@@ -536,32 +750,40 @@ const DAY_ONE_MESSAGE = {
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                 <h2
-                  class="font-medium text-brand-light-text-primary dark:text-brand-text-primary"
+                  class="habit-card-field habit-card-field--primary font-medium"
                 >
                   {{ displayTitle() }}
                 </h2>
                 <span
-                  class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
+                  class="habit-card-field habit-card-field--secondary shrink-0 text-xs italic"
                   >{{ time() }} · {{ category() }}</span
                 >
               </div>
 
               <app-weekday-schedule
-                class="mt-2"
+                class="habit-card-weekdays mt-2"
                 [selectedDays]="scheduleDays()"
                 [readonly]="true"
               />
 
               <div
-                class="habit-marquee-viewport mt-1 overflow-hidden"
-                [attr.aria-label]="marqueeLabel()"
+                class="habit-marquee-viewport mt-1 overflow-hidden select-none"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="marqueeAriaLabel()"
+                (click)="cycleMarqueeSpeed($event)"
+                (keydown.enter)="cycleMarqueeSpeed($event)"
+                (keydown.space)="cycleMarqueeSpeed($event)"
               >
-                <div class="habit-marquee-track text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
+                <div
+                  #marqueeTrack
+                  class="habit-marquee-track habit-card-field habit-card-field--secondary text-sm"
+                >
                   @for (copy of [0, 1]; track copy) {
                     <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
                       <span class="inline-flex items-center gap-1">
                         <i
-                          class="bi bi-lightning-charge shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                          class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
                           aria-hidden="true"
                         ></i>
                         <span>{{ trigger1() }}</span>
@@ -569,7 +791,7 @@ const DAY_ONE_MESSAGE = {
                       <span class="leading-none opacity-50" aria-hidden="true">·</span>
                       <span class="inline-flex items-center gap-1">
                         <i
-                          class="bi bi-lightning-charge shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                          class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
                           aria-hidden="true"
                         ></i>
                         <span>{{ trigger2() }}</span>
@@ -577,7 +799,7 @@ const DAY_ONE_MESSAGE = {
                       <span class="leading-none opacity-50" aria-hidden="true">·</span>
                       <span class="inline-flex items-center gap-1">
                         <i
-                          class="bi bi-trophy shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                          class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
                           aria-hidden="true"
                         ></i>
                         <span>{{ motivation1() }}</span>
@@ -585,7 +807,7 @@ const DAY_ONE_MESSAGE = {
                       <span class="leading-none opacity-50" aria-hidden="true">·</span>
                       <span class="inline-flex items-center gap-1">
                         <i
-                          class="bi bi-trophy shrink-0 text-xs text-brand-light-primary dark:text-brand-primary"
+                          class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
                           aria-hidden="true"
                         ></i>
                         <span>{{ motivation2() }}</span>
@@ -597,13 +819,13 @@ const DAY_ONE_MESSAGE = {
 
               <div class="mt-1 flex items-start justify-between gap-3">
                 <p
-                  class="min-w-0 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                  class="habit-card-field habit-card-field--secondary min-w-0 text-sm"
                 >
                   Mínimo: {{ minimumAction() }}
                 </p>
 
                 <div
-                  class="shrink-0 text-right"
+                  class="habit-card-streak-status shrink-0 text-right"
                   [attr.aria-label]="streakStatusAriaLabel()"
                 >
                   @if (isDayOne() && !completed()) {
@@ -639,7 +861,7 @@ const DAY_ONE_MESSAGE = {
 
           @if (completed()) {
             <span
-              class="shrink-0 text-sm font-medium text-brand-light-primary dark:text-brand-primary"
+              class="habit-card-field habit-card-field--accent shrink-0 text-sm font-medium"
               >✓ Feito</span
             >
           } @else {
@@ -657,7 +879,7 @@ const DAY_ONE_MESSAGE = {
         @if (completed()) {
           <button
             type="button"
-            class="mt-3 inline-flex items-center gap-1.5 text-xs text-brand-light-text-secondary underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            class="habit-card-field habit-card-field--secondary mt-3 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
             [attr.aria-label]="'Desmarcar ' + name()"
             (click)="markToggle.emit()"
           >
@@ -670,6 +892,20 @@ const DAY_ONE_MESSAGE = {
   `,
 })
 export class HabitCardComponent {
+  private initialized = false;
+  private previousCompleted = false;
+
+  private readonly marqueeTrack = viewChild<ElementRef<HTMLElement>>('marqueeTrack');
+
+  protected readonly completeSweepPhase = signal<CompleteSweepPhase>('idle');
+  protected readonly marqueeSpeed = signal<MarqueeSpeed>('default');
+
+  protected readonly showCompleteOverlay = computed(
+    () => this.completed() || this.completeSweepPhase() === 'out',
+  );
+
+  protected readonly completeSweepBands = COMPLETE_SWEEP_BANDS;
+
   readonly name = input.required<string>();
   readonly displayMeta = input('');
   readonly scheduleDays = input.required<Weekday[]>();
@@ -687,6 +923,40 @@ export class HabitCardComponent {
   readonly accent = input<HabitCardAccent>('default');
 
   readonly markToggle = output<void>();
+
+  constructor() {
+    effect((onCleanup) => {
+      const isCompleted = this.completed();
+
+      if (!this.initialized) {
+        this.initialized = true;
+        this.previousCompleted = isCompleted;
+        return;
+      }
+
+      if (isCompleted && !this.previousCompleted) {
+        this.completeSweepPhase.set('in');
+
+        const timer = setTimeout(
+          () => this.completeSweepPhase.set('idle'),
+          COMPLETE_SWEEP_MS,
+        );
+
+        onCleanup(() => clearTimeout(timer));
+      } else if (!isCompleted && this.previousCompleted) {
+        this.completeSweepPhase.set('out');
+
+        const timer = setTimeout(
+          () => this.completeSweepPhase.set('idle'),
+          COMPLETE_SWEEP_MS,
+        );
+
+        onCleanup(() => clearTimeout(timer));
+      }
+
+      this.previousCompleted = isCompleted;
+    });
+  }
 
   protected readonly displayTitle = computed(() =>
     formatHabitCardTitle(this.name(), this.displayMeta()),
@@ -725,6 +995,51 @@ export class HabitCardComponent {
     () =>
       `${this.trigger1()}. ${this.trigger2()}. ${this.motivation1()}. ${this.motivation2()}.`,
   );
+
+  protected readonly marqueeAriaLabel = computed(() => {
+    const speedHint =
+      this.marqueeSpeed() === 'fast'
+        ? 'Velocidade rápida.'
+        : this.marqueeSpeed() === 'paused'
+          ? 'Pausado.'
+          : 'Velocidade normal.';
+
+    return `${this.marqueeLabel()} Toque para alterar a velocidade. ${speedHint}`;
+  });
+
+  protected cycleMarqueeSpeed(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const next = MARQUEE_SPEED_CYCLE[this.marqueeSpeed()];
+    this.marqueeSpeed.set(next);
+    this.applyMarqueeSpeed(next);
+  }
+
+  private applyMarqueeSpeed(speed: MarqueeSpeed): void {
+    const track = this.marqueeTrack()?.nativeElement;
+    if (!track) {
+      return;
+    }
+
+    const animation = track.getAnimations()[0];
+    if (!animation) {
+      return;
+    }
+
+    switch (speed) {
+      case 'fast':
+        animation.playbackRate = MARQUEE_FAST_PLAYBACK_RATE;
+        animation.play();
+        break;
+      case 'paused':
+        animation.pause();
+        break;
+      default:
+        animation.playbackRate = 1;
+        animation.play();
+        break;
+    }
+  }
 
   protected readonly streakAtRiskHint = computed(() => {
     const remaining = STREAK_MISS_TOLERANCE - this.missCount();

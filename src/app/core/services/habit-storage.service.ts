@@ -240,6 +240,41 @@ export class HabitStorageService {
     return habit;
   }
 
+  exportStorage(): AppStorage {
+    return {
+      version: CURRENT_STORAGE_VERSION,
+      habits: this.habits(),
+      completions: this.completions(),
+    };
+  }
+
+  importStorage(raw: unknown): { ok: true } | { ok: false; message: string } {
+    if (!isPlatformBrowser(this.platformId)) {
+      return { ok: false, message: 'Importação indisponível neste ambiente.' };
+    }
+
+    const migrated = this.migrate(raw);
+    const payload: AppStorage = {
+      version: CURRENT_STORAGE_VERSION,
+      habits: migrated.habits,
+      completions: migrated.completions,
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      this.habits.set(migrated.habits);
+      this.completions.set(migrated.completions);
+      return { ok: true };
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        return { ok: false, message: 'Espaço insuficiente no navegador.' };
+      }
+
+      console.error('[HabitStorage] import failed', error);
+      return { ok: false, message: 'Não foi possível importar os dados.' };
+    }
+  }
+
   toggleCompletion(habitId: string, date: string = toDateKey()): void {
     const exists = this.isCompleted(habitId, date);
 
