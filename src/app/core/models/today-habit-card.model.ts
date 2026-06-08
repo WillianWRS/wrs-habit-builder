@@ -16,9 +16,10 @@ export interface TodayHabitCard {
   motivation2: string;
   minimumAction: string;
   dayCount: number;
+  missCount: number;
+  isDayOne: boolean;
   completed: boolean;
   accent: HabitCardAccent;
-  previousDayCompleted: boolean;
 }
 
 /** View model consumido na listagem de hábitos. */

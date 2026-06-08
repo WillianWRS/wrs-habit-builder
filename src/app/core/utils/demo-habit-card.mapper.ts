@@ -1,5 +1,6 @@
 import type { DemoHabitPoolEntry } from '../models/demo-habit-pool-entry.model';
 import type { HabitCardAccent, TodayHabitCard } from '../models/today-habit-card.model';
+import { STREAK_MISS_TOLERANCE } from './habit-streak.utils';
 import {
   resolveHabitDisplayMeta,
   resolveHabitDisplayMinimumAction,
@@ -35,7 +36,6 @@ export function mapDemoPoolEntryToCard(
 ): TodayHabitCard {
   const dayCount = streakSeed % 68;
   const completed = streakSeed % 5 < 2;
-  const previousDayCompleted = streakSeed % 7 !== 0;
   const date = new Date();
 
   return {
@@ -51,8 +51,9 @@ export function mapDemoPoolEntryToCard(
     motivation2: entry.motivation2,
     minimumAction: resolveHabitDisplayMinimumAction(entry, date),
     dayCount,
+    missCount: streakSeed % STREAK_MISS_TOLERANCE,
+    isDayOne: dayCount === 0,
     completed,
     accent: mapAccent(entry.category),
-    previousDayCompleted,
   };
 }

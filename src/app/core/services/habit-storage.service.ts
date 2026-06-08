@@ -1,5 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import {
+  effect,
+  Injectable,
+  PLATFORM_ID,
+  computed,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import {
   CURRENT_STORAGE_VERSION,
   STORAGE_KEY,
@@ -16,6 +24,11 @@ import type {
 import { ALL_WEEKDAYS } from '../models/habit.model';
 import { normalizeHabit } from '../utils/habit-normalizer';
 import { getWeekday, toDateKey } from '../utils/date.utils';
+import {
+  buildInitialScheduleDaySince,
+  getHabitIdsToReset,
+  mergeScheduleDaySince,
+} from '../utils/habit-streak.utils';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +46,13 @@ export class HabitStorageService {
 
   constructor() {
     this.load();
+
+    effect(() => {
+      this.habits();
+      this.completions();
+
+      untracked(() => this.reconcileStreakResets());
+    });
   }
 
   load(): void {
@@ -144,6 +164,10 @@ export class HabitStorageService {
       return undefined;
     }
 
+    const nextScheduleDays =
+      dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
+    const todayKey = toDateKey();
+
     const updated: Habit = {
       ...existing,
       name: dto.name.trim(),
@@ -161,8 +185,13 @@ export class HabitStorageService {
       motivation1: dto.motivation1.trim(),
       motivation2: dto.motivation2.trim(),
       minimumAction: dto.minimumAction.trim(),
-      scheduleDays:
-        dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS],
+      scheduleDays: nextScheduleDays,
+      scheduleDaySince: mergeScheduleDaySince(
+        existing.scheduleDaySince,
+        existing.scheduleDays,
+        nextScheduleDays,
+        todayKey,
+      ),
       optionalReminder: dto.optionalReminder.trim(),
       showOnToday: dto.showOnToday ?? existing.showOnToday,
     };
@@ -176,6 +205,10 @@ export class HabitStorageService {
   }
 
   createHabit(dto: CreateHabitDto): Habit {
+    const scheduleDays =
+      dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
+    const createdDateKey = toDateKey();
+
     const habit: Habit = {
       id: crypto.randomUUID(),
       name: dto.name.trim(),
@@ -193,8 +226,8 @@ export class HabitStorageService {
       motivation1: dto.motivation1.trim(),
       motivation2: dto.motivation2.trim(),
       minimumAction: dto.minimumAction.trim(),
-      scheduleDays:
-        dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS],
+      scheduleDays,
+      scheduleDaySince: buildInitialScheduleDaySince(scheduleDays, createdDateKey),
       optionalReminder: dto.optionalReminder.trim(),
       archived: false,
       createdAt: new Date().toISOString(),
@@ -228,6 +261,23 @@ export class HabitStorageService {
       ]);
     }
 
+    this.persist();
+  }
+
+  private reconcileStreakResets(referenceDate: Date = new Date()): void {
+    const habits = this.habits();
+    const completions = this.completions();
+    const habitIdsToReset = new Set(
+      getHabitIdsToReset(habits, completions, referenceDate),
+    );
+
+    if (habitIdsToReset.size === 0) {
+      return;
+    }
+
+    this.completions.update((list) =>
+      list.filter((completion) => !habitIdsToReset.has(completion.habitId)),
+    );
     this.persist();
   }
 

@@ -5,6 +5,10 @@ import {
 } from '../models/habit-weekday-goal.model';
 import { ALL_WEEKDAYS, type Habit } from '../models/habit.model';
 import type { Weekday } from '../models/weekday.model';
+import { toDateKey } from './date.utils';
+import {
+  mergeScheduleDaySince,
+} from './habit-streak.utils';
 
 type LegacyHabit = Partial<Habit> & {
   triggerText?: string;
@@ -52,6 +56,28 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
 
   const trigger1 = raw.trigger1?.trim() || raw.triggerText?.trim() || '';
   const trigger2 = raw.trigger2?.trim() || trigger1;
+  const createdAt = raw.createdAt ?? new Date().toISOString();
+  const createdDateKey = toDateKey(new Date(createdAt));
+  const previousScheduleDays =
+    raw.scheduleDays && raw.scheduleDays.length > 0
+      ? ([...raw.scheduleDays] as Weekday[])
+      : scheduleDays;
+  let scheduleDaySince =
+    raw.scheduleDaySince && Object.keys(raw.scheduleDaySince).length > 0
+      ? { ...raw.scheduleDaySince }
+      : {};
+  scheduleDaySince = mergeScheduleDaySince(
+    scheduleDaySince,
+    previousScheduleDays,
+    scheduleDays,
+    createdDateKey,
+  );
+
+  for (const weekday of scheduleDays) {
+    if (!scheduleDaySince[weekday]) {
+      scheduleDaySince[weekday] = createdDateKey;
+    }
+  }
 
   return {
     id: raw.id ?? crypto.randomUUID(),
@@ -66,9 +92,10 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
     motivation2: raw.motivation2?.trim() || 'Um passo de cada vez',
     minimumAction: raw.minimumAction?.trim() ?? '',
     scheduleDays,
+    scheduleDaySince,
     optionalReminder: raw.optionalReminder?.trim() ?? '',
     archived: raw.archived ?? false,
-    createdAt: raw.createdAt ?? new Date().toISOString(),
+    createdAt,
     showOnToday: raw.showOnToday ?? true,
   };
 }

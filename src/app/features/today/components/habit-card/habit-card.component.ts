@@ -5,6 +5,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import { STREAK_MISS_TOLERANCE } from '../../../../core/utils/habit-streak.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 import type { Weekday } from '../../../../core/models/weekday.model';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
@@ -35,8 +36,11 @@ const STREAK_TIER_MESSAGES: Record<
   4: { title: 'Sequência perfeita', subtitle: 'Manteremos o topo' },
 };
 
-/** Faltas acumuladas até interromper a streak — preview fixo até persistência real */
-const STREAK_MISS_TOLERANCE = 7;
+/** Faltas acumuladas até interromper a streak e zerar os dias */
+const DAY_ONE_MESSAGE = {
+  title: 'Dia um',
+  subtitle: 'Marque hoje para começar a sequência',
+} as const;
 
 @Component({
   selector: 'app-habit-card',
@@ -602,7 +606,14 @@ const STREAK_MISS_TOLERANCE = 7;
                   class="shrink-0 text-right"
                   [attr.aria-label]="streakStatusAriaLabel()"
                 >
-                  @if (showMissMessage()) {
+                  @if (isDayOne() && !completed()) {
+                    <p class="streak-status-title text-sm font-medium">
+                      {{ dayOneMessage.title }}
+                    </p>
+                    <p class="streak-status-subtitle mt-0.5 text-sm">
+                      {{ dayOneMessage.subtitle }}
+                    </p>
+                  } @else if (showMissMessage()) {
                     <p
                       class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
                     >
@@ -670,8 +681,8 @@ export class HabitCardComponent {
   readonly motivation2 = input.required<string>();
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
-  /** Preview: assume `false` até haver completions do dia anterior */
-  readonly previousDayCompleted = input(false);
+  readonly missCount = input<number>(0);
+  readonly isDayOne = input(false);
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
 
@@ -683,9 +694,11 @@ export class HabitCardComponent {
 
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));
 
-  /** Falta ontem e ainda não marcou hoje → mensagem de risco */
+  protected readonly dayOneMessage = DAY_ONE_MESSAGE;
+
+  /** Falta em dia esperado e ainda não marcou hoje → mensagem de risco */
   protected readonly showMissMessage = computed(
-    () => !this.previousDayCompleted() && !this.completed(),
+    () => !this.isDayOne() && this.missCount() > 0 && !this.completed(),
   );
 
   protected readonly streakTierMessage = computed(
@@ -714,17 +727,24 @@ export class HabitCardComponent {
   );
 
   protected readonly streakAtRiskHint = computed(() => {
-    const remaining = STREAK_MISS_TOLERANCE - 1;
+    const remaining = STREAK_MISS_TOLERANCE - this.missCount();
     const label = remaining === 1 ? 'falta' : 'faltas';
 
-    return `mais ${remaining} ${label} seguidas interrompem a streak`;
+    return `mais ${remaining} ${label} seguidas interrompem a sequência`;
   });
 
   protected readonly streakAtRiskEncouragement = computed(() => {
-    return '1 falta, não desanime, complete a tarefa hoje';
+    const misses = this.missCount();
+    const label = misses === 1 ? 'falta' : 'faltas';
+
+    return `${misses} ${label}, não desanime, complete a tarefa hoje`;
   });
 
   protected readonly streakStatusAriaLabel = computed(() => {
+    if (this.isDayOne() && !this.completed()) {
+      return `${this.dayOneMessage.title}. ${this.dayOneMessage.subtitle}`;
+    }
+
     if (this.showMissMessage()) {
       return `${this.streakAtRiskHint()}. ${this.streakAtRiskEncouragement()}`;
     }

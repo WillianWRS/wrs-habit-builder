@@ -152,9 +152,10 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
                 [motivation2]="habit.motivation2"
                 [minimumAction]="habit.minimumAction"
                 [dayCount]="habit.dayCount"
+                [missCount]="habit.missCount"
+                [isDayOne]="habit.isDayOne"
                 [completed]="habit.completed"
                 [accent]="habit.accent"
-                [previousDayCompleted]="habit.previousDayCompleted"
                 (markToggle)="toggleHabit(habit.id)"
               />
             </li>

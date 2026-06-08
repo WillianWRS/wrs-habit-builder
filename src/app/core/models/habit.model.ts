@@ -3,6 +3,9 @@ import type { Weekday } from './weekday.model';
 
 export const ALL_WEEKDAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 
+/** Data local (YYYY-MM-DD) em que cada dia da semana passou a contar no hábito. */
+export type ScheduleDaySince = Partial<Record<Weekday, string>>;
+
 export interface Habit {
   id: string;
   name: string;
@@ -16,6 +19,7 @@ export interface Habit {
   motivation2: string;
   minimumAction: string;
   scheduleDays: Weekday[];
+  scheduleDaySince: ScheduleDaySince;
   optionalReminder: string;
   archived: boolean;
   createdAt: string;

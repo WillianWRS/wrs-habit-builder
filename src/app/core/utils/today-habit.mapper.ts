@@ -5,12 +5,13 @@ import type {
   HabitListCardView,
   TodayHabitCard,
 } from '../models/today-habit-card.model';
-import { addDays, parseDateKey, toDateKey } from './date.utils';
+import { toDateKey } from './date.utils';
 import {
   resolveHabitDisplayMeta,
   resolveHabitDisplayMinimumAction,
   resolveHabitDisplayReminder,
 } from './habit-meta.utils';
+import { computeHabitStreakMetrics } from './habit-streak.utils';
 
 function mapAccent(category: string): HabitCardAccent {
   const normalized = category.toLowerCase();
@@ -26,35 +27,13 @@ function mapAccent(category: string): HabitCardAccent {
   return 'default';
 }
 
-function countStreakDays(
-  habitId: string,
-  completions: HabitCompletion[],
-  referenceDate: Date,
-): number {
-  const completionSet = new Set(
-    completions
-      .filter((completion) => completion.habitId === habitId)
-      .map((completion) => completion.completedOn),
-  );
-
-  let streak = 0;
-  let cursor = new Date(referenceDate);
-
-  while (completionSet.has(toDateKey(cursor))) {
-    streak += 1;
-    cursor = addDays(cursor, -1);
-  }
-
-  return streak;
-}
-
 export function mapHabitToTodayCard(
   habit: Habit,
   completions: HabitCompletion[],
   date: Date = new Date(),
 ): TodayHabitCard {
   const dateKey = toDateKey(date);
-  const previousDateKey = toDateKey(addDays(date, -1));
+  const streak = computeHabitStreakMetrics(habit, completions, date);
 
   return {
     id: habit.id,
@@ -68,17 +47,14 @@ export function mapHabitToTodayCard(
     motivation1: habit.motivation1,
     motivation2: habit.motivation2,
     minimumAction: resolveHabitDisplayMinimumAction(habit, date),
-    dayCount: countStreakDays(habit.id, completions, parseDateKey(dateKey)),
+    dayCount: streak.dayCount,
+    missCount: streak.missCount,
+    isDayOne: streak.isDayOne,
     completed: completions.some(
       (completion) =>
         completion.habitId === habit.id && completion.completedOn === dateKey,
     ),
     accent: mapAccent(habit.category),
-    previousDayCompleted: completions.some(
-      (completion) =>
-        completion.habitId === habit.id &&
-        completion.completedOn === previousDateKey,
-    ),
   };
 }
 
