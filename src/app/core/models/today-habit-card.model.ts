@@ -1,3 +1,4 @@
+import type { MarqueeItem } from '../utils/habit-trigger-motivation.utils';
 import type { Weekday } from './weekday.model';
 
 export type HabitCardAccent = 'default' | 'physical' | 'wellness';
@@ -10,10 +11,7 @@ export interface TodayHabitCard {
   scheduleDays: Weekday[];
   time: string;
   category: string;
-  trigger1: string;
-  trigger2: string;
-  motivation1: string;
-  motivation2: string;
+  marqueeItems: MarqueeItem[];
   minimumAction: string;
   dayCount: number;
   missCount: number;

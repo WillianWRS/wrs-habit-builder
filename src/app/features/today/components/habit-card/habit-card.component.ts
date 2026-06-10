@@ -11,6 +11,10 @@ import {
 } from '@angular/core';
 import { STREAK_MISS_TOLERANCE } from '../../../../core/utils/habit-streak.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
+import {
+  formatMarqueeLabel,
+  type MarqueeItem,
+} from '../../../../core/utils/habit-trigger-motivation.utils';
 import type { Weekday } from '../../../../core/models/weekday.model';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
 
@@ -789,37 +793,20 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
                   >
                     @for (copy of [0, 1]; track copy) {
                       <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
-                        <span class="inline-flex items-center gap-1">
-                          <i
-                            class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                            aria-hidden="true"
-                          ></i>
-                          <span>{{ trigger1() }}</span>
-                        </span>
-                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                        <span class="inline-flex items-center gap-1">
-                          <i
-                            class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                            aria-hidden="true"
-                          ></i>
-                          <span>{{ trigger2() }}</span>
-                        </span>
-                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                        <span class="inline-flex items-center gap-1">
-                          <i
-                            class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                            aria-hidden="true"
-                          ></i>
-                          <span>{{ motivation1() }}</span>
-                        </span>
-                        <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                        <span class="inline-flex items-center gap-1">
-                          <i
-                            class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                            aria-hidden="true"
-                          ></i>
-                          <span>{{ motivation2() }}</span>
-                        </span>
+                        @for (item of marqueeItems(); track item.text + item.type; let last = $last) {
+                          <span class="inline-flex items-center gap-1">
+                            <i
+                              class="bi habit-card-field habit-card-field--accent shrink-0 text-xs"
+                              [class.bi-lightning-charge]="item.type === 'trigger'"
+                              [class.bi-trophy]="item.type === 'motivation'"
+                              aria-hidden="true"
+                            ></i>
+                            <span>{{ item.text }}</span>
+                          </span>
+                          @if (!last) {
+                            <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                          }
+                        }
                       </span>
                     }
                   </div>
@@ -909,37 +896,20 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
             >
               @for (copy of [0, 1]; track copy) {
                 <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
-                  <span class="inline-flex items-center gap-1">
-                    <i
-                      class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                      aria-hidden="true"
-                    ></i>
-                    <span>{{ trigger1() }}</span>
-                  </span>
-                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                  <span class="inline-flex items-center gap-1">
-                    <i
-                      class="bi bi-lightning-charge habit-card-field habit-card-field--accent shrink-0 text-xs"
-                      aria-hidden="true"
-                    ></i>
-                    <span>{{ trigger2() }}</span>
-                  </span>
-                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                  <span class="inline-flex items-center gap-1">
-                    <i
-                      class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                      aria-hidden="true"
-                    ></i>
-                    <span>{{ motivation1() }}</span>
-                  </span>
-                  <span class="leading-none opacity-50" aria-hidden="true">·</span>
-                  <span class="inline-flex items-center gap-1">
-                    <i
-                      class="bi bi-trophy habit-card-field habit-card-field--accent shrink-0 text-xs"
-                      aria-hidden="true"
-                    ></i>
-                    <span>{{ motivation2() }}</span>
-                  </span>
+                  @for (item of marqueeItems(); track item.text + item.type; let last = $last) {
+                    <span class="inline-flex items-center gap-1">
+                      <i
+                        class="bi habit-card-field habit-card-field--accent shrink-0 text-xs"
+                        [class.bi-lightning-charge]="item.type === 'trigger'"
+                        [class.bi-trophy]="item.type === 'motivation'"
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ item.text }}</span>
+                    </span>
+                    @if (!last) {
+                      <span class="leading-none opacity-50" aria-hidden="true">·</span>
+                    }
+                  }
                 </span>
               }
             </div>
@@ -1042,10 +1012,7 @@ export class HabitCardComponent {
   readonly scheduleDays = input.required<Weekday[]>();
   readonly time = input.required<string>();
   readonly category = input.required<string>();
-  readonly trigger1 = input.required<string>();
-  readonly trigger2 = input.required<string>();
-  readonly motivation1 = input.required<string>();
-  readonly motivation2 = input.required<string>();
+  readonly marqueeItems = input.required<MarqueeItem[]>();
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
   readonly missCount = input<number>(0);
@@ -1122,9 +1089,8 @@ export class HabitCardComponent {
     return base;
   });
 
-  protected readonly marqueeLabel = computed(
-    () =>
-      `${this.trigger1()}. ${this.trigger2()}. ${this.motivation1()}. ${this.motivation2()}.`,
+  protected readonly marqueeLabel = computed(() =>
+    formatMarqueeLabel(this.marqueeItems()),
   );
 
   protected readonly marqueeAriaLabel = computed(() => {

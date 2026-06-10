@@ -25,3 +25,21 @@ export function addDays(date: Date, delta: number): Date {
 export function getWeekday(date: Date = new Date()): Weekday {
   return date.getDay() as Weekday;
 }
+
+/** Milissegundos até 00:00:00 do dia seguinte na timezone local. */
+export function getMsUntilNextMidnight(from: Date = new Date()): number {
+  const nextMidnight = new Date(from);
+  nextMidnight.setHours(0, 0, 0, 0);
+  nextMidnight.setDate(nextMidnight.getDate() + 1);
+
+  return nextMidnight.getTime() - from.getTime();
+}
+
+/** Label do cabeçalho "Hoje · …" — compacto em mobile (≤768px). */
+export function formatTodayHeaderLabel(date: Date, compact: boolean): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    weekday: compact ? 'short' : 'long',
+    day: 'numeric',
+    month: compact ? 'short' : 'long',
+  }).format(date);
+}

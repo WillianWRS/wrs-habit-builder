@@ -9,6 +9,7 @@ import { toDateKey } from './date.utils';
 import {
   mergeScheduleDaySince,
 } from './habit-streak.utils';
+import { resolveTriggerMotivationFields } from './habit-trigger-motivation.utils';
 
 type LegacyHabit = Partial<Habit> & {
   triggerText?: string;
@@ -54,8 +55,6 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
       ? ([...raw.scheduleDays] as Weekday[])
       : ALL_WEEKDAYS;
 
-  const trigger1 = raw.trigger1?.trim() || raw.triggerText?.trim() || '';
-  const trigger2 = raw.trigger2?.trim() || trigger1;
   const createdAt = raw.createdAt ?? new Date().toISOString();
   const createdDateKey = toDateKey(new Date(createdAt));
   const previousScheduleDays =
@@ -79,6 +78,8 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
     }
   }
 
+  const triggerMotivation = resolveTriggerMotivationFields(raw);
+
   return {
     id: raw.id ?? crypto.randomUUID(),
     name: raw.name?.trim() ?? '',
@@ -86,10 +87,7 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
     metasDinamicas: raw.metasDinamicas ?? false,
     weekdayGoals: normalizeWeekdayGoals(raw.weekdayGoals),
     category: resolveCategory(raw.category),
-    trigger1,
-    trigger2,
-    motivation1: raw.motivation1?.trim() || 'Consistência em construção',
-    motivation2: raw.motivation2?.trim() || 'Um passo de cada vez',
+    ...triggerMotivation,
     minimumAction: raw.minimumAction?.trim() ?? '',
     scheduleDays,
     scheduleDaySince,

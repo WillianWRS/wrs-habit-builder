@@ -34,6 +34,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
           <a
             routerLink="/"
             class="group shrink-0 rounded-[18%] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+            (dblclick)="revealPreviewActions($event)"
           >
             <img
               src="/habit builder.png"
@@ -129,7 +130,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                       class="bi bi-arrow-counterclockwise shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
                       aria-hidden="true"
                     ></i>
-                    Dados reais
+                    Sair do modo demonstrativo
                   </button>
                   <div
                     class="my-1 border-t border-brand-light-border dark:border-brand-border"
@@ -169,31 +170,33 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                   Alterar tema
                 </button>
 
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-                  role="menuitem"
-                  (click)="activatePredefinedDemo()"
-                >
-                  <i
-                    class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-                    aria-hidden="true"
-                  ></i>
-                  Preview levels
-                </button>
+                @if (showPreviewActions()) {
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                    role="menuitem"
+                    (click)="activatePredefinedDemo()"
+                  >
+                    <i
+                      class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                      aria-hidden="true"
+                    ></i>
+                    Preview levels
+                  </button>
 
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-                  role="menuitem"
-                  (click)="activateRandomDemo()"
-                >
-                  <i
-                    class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-                    aria-hidden="true"
-                  ></i>
-                  Preview random
-                </button>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                    role="menuitem"
+                    (click)="activateRandomDemo()"
+                  >
+                    <i
+                      class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                      aria-hidden="true"
+                    ></i>
+                    Preview random
+                  </button>
+                }
 
                 <button
                   type="button"
@@ -322,7 +325,7 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                     class="bi bi-arrow-counterclockwise shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
                     aria-hidden="true"
                   ></i>
-                  Dados reais
+                  Sair do modo demonstrativo
                 </button>
                 <div
                   class="my-1 border-t border-brand-light-border dark:border-brand-border"
@@ -360,31 +363,33 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                 Alterar tema
               </button>
 
-              <button
-                type="button"
-                class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-                role="menuitem"
-                (click)="activatePredefinedDemo()"
-              >
-                <i
-                  class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-                  aria-hidden="true"
-                ></i>
-                Preview levels
-              </button>
+              @if (showPreviewActions()) {
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                  role="menuitem"
+                  (click)="activatePredefinedDemo()"
+                >
+                  <i
+                    class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                    aria-hidden="true"
+                  ></i>
+                  Preview levels
+                </button>
 
-              <button
-                type="button"
-                class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-                role="menuitem"
-                (click)="activateRandomDemo()"
-              >
-                <i
-                  class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-                  aria-hidden="true"
-                ></i>
-                Preview random
-              </button>
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                  role="menuitem"
+                  (click)="activateRandomDemo()"
+                >
+                  <i
+                    class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                    aria-hidden="true"
+                  ></i>
+                  Preview random
+                </button>
+              }
 
               <button
                 type="button"
@@ -418,6 +423,7 @@ export class AppNavComponent {
   protected readonly demoMode = this.demoModeService;
   protected readonly showSettingsMenu = signal(false);
   protected readonly showMobileSettingsMenu = signal(false);
+  protected readonly showPreviewActions = signal(false);
 
   private readonly settingsAnchor =
     viewChild<ElementRef<HTMLElement>>('settingsAnchor');
@@ -464,14 +470,22 @@ export class AppNavComponent {
     this.closeSettingsMenus();
   }
 
+  protected revealPreviewActions(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showPreviewActions.set(true);
+  }
+
   protected activatePredefinedDemo(): void {
     this.demoModeService.activatePredefined();
     this.closeSettingsMenus();
+    this.navigateToTodayIfPreviewRoute();
   }
 
   protected activateRandomDemo(): void {
     this.demoModeService.activateRandom();
     this.closeSettingsMenus();
+    this.navigateToTodayIfPreviewRoute();
   }
 
   protected exitDemoMode(): void {
@@ -491,5 +505,13 @@ export class AppNavComponent {
   private closeSettingsMenus(): void {
     this.showSettingsMenu.set(false);
     this.showMobileSettingsMenu.set(false);
+  }
+
+  private navigateToTodayIfPreviewRoute(): void {
+    const path = this.router.url.split('?')[0].split('#')[0];
+
+    if (path === '/habits' || path === '/data') {
+      void this.router.navigate(['/']);
+    }
   }
 }

@@ -23,6 +23,7 @@ import type {
 } from '../models/today-habit-card.model';
 import { ALL_WEEKDAYS } from '../models/habit.model';
 import { normalizeHabit } from '../utils/habit-normalizer';
+import { isLegacyTriggerMotivationHabit } from '../utils/habit-trigger-motivation.utils';
 import { getWeekday, toDateKey } from '../utils/date.utils';
 import {
   buildInitialScheduleDaySince,
@@ -30,10 +31,12 @@ import {
   mergeScheduleDaySince,
 } from '../utils/habit-streak.utils';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
+import { CurrentDayService } from './current-day.service';
 
 @Injectable({ providedIn: 'root' })
 export class HabitStorageService {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly currentDay = inject(CurrentDayService);
 
   private readonly habits = signal<Habit[]>([]);
   private readonly completions = signal<HabitCompletion[]>([]);
@@ -41,8 +44,14 @@ export class HabitStorageService {
   readonly habitsReadonly = this.habits.asReadonly();
   readonly completionsReadonly = this.completions.asReadonly();
 
-  readonly todayHabitCards = computed(() => this.buildTodayCards());
-  readonly habitListCards = computed(() => this.buildAllHabitListCards());
+  readonly todayHabitCards = computed(() => {
+    const date = this.currentDay.today();
+    return this.buildTodayCards(date);
+  });
+  readonly habitListCards = computed(() => {
+    const date = this.currentDay.today();
+    return this.buildAllHabitListCards(date);
+  });
 
   constructor() {
     this.load();
@@ -50,8 +59,9 @@ export class HabitStorageService {
     effect(() => {
       this.habits();
       this.completions();
+      const referenceDate = this.currentDay.today();
 
-      untracked(() => this.reconcileStreakResets());
+      untracked(() => this.reconcileStreakResets(referenceDate));
     });
   }
 
@@ -91,8 +101,9 @@ export class HabitStorageService {
     return this.habits().filter((habit) => habit.archived);
   }
 
-  isHabitOnToday(habitId: string, date: Date = new Date()): boolean {
-    return this.getTodayHabits(date).some((habit) => habit.id === habitId);
+  isHabitOnToday(habitId: string, date?: Date): boolean {
+    const referenceDate = date ?? this.currentDay.today();
+    return this.getTodayHabits(referenceDate).some((habit) => habit.id === habitId);
   }
 
   archiveHabit(id: string): void {
@@ -139,8 +150,9 @@ export class HabitStorageService {
     this.persist();
   }
 
-  getTodayHabits(date: Date = new Date()): Habit[] {
-    const weekday = getWeekday(date);
+  getTodayHabits(date?: Date): Habit[] {
+    const referenceDate = date ?? this.currentDay.today();
+    const weekday = getWeekday(referenceDate);
 
     return this.habits().filter(
       (habit) =>
@@ -150,10 +162,11 @@ export class HabitStorageService {
     );
   }
 
-  isCompleted(habitId: string, date: string = toDateKey()): boolean {
+  isCompleted(habitId: string, date?: string): boolean {
+    const targetDate = date ?? this.currentDay.todayKey();
     return this.completions().some(
       (completion) =>
-        completion.habitId === habitId && completion.completedOn === date,
+        completion.habitId === habitId && completion.completedOn === targetDate,
     );
   }
 
@@ -166,7 +179,7 @@ export class HabitStorageService {
 
     const nextScheduleDays =
       dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
-    const todayKey = toDateKey();
+    const todayKey = this.currentDay.todayKey();
 
     const updated: Habit = {
       ...existing,
@@ -182,8 +195,16 @@ export class HabitStorageService {
       category: dto.category.trim(),
       trigger1: dto.trigger1.trim(),
       trigger2: dto.trigger2.trim(),
+      trigger3: dto.trigger3.trim(),
+      trigger1Visible: dto.trigger1Visible,
+      trigger2Visible: dto.trigger2Visible,
+      trigger3Visible: dto.trigger3Visible,
       motivation1: dto.motivation1.trim(),
       motivation2: dto.motivation2.trim(),
+      motivation3: dto.motivation3.trim(),
+      motivation1Visible: dto.motivation1Visible,
+      motivation2Visible: dto.motivation2Visible,
+      motivation3Visible: dto.motivation3Visible,
       minimumAction: dto.minimumAction.trim(),
       scheduleDays: nextScheduleDays,
       scheduleDaySince: mergeScheduleDaySince(
@@ -207,7 +228,7 @@ export class HabitStorageService {
   createHabit(dto: CreateHabitDto): Habit {
     const scheduleDays =
       dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
-    const createdDateKey = toDateKey();
+    const createdDateKey = this.currentDay.todayKey();
 
     const habit: Habit = {
       id: crypto.randomUUID(),
@@ -223,8 +244,16 @@ export class HabitStorageService {
       category: dto.category.trim(),
       trigger1: dto.trigger1.trim(),
       trigger2: dto.trigger2.trim(),
+      trigger3: dto.trigger3.trim(),
+      trigger1Visible: dto.trigger1Visible,
+      trigger2Visible: dto.trigger2Visible,
+      trigger3Visible: dto.trigger3Visible,
       motivation1: dto.motivation1.trim(),
       motivation2: dto.motivation2.trim(),
+      motivation3: dto.motivation3.trim(),
+      motivation1Visible: dto.motivation1Visible,
+      motivation2Visible: dto.motivation2Visible,
+      motivation3Visible: dto.motivation3Visible,
       minimumAction: dto.minimumAction.trim(),
       scheduleDays,
       scheduleDaySince: buildInitialScheduleDaySince(scheduleDays, createdDateKey),
@@ -246,6 +275,54 @@ export class HabitStorageService {
       habits: this.habits(),
       completions: this.completions(),
     };
+  }
+
+  needsTriggerMotivationSchemaUpgrade(): boolean {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+
+      if (!raw) {
+        return false;
+      }
+
+      const data = JSON.parse(raw) as Partial<AppStorage>;
+
+      return (data.habits ?? []).some((habit) =>
+        isLegacyTriggerMotivationHabit(habit),
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  upgradeTriggerMotivationSchema(): boolean {
+    if (!isPlatformBrowser(this.platformId)) {
+      return false;
+    }
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+
+      if (!raw) {
+        return false;
+      }
+
+      const data = JSON.parse(raw) as Partial<AppStorage>;
+      const habits = (data.habits ?? []).map((habit) => normalizeHabit(habit));
+
+      this.habits.set(habits);
+      this.completions.set(data.completions ?? []);
+      this.persist();
+
+      return true;
+    } catch (error) {
+      console.error('[HabitStorage] trigger/motivation upgrade failed', error);
+      return false;
+    }
   }
 
   importStorage(raw: unknown): { ok: true } | { ok: false; message: string } {
@@ -275,14 +352,15 @@ export class HabitStorageService {
     }
   }
 
-  toggleCompletion(habitId: string, date: string = toDateKey()): void {
-    const exists = this.isCompleted(habitId, date);
+  toggleCompletion(habitId: string, date?: string): void {
+    const targetDate = date ?? this.currentDay.todayKey();
+    const exists = this.isCompleted(habitId, targetDate);
 
     if (exists) {
       this.completions.update((list) =>
         list.filter(
           (completion) =>
-            !(completion.habitId === habitId && completion.completedOn === date),
+            !(completion.habitId === habitId && completion.completedOn === targetDate),
         ),
       );
     } else {
@@ -291,7 +369,7 @@ export class HabitStorageService {
         {
           id: crypto.randomUUID(),
           habitId,
-          completedOn: date,
+          completedOn: targetDate,
         },
       ]);
     }
@@ -299,7 +377,7 @@ export class HabitStorageService {
     this.persist();
   }
 
-  private reconcileStreakResets(referenceDate: Date = new Date()): void {
+  private reconcileStreakResets(referenceDate: Date): void {
     const habits = this.habits();
     const completions = this.completions();
     const habitIdsToReset = new Set(
@@ -316,7 +394,7 @@ export class HabitStorageService {
     this.persist();
   }
 
-  private buildTodayCards(date: Date = new Date()): TodayHabitCard[] {
+  private buildTodayCards(date: Date): TodayHabitCard[] {
     const completions = this.completions();
 
     return this.getTodayHabits(date).map((habit) =>
@@ -324,7 +402,7 @@ export class HabitStorageService {
     );
   }
 
-  private buildAllHabitListCards(date: Date = new Date()): HabitListCardView[] {
+  private buildAllHabitListCards(date: Date): HabitListCardView[] {
     const completions = this.completions();
 
     return this.habits().map((habit) =>

@@ -6,6 +6,7 @@ import {
   output,
 } from '@angular/core';
 import type { HabitCardAccent } from '../../../../core/models/today-habit-card.model';
+import type { MarqueeItem } from '../../../../core/utils/habit-trigger-motivation.utils';
 import type { Weekday } from '../../../../core/models/weekday.model';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
@@ -83,59 +84,29 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
                 [readonly]="true"
               />
 
-              <ul
-                class="mt-2 space-y-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-                role="list"
-              >
-                <li class="flex items-start gap-1.5">
-                  <i
-                    class="bi bi-lightning-charge mt-0.5 shrink-0 text-xs"
-                    [class]="
-                      archived()
-                        ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                        : 'text-brand-light-primary dark:text-brand-primary'
-                    "
-                    aria-hidden="true"
-                  ></i>
-                  <span>{{ trigger1() }}</span>
-                </li>
-                <li class="flex items-start gap-1.5">
-                  <i
-                    class="bi bi-lightning-charge mt-0.5 shrink-0 text-xs"
-                    [class]="
-                      archived()
-                        ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                        : 'text-brand-light-primary dark:text-brand-primary'
-                    "
-                    aria-hidden="true"
-                  ></i>
-                  <span>{{ trigger2() }}</span>
-                </li>
-                <li class="flex items-start gap-1.5">
-                  <i
-                    class="bi bi-trophy mt-0.5 shrink-0 text-xs"
-                    [class]="
-                      archived()
-                        ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                        : 'text-brand-light-primary dark:text-brand-primary'
-                    "
-                    aria-hidden="true"
-                  ></i>
-                  <span>{{ motivation1() }}</span>
-                </li>
-                <li class="flex items-start gap-1.5">
-                  <i
-                    class="bi bi-trophy mt-0.5 shrink-0 text-xs"
-                    [class]="
-                      archived()
-                        ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                        : 'text-brand-light-primary dark:text-brand-primary'
-                    "
-                    aria-hidden="true"
-                  ></i>
-                  <span>{{ motivation2() }}</span>
-                </li>
-              </ul>
+              @if (marqueeItems().length > 0) {
+                <ul
+                  class="mt-2 space-y-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                  role="list"
+                >
+                  @for (item of marqueeItems(); track item.text + item.type) {
+                    <li class="flex items-start gap-1.5">
+                      <i
+                        class="bi mt-0.5 shrink-0 text-xs"
+                        [class.bi-lightning-charge]="item.type === 'trigger'"
+                        [class.bi-trophy]="item.type === 'motivation'"
+                        [class]="
+                          archived()
+                            ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
+                            : 'text-brand-light-primary dark:text-brand-primary'
+                        "
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ item.text }}</span>
+                    </li>
+                  }
+                </ul>
+              }
 
               <p
                 class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
@@ -194,10 +165,7 @@ export class HabitListCardComponent {
   readonly scheduleDays = input.required<Weekday[]>();
   readonly time = input.required<string>();
   readonly category = input.required<string>();
-  readonly trigger1 = input.required<string>();
-  readonly trigger2 = input.required<string>();
-  readonly motivation1 = input.required<string>();
-  readonly motivation2 = input.required<string>();
+  readonly marqueeItems = input.required<MarqueeItem[]>();
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
   readonly accent = input<HabitCardAccent>('default');

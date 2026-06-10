@@ -2,6 +2,29 @@ import { ALL_WEEKDAYS } from '../models/habit.model';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
 import { mapDemoPoolEntryToCard } from './demo-habit-card.mapper';
 import { buildDemoHabitPool } from './demo-habits-pool.data';
+import { buildMarqueeItems } from './habit-trigger-motivation.utils';
+
+function demoMarquee(
+  trigger1: string,
+  trigger2: string,
+  motivation1: string,
+  motivation2: string,
+) {
+  return buildMarqueeItems({
+    trigger1,
+    trigger2,
+    trigger3: '',
+    trigger1Visible: true,
+    trigger2Visible: !!trigger2.trim(),
+    trigger3Visible: false,
+    motivation1,
+    motivation2,
+    motivation3: '',
+    motivation1Visible: true,
+    motivation2Visible: !!motivation2.trim(),
+    motivation3Visible: false,
+  });
+}
 
 function shuffleIndices(length: number): number[] {
   const indices = Array.from({ length }, (_, index) => index);
@@ -27,10 +50,12 @@ export class DemoHabitsData {
         scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
-        trigger1: 'Borda 4px fixa laranja + claro',
-        trigger2: 'Cores fluem dentro da borda',
-        motivation1: 'Sequência lendária',
-        motivation2: '66 dias ou mais',
+        marqueeItems: demoMarquee(
+          'Borda 4px fixa laranja + claro',
+          'Cores fluem dentro da borda',
+          'Sequência lendária',
+          '66 dias ou mais',
+        ),
         minimumAction: '1 unidade',
         dayCount: 72,
         missCount: 0,
@@ -45,10 +70,12 @@ export class DemoHabitsData {
         scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
-        trigger1: 'Pulse animado no glow',
-        trigger2: 'Borda pulsante suave',
-        motivation1: 'Consistência de elite',
-        motivation2: '50 dias seguidos',
+        marqueeItems: demoMarquee(
+          'Pulse animado no glow',
+          'Borda pulsante suave',
+          'Consistência de elite',
+          '50 dias seguidos',
+        ),
         minimumAction: '1 unidade',
         dayCount: 50,
         missCount: 0,
@@ -63,10 +90,12 @@ export class DemoHabitsData {
         scheduleDays: [1, 2, 3, 4, 5],
         time: '08:00',
         category: 'Preview',
-        trigger1: 'Borda laranja mais intensa',
-        trigger2: 'Glow + highlight interno',
-        motivation1: 'Hábito consolidado',
-        motivation2: '35 dias seguidos',
+        marqueeItems: demoMarquee(
+          'Borda laranja mais intensa',
+          'Glow + highlight interno',
+          'Hábito consolidado',
+          '35 dias seguidos',
+        ),
         minimumAction: '1 unidade',
         dayCount: 35,
         missCount: 1,
@@ -81,10 +110,12 @@ export class DemoHabitsData {
         scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
-        trigger1: 'Borda 2px com tom laranja',
-        trigger2: 'Sombra sutil externa',
-        motivation1: 'Primeiro marco de consistência',
-        motivation2: '15 dias seguidos',
+        marqueeItems: demoMarquee(
+          'Borda 2px com tom laranja',
+          'Sombra sutil externa',
+          'Primeiro marco de consistência',
+          '15 dias seguidos',
+        ),
         minimumAction: '1 unidade',
         dayCount: 15,
         missCount: 0,
@@ -99,10 +130,12 @@ export class DemoHabitsData {
         scheduleDays: [...ALL_WEEKDAYS],
         time: '08:00',
         category: 'Preview',
-        trigger1: 'Borda padrão atual',
-        trigger2: 'Sem efeitos extras',
-        motivation1: 'Referência visual do nível inicial',
-        motivation2: 'A partir de 15 dias evolui',
+        marqueeItems: demoMarquee(
+          'Borda padrão atual',
+          'Sem efeitos extras',
+          'Referência visual do nível inicial',
+          'A partir de 15 dias evolui',
+        ),
         minimumAction: '1 unidade',
         dayCount: 0,
         missCount: 0,

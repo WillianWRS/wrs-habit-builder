@@ -23,8 +23,8 @@ export type HabitsFilter = 'active' | 'archived' | 'today';
 
 const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
   { id: 'active', label: 'Ativos' },
-  { id: 'archived', label: 'Arquivados' },
   { id: 'today', label: 'Na tela Hoje' },
+  { id: 'archived', label: 'Arquivados' },
 ];
 
 @Component({
@@ -87,19 +87,11 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
           }
         </div>
 
-        <div class="flex items-center gap-2">
-          <label
-            for="habits-sort"
-            class="shrink-0 text-xs font-medium text-brand-light-text-secondary dark:text-brand-text-secondary"
-          >
-            Ordenar
-          </label>
-          <app-habit-sort-select
-            controlId="habits-sort"
-            [value]="sort()"
-            (valueChange)="sort.set($event)"
-          />
-        </div>
+        <app-habit-sort-select
+          controlId="habits-sort"
+          [value]="sort()"
+          (valueChange)="sort.set($event)"
+        />
       </div>
 
       @if (showEmpty()) {
@@ -131,10 +123,7 @@ const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
                 [scheduleDays]="habit.scheduleDays"
                 [time]="habit.time"
                 [category]="habit.category"
-                [trigger1]="habit.trigger1"
-                [trigger2]="habit.trigger2"
-                [motivation1]="habit.motivation1"
-                [motivation2]="habit.motivation2"
+                [marqueeItems]="habit.marqueeItems"
                 [minimumAction]="habit.minimumAction"
                 [dayCount]="habit.dayCount"
                 [accent]="habit.accent"
@@ -165,7 +154,7 @@ export class HabitsPageComponent {
 
   protected readonly filterOptions = FILTER_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
-  protected readonly sort = signal<HabitSort>('days-desc');
+  protected readonly sort = signal<HabitSort>('time-asc');
   protected readonly pendingDelete = signal<PendingDelete | null>(null);
 
   protected readonly filterCounts = computed(() => {

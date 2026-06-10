@@ -10,13 +10,16 @@ import {
   viewChild,
 } from '@angular/core';
 import { DemoModeService } from '../../../../core/services/demo-mode.service';
+import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import { ViewportService } from '../../../../core/services/viewport.service';
 import {
   captureListItemPositions,
   flipListItems,
   shouldAnimateHabitList,
 } from '../../../../core/utils/habit-list-flip.utils';
+import { formatTodayHeaderLabel } from '../../../../core/utils/date.utils';
 import {
   sortHabitsByPreference,
   type HabitSort,
@@ -98,47 +101,28 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
         </section>
       } @else {
         @if (demoMode.isActive()) {
-          <p
-            class="mb-4 rounded-lg border border-brand-light-primary/25 bg-brand-light-primary/5 px-4 py-2 text-center text-xs text-brand-light-text-secondary dark:border-brand-primary/25 dark:bg-brand-primary/5 dark:text-brand-text-secondary"
-          >
-            Modo demonstrativo — alterações não são salvas no navegador.
-          </p>
+          <div class="mb-4 flex flex-col items-center gap-3">
+            <p
+              class="w-full rounded-lg border border-brand-light-primary/25 bg-brand-light-primary/5 px-4 py-2 text-center text-xs text-brand-light-text-secondary dark:border-brand-primary/25 dark:bg-brand-primary/5 dark:text-brand-text-secondary"
+            >
+              Modo demonstrativo — alterações não são salvas no navegador.
+            </p>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-lg border border-brand-light-primary px-5 py-2.5 text-sm font-semibold text-brand-light-primary transition-colors hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:border-brand-primary dark:text-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              (click)="exitDemoMode()"
+            >
+              Sair do modo demonstrativo
+            </button>
+          </div>
         }
 
-        <div
-          class="mb-3 flex min-h-9 items-center gap-3"
-          [class.justify-end]="!editMode()"
-          [class.justify-between]="editMode()"
-        >
-          @if (editMode()) {
-            <div class="flex items-center gap-2">
-              <label
-                for="today-sort"
-                class="shrink-0 text-xs font-medium text-brand-light-text-secondary dark:text-brand-text-secondary"
-              >
-                Ordenar
-              </label>
-              <app-habit-sort-select
-                controlId="today-sort"
-                [value]="sort()"
-                (valueChange)="sort.set($event)"
-              />
-            </div>
-          }
-
-          <button
-            type="button"
-            class="rounded-lg border border-brand-light-border p-2 text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:bg-brand-light-bg hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:bg-brand-bg dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
-            [attr.aria-label]="editMode() ? 'Salvar ordenação' : 'Ordenar lista'"
-            [attr.aria-pressed]="editMode()"
-            (click)="toggleEditMode()"
-          >
-            @if (editMode()) {
-              <i class="bi bi-check-lg text-sm" aria-hidden="true"></i>
-            } @else {
-              <i class="bi bi-funnel text-sm" aria-hidden="true"></i>
-            }
-          </button>
+        <div class="mb-3 flex min-h-9 items-center justify-end">
+          <app-habit-sort-select
+            controlId="today-sort"
+            [value]="sort()"
+            (valueChange)="sort.set($event)"
+          />
         </div>
 
         <ul #habitList class="space-y-3" role="list">
@@ -150,10 +134,7 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
                 [scheduleDays]="habit.scheduleDays"
                 [time]="habit.time"
                 [category]="habit.category"
-                [trigger1]="habit.trigger1"
-                [trigger2]="habit.trigger2"
-                [motivation1]="habit.motivation1"
-                [motivation2]="habit.motivation2"
+                [marqueeItems]="habit.marqueeItems"
                 [minimumAction]="habit.minimumAction"
                 [dayCount]="habit.dayCount"
                 [missCount]="habit.missCount"
@@ -171,6 +152,8 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
 })
 export class TodayPageComponent {
   private readonly storage = inject(HabitStorageService);
+  private readonly currentDay = inject(CurrentDayService);
+  private readonly viewport = inject(ViewportService);
   private readonly habitFormModal = inject(HabitFormModalService);
   private readonly injector = inject(Injector);
   protected readonly demoMode = inject(DemoModeService);
@@ -178,8 +161,7 @@ export class TodayPageComponent {
   private readonly habitListRef = viewChild<ElementRef<HTMLUListElement>>('habitList');
   private pendingFlipPositions: Map<string, DOMRect> | null = null;
 
-  protected readonly editMode = signal(false);
-  protected readonly sort = signal<HabitSort>('days-desc');
+  protected readonly sort = signal<HabitSort>('time-asc');
 
   protected readonly habits = computed(() => {
     const source = this.demoMode.isActive()
@@ -218,11 +200,8 @@ export class TodayPageComponent {
   );
 
   protected readonly todayLabel = computed(() => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    }).format(new Date());
+    const date = this.currentDay.today();
+    return formatTodayHeaderLabel(date, this.viewport.isMobile());
   });
 
   protected readonly doneCount = computed(
@@ -237,12 +216,12 @@ export class TodayPageComponent {
       : this.storage.todayHabitCards().length,
   );
 
-  protected toggleEditMode(): void {
-    this.editMode.update((active) => !active);
-  }
-
   protected openHabitForm(): void {
     this.habitFormModal.open();
+  }
+
+  protected exitDemoMode(): void {
+    this.demoMode.deactivate();
   }
 
   protected toggleHabit(id: string): void {

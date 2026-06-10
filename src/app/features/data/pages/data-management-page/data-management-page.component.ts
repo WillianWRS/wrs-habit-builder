@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  computed,
   inject,
   signal,
   viewChild,
@@ -55,7 +56,7 @@ const IMPORT_STEP_LABELS = [
           Backup
         </h2>
 
-        <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg disabled:cursor-not-allowed disabled:opacity-50 dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
@@ -75,6 +76,18 @@ const IMPORT_STEP_LABELS = [
             <i class="bi bi-upload text-base" aria-hidden="true"></i>
             Importar JSON
           </button>
+
+          @if (showSchemaUpgrade()) {
+            <button
+              type="button"
+              class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-400/50 dark:text-amber-300 dark:hover:bg-amber-500/20 dark:focus-visible:ring-amber-400 dark:focus-visible:ring-offset-brand-bg"
+              [disabled]="isImporting() || isUpgradingSchema()"
+              (click)="upgradeJsonSchema()"
+            >
+              <i class="bi bi-arrow-repeat text-base" aria-hidden="true"></i>
+              Atualizar JSON
+            </button>
+          }
         </div>
 
         <input
@@ -124,9 +137,42 @@ export class DataManagementPageComponent {
 
   protected readonly feedback = signal<ImportFeedback | null>(null);
   protected readonly isImporting = signal(false);
+  protected readonly isUpgradingSchema = signal(false);
   protected readonly showImportProgress = signal(false);
   protected readonly importProgress = signal(0);
   protected readonly importStepLabel = signal('');
+  private readonly schemaUpgradeNeeded = signal(
+    this.storage.needsTriggerMotivationSchemaUpgrade(),
+  );
+
+  protected readonly showSchemaUpgrade = computed(
+    () => this.schemaUpgradeNeeded(),
+  );
+
+  protected upgradeJsonSchema(): void {
+    if (this.isImporting() || this.isUpgradingSchema()) {
+      return;
+    }
+
+    this.feedback.set(null);
+    this.isUpgradingSchema.set(true);
+
+    const upgraded = this.storage.upgradeTriggerMotivationSchema();
+
+    this.isUpgradingSchema.set(false);
+
+    if (!upgraded) {
+      this.feedback.set({
+        type: 'error',
+        message: 'Não foi possível atualizar o JSON.',
+      });
+      return;
+    }
+
+    this.schemaUpgradeNeeded.set(
+      this.storage.needsTriggerMotivationSchemaUpgrade(),
+    );
+  }
 
   protected exportJson(): void {
     const payload = this.storage.exportStorage();
@@ -223,6 +269,9 @@ export class DataManagementPageComponent {
     }
 
     this.isImporting.set(false);
+    this.schemaUpgradeNeeded.set(
+      this.storage.needsTriggerMotivationSchemaUpgrade(),
+    );
     input.value = '';
   }
 

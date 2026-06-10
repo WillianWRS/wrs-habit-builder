@@ -21,21 +21,34 @@ import {
     '(document:click)': 'onDocumentClick($event)',
   },
   template: `
-    <button
-      type="button"
-      class="inline-flex min-w-[11rem] items-center justify-between gap-2 rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-1.5 text-left text-xs text-brand-light-text-primary outline-none transition-colors hover:border-brand-light-primary/40 focus-visible:border-brand-light-primary focus-visible:ring-1 focus-visible:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:hover:border-brand-primary/40 dark:focus-visible:border-brand-primary dark:focus-visible:ring-brand-primary"
-      [id]="controlId()"
-      [attr.aria-expanded]="open()"
-      aria-haspopup="listbox"
-      (click)="toggle($event)"
+    <div
+      class="inline-flex overflow-hidden rounded-lg border border-brand-light-border bg-brand-light-bg transition-colors focus-within:border-brand-light-primary focus-within:ring-1 focus-within:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:focus-within:border-brand-primary dark:focus-within:ring-brand-primary"
+      role="group"
     >
-      <span class="truncate">{{ selectedLabel() }}</span>
-      <i
-        class="bi bi-chevron-down shrink-0 text-[10px] text-brand-light-text-secondary transition-transform duration-200 dark:text-brand-text-secondary"
-        [class.rotate-180]="open()"
-        aria-hidden="true"
-      ></i>
-    </button>
+      <span
+        [id]="labelId()"
+        class="flex shrink-0 items-center self-stretch border-r border-brand-light-border px-2.5 text-xs font-medium text-brand-light-text-secondary dark:border-brand-border dark:text-brand-text-secondary"
+      >
+        Ordenado por
+      </span>
+
+      <button
+        type="button"
+        class="inline-flex min-w-[11rem] items-center justify-between gap-2 bg-transparent px-3 py-1.5 text-left text-xs text-brand-light-text-primary outline-none transition-colors hover:text-brand-light-primary focus-visible:text-brand-light-primary dark:text-brand-text-primary dark:hover:text-brand-primary dark:focus-visible:text-brand-primary"
+        [id]="controlId()"
+        [attr.aria-expanded]="open()"
+        [attr.aria-labelledby]="labelId() + ' ' + controlId()"
+        aria-haspopup="listbox"
+        (click)="toggle($event)"
+      >
+        <span class="truncate">{{ selectedLabel() }}</span>
+        <i
+          class="bi bi-chevron-down shrink-0 text-[10px] text-brand-light-text-secondary transition-transform duration-200 dark:text-brand-text-secondary"
+          [class.rotate-180]="open()"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </div>
 
     @if (open()) {
       <div
@@ -43,7 +56,7 @@ import {
         animate.leave="ui-dropdown-leave"
         class="absolute right-0 top-full z-20 mt-1 min-w-full overflow-hidden rounded-lg border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
         role="listbox"
-        [attr.aria-labelledby]="controlId()"
+        [attr.aria-labelledby]="labelId()"
       >
         @for (option of sortOptions; track option.id) {
           <button
@@ -74,6 +87,8 @@ export class HabitSortSelectComponent {
 
   protected readonly open = signal(false);
   protected readonly sortOptions = HABIT_SORT_OPTIONS;
+
+  protected readonly labelId = computed(() => `${this.controlId()}-label`);
 
   protected readonly selectedLabel = computed(
     () =>

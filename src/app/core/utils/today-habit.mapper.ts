@@ -12,6 +12,7 @@ import {
   resolveHabitDisplayReminder,
 } from './habit-meta.utils';
 import { computeHabitStreakMetrics } from './habit-streak.utils';
+import { buildMarqueeItems } from './habit-trigger-motivation.utils';
 
 function mapAccent(category: string): HabitCardAccent {
   const normalized = category.toLowerCase();
@@ -42,10 +43,7 @@ export function mapHabitToTodayCard(
     scheduleDays: [...habit.scheduleDays],
     time: resolveHabitDisplayReminder(habit, date),
     category: habit.category,
-    trigger1: habit.trigger1,
-    trigger2: habit.trigger2,
-    motivation1: habit.motivation1,
-    motivation2: habit.motivation2,
+    marqueeItems: buildMarqueeItems(habit),
     minimumAction: resolveHabitDisplayMinimumAction(habit, date),
     dayCount: streak.dayCount,
     missCount: streak.missCount,
