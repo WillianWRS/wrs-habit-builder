@@ -13,7 +13,7 @@ import { DemoModeService } from '../../../core/services/demo-mode.service';
 import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
 import { ThemeService } from '../../../core/services/theme.service';
 
-export type AppNavTab = 'today' | 'habits' | 'create';
+export type AppNavTab = 'today' | 'habits' | 'historico' | 'create';
 
 @Component({
   selector: 'app-nav',
@@ -57,6 +57,19 @@ export type AppNavTab = 'today' | 'habits' | 'create';
             >
               <i class="bi bi-list-ul text-base" aria-hidden="true"></i>
               Hábitos
+            </a>
+
+            <a
+              routerLink="/historico"
+              class="inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              [class]="
+                activeTab() === 'historico'
+                  ? 'border-brand-light-primary bg-brand-light-bg/80 text-brand-light-primary dark:border-brand-primary dark:bg-brand-bg/60 dark:text-brand-primary'
+                  : 'border-brand-light-border text-brand-light-text-secondary hover:bg-brand-light-bg hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary'
+              "
+            >
+              <i class="bi bi-calendar2-week text-base" aria-hidden="true"></i>
+              Histórico
             </a>
           }
         </div>
@@ -195,6 +208,21 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                       aria-hidden="true"
                     ></i>
                     Preview random
+                  </button>
+                }
+
+                @if (!demoMode.isActive()) {
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                    role="menuitem"
+                    (click)="openHistorico()"
+                  >
+                    <i
+                      class="bi bi-calendar2-week shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                      aria-hidden="true"
+                    ></i>
+                    Histórico
                   </button>
                 }
 
@@ -391,6 +419,21 @@ export type AppNavTab = 'today' | 'habits' | 'create';
                 </button>
               }
 
+              @if (!demoMode.isActive()) {
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+                  role="menuitem"
+                  (click)="openHistorico()"
+                >
+                  <i
+                    class="bi bi-calendar2-week shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+                    aria-hidden="true"
+                  ></i>
+                  Histórico
+                </button>
+              }
+
               <button
                 type="button"
                 class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
@@ -498,6 +541,11 @@ export class AppNavComponent {
     void this.router.navigate(['/data']);
   }
 
+  protected openHistorico(): void {
+    this.closeSettingsMenus();
+    void this.router.navigate(['/historico']);
+  }
+
   protected openHabitForm(): void {
     this.habitFormModal.open();
   }
@@ -510,7 +558,7 @@ export class AppNavComponent {
   private navigateToTodayIfPreviewRoute(): void {
     const path = this.router.url.split('?')[0].split('#')[0];
 
-    if (path === '/habits' || path === '/data') {
+    if (path === '/habits' || path === '/data' || path === '/historico') {
       void this.router.navigate(['/']);
     }
   }

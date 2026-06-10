@@ -8,6 +8,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { COMPLETION_RESTORE_PATCH } from '../data/completion-restore.patch';
 import {
   CURRENT_STORAGE_VERSION,
   STORAGE_KEY,
@@ -30,6 +31,10 @@ import {
   getHabitIdsToReset,
   mergeScheduleDaySince,
 } from '../utils/habit-streak.utils';
+import {
+  applyCompletionRestorePatch,
+  completionRestorePatchNeedsApplication,
+} from '../utils/completion-restore.utils';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 import { CurrentDayService } from './current-day.service';
 
@@ -82,6 +87,7 @@ export class HabitStorageService {
       const migrated = this.migrate(JSON.parse(raw));
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
+      this.applyCompletionRestoreIfNeeded();
     } catch (error) {
       console.warn('[HabitStorage] load failed, starting empty', error);
       this.habits.set([]);
@@ -341,6 +347,7 @@ export class HabitStorageService {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
+      this.applyCompletionRestoreIfNeeded();
       return { ok: true };
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
@@ -408,6 +415,43 @@ export class HabitStorageService {
     return this.habits().map((habit) =>
       mapHabitToListCard(habit, completions, date),
     );
+  }
+
+  private applyCompletionRestoreIfNeeded(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const habits = this.habits();
+    const completions = this.completions();
+
+    if (
+      !completionRestorePatchNeedsApplication(
+        habits,
+        completions,
+        COMPLETION_RESTORE_PATCH,
+      )
+    ) {
+      return;
+    }
+
+    const result = applyCompletionRestorePatch(
+      habits,
+      completions,
+      COMPLETION_RESTORE_PATCH,
+    );
+
+    if (result.unmatchedHabits.length > 0) {
+      console.warn(
+        '[HabitStorage] completion restore: hábitos não encontrados',
+        result.unmatchedHabits,
+      );
+    }
+
+    if (result.addedCount > 0) {
+      this.completions.set(result.completions);
+      this.persist();
+    }
   }
 
   private migrate(raw: unknown): AppStorage {

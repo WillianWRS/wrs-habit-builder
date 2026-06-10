@@ -22,4 +22,11 @@ export const routes: Routes = [
         './features/data/pages/data-management-page/data-management-page.component'
       ).then((m) => m.DataManagementPageComponent),
   },
+  {
+    path: 'historico',
+    loadComponent: () =>
+      import(
+        './features/historico/pages/historico-page/historico-page.component'
+      ).then((m) => m.HistoricoPageComponent),
+  },
 ];
