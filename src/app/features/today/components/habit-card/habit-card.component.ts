@@ -4,11 +4,14 @@ import {
   computed,
   effect,
   ElementRef,
+  inject,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
+import { CurrentDayService } from '../../../../core/services/current-day.service';
+import { getWeekday } from '../../../../core/utils/date.utils';
 import { STREAK_MISS_TOLERANCE } from '../../../../core/utils/habit-streak.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 import {
@@ -160,6 +163,20 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
 
     .habit-mark-btn:hover {
       animation: mark-btn-shake 0.45s ease-in-out;
+    }
+
+    @keyframes habit-unmark-icon-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+
+    .habit-unmark-btn:hover .habit-unmark-icon {
+      animation: habit-unmark-icon-spin 0.3s ease-in-out;
     }
 
     @keyframes day-count-pulse {
@@ -653,6 +670,10 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
         animation: none;
       }
 
+      .habit-unmark-btn:hover .habit-unmark-icon {
+        animation: none;
+      }
+
       .habit-card-complete-band--sweep-in,
       .habit-card-complete-band--sweep-out {
         animation: none;
@@ -775,6 +796,7 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
                 <app-weekday-schedule
                   class="habit-card-weekdays mt-2"
                   [selectedDays]="scheduleDays()"
+                  [highlightWeekday]="todayWeekday()"
                   [readonly]="true"
                 />
 
@@ -878,6 +900,7 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
           <app-weekday-schedule
             class="habit-card-weekdays"
             [selectedDays]="scheduleDays()"
+            [highlightWeekday]="todayWeekday()"
             [readonly]="true"
           />
 
@@ -950,11 +973,14 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
             <div class="relative flex items-center justify-center py-1.5">
               <button
                 type="button"
-                class="habit-card-field habit-card-field--secondary absolute left-0 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                class="habit-unmark-btn habit-card-field habit-card-field--secondary absolute left-0 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
                 [attr.aria-label]="'Desmarcar ' + name()"
                 (click)="markToggle.emit()"
               >
-                <i class="bi bi-arrow-counterclockwise text-[11px]" aria-hidden="true"></i>
+                <i
+                  class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
+                  aria-hidden="true"
+                ></i>
                 Desmarcar
               </button>
               <span class="habit-card-field habit-card-field--accent text-sm font-medium"
@@ -978,11 +1004,14 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
         @if (completed()) {
           <button
             type="button"
-            class="habit-card-field habit-card-field--secondary mt-3 hidden items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary md:inline-flex dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            class="habit-unmark-btn habit-card-field habit-card-field--secondary mt-3 hidden items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary md:inline-flex dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
             [attr.aria-label]="'Desmarcar ' + name()"
             (click)="markToggle.emit()"
           >
-            <i class="bi bi-arrow-counterclockwise text-[11px]" aria-hidden="true"></i>
+            <i
+              class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
+              aria-hidden="true"
+            ></i>
             Desmarcar
           </button>
         }
@@ -991,6 +1020,8 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
   `,
 })
 export class HabitCardComponent {
+  private readonly currentDay = inject(CurrentDayService);
+
   private initialized = false;
   private previousCompleted = false;
 
@@ -1055,6 +1086,10 @@ export class HabitCardComponent {
       this.previousCompleted = isCompleted;
     });
   }
+
+  protected readonly todayWeekday = computed(() =>
+    getWeekday(this.currentDay.today()),
+  );
 
   protected readonly displayTitle = computed(() =>
     formatHabitCardTitle(this.name(), this.displayMeta()),

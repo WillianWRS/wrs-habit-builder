@@ -81,12 +81,14 @@ describe('buildDayHistory', () => {
     ]);
     expect(snapshot.entries[0]).toMatchObject({
       reminderDisplay: '07:00',
-      title: 'Caminhar - 4KM',
+      name: 'Caminhar',
+      meta: '4KM',
       status: 'done',
     });
     expect(snapshot.entries[2]).toMatchObject({
       reminderDisplay: '--:--',
-      title: 'Meditar - 10 min',
+      name: 'Meditar',
+      meta: '10 min',
       status: 'not_done',
     });
   });

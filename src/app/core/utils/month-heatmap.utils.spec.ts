@@ -47,11 +47,24 @@ function createHabit(overrides: Partial<Habit> = {}): Habit {
 }
 
 describe('resolveHeatmapIntensity', () => {
-  it('escala conclusões de 0 a 5+', () => {
-    expect(resolveHeatmapIntensity(0)).toBe(0);
-    expect(resolveHeatmapIntensity(3)).toBe(3);
-    expect(resolveHeatmapIntensity(5)).toBe(5);
-    expect(resolveHeatmapIntensity(8)).toBe(5);
+  it('retorna 0 sem hábitos esperados ou conclusões', () => {
+    expect(resolveHeatmapIntensity(0, 0)).toBe(0);
+    expect(resolveHeatmapIntensity(0, 3)).toBe(0);
+  });
+
+  it('retorna 3 quando todos os hábitos foram concluídos', () => {
+    expect(resolveHeatmapIntensity(1, 1)).toBe(3);
+    expect(resolveHeatmapIntensity(4, 4)).toBe(3);
+  });
+
+  it('retorna 2 com metade ou mais concluída, mas não todos', () => {
+    expect(resolveHeatmapIntensity(1, 2)).toBe(2);
+    expect(resolveHeatmapIntensity(2, 3)).toBe(2);
+  });
+
+  it('retorna 1 com pelo menos uma conclusão abaixo da metade', () => {
+    expect(resolveHeatmapIntensity(1, 3)).toBe(1);
+    expect(resolveHeatmapIntensity(1, 4)).toBe(1);
   });
 });
 
@@ -74,7 +87,33 @@ describe('buildMonthHeatmapCells', () => {
     expect(futureCell?.isClickable).toBe(false);
   });
 
-  it('conta conclusões esperadas no dia', () => {
+  it('inclui dias adjacentes no grid com número e sem clique', () => {
+    const cells = buildMonthHeatmapCells(
+      2026,
+      5,
+      [createHabit()],
+      [],
+      '2026-06-15',
+    );
+
+    const previousMonthCell = cells.find((cell) => cell.dateKey === '2026-05-31');
+    const nextMonthCell = cells.find((cell) => cell.dateKey === '2026-07-01');
+
+    expect(previousMonthCell).toMatchObject({
+      kind: 'padding',
+      inCurrentMonth: false,
+      dayNumber: 31,
+      isClickable: false,
+    });
+    expect(nextMonthCell).toMatchObject({
+      kind: 'padding',
+      inCurrentMonth: false,
+      dayNumber: 1,
+      isClickable: false,
+    });
+  });
+
+  it('aplica intensidade máxima quando todos os hábitos do dia foram concluídos', () => {
     const habits = [
       createHabit({ id: 'h1' }),
       createHabit({ id: 'h2', name: 'Ler' }),
@@ -94,7 +133,7 @@ describe('buildMonthHeatmapCells', () => {
     const dayCell = cells.find((cell) => cell.dateKey === '2026-06-10');
 
     expect(dayCell?.completionCount).toBe(2);
-    expect(dayCell?.intensity).toBe(2);
+    expect(dayCell?.intensity).toBe(3);
     expect(dayCell?.hasExpectedHabits).toBe(true);
   });
 });

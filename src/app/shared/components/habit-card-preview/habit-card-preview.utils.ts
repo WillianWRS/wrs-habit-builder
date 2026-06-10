@@ -37,7 +37,7 @@ export function buildPreviewMarqueeItems(state: HabitCardPreviewFormState): Marq
     if (entry.visible) {
       items.push({
         type: 'trigger',
-        text: previewTextOrPlaceholder(entry.text, 'Gatilho não informado'),
+        text: previewTextOrPlaceholder(entry.text, 'Gatilho'),
       });
     }
   }
@@ -52,7 +52,7 @@ export function buildPreviewMarqueeItems(state: HabitCardPreviewFormState): Marq
     if (entry.visible) {
       items.push({
         type: 'motivation',
-        text: previewTextOrPlaceholder(entry.text, 'Recompensa não informada'),
+        text: previewTextOrPlaceholder(entry.text, 'Recompensa'),
       });
     }
   }

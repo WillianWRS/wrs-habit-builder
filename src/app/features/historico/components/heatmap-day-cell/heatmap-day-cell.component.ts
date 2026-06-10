@@ -11,10 +11,13 @@ import type { MonthHeatmapCell } from '../../../../core/models/day-history.model
   selector: 'app-heatmap-day-cell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (cell().kind === 'padding') {
-      <div class="aspect-square" aria-hidden="true"></div>
-    } @else if (!cell().inCurrentMonth) {
-      <div class="aspect-square" aria-hidden="true"></div>
+    @if (!cell().inCurrentMonth) {
+      <div
+        class="relative flex aspect-square w-full items-center justify-center rounded-full text-sm font-medium text-brand-light-text-secondary/15 dark:text-brand-text-secondary/15"
+        aria-hidden="true"
+      >
+        {{ cell().dayNumber }}
+      </div>
     } @else {
       <button
         type="button"
@@ -49,8 +52,8 @@ import type { MonthHeatmapCell } from '../../../../core/models/day-history.model
 
         <span
           class="relative z-[1]"
-          [class.text-brand-bg]="cell().intensity >= 5"
-          [class.dark:text-brand-bg]="cell().intensity >= 5"
+          [class.text-brand-bg]="cell().intensity === 3"
+          [class.dark:text-brand-bg]="cell().intensity === 3"
         >
           {{ cell().dayNumber }}
         </span>
@@ -66,14 +69,10 @@ export class HeatmapDayCellComponent {
   protected readonly intensityClass = computed(() => {
     switch (this.cell().intensity) {
       case 1:
-        return 'bg-brand-light-primary/20 dark:bg-brand-primary/20';
+        return 'bg-brand-light-primary/25 dark:bg-brand-primary/25';
       case 2:
-        return 'bg-brand-light-primary/35 dark:bg-brand-primary/35';
+        return 'bg-brand-light-primary/55 dark:bg-brand-primary/55';
       case 3:
-        return 'bg-brand-light-primary/50 dark:bg-brand-primary/50';
-      case 4:
-        return 'bg-brand-light-primary/70 dark:bg-brand-primary/70';
-      case 5:
         return 'bg-brand-light-primary dark:bg-brand-primary';
       default:
         return '';

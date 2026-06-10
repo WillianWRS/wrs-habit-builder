@@ -1,5 +1,6 @@
 export type HabitSort =
   | 'time-asc'
+  | 'time-desc'
   | 'days-asc'
   | 'days-desc'
   | 'name-asc'
@@ -10,6 +11,7 @@ export const HABIT_SORT_OPTIONS: ReadonlyArray<{
   label: string;
 }> = [
   { id: 'time-asc', label: 'Horário · mais cedo primeiro' },
+  { id: 'time-desc', label: 'Horário · mais tarde primeiro' },
   { id: 'days-desc', label: 'Dias · maior primeiro' },
   { id: 'days-asc', label: 'Dias · menor primeiro' },
   { id: 'name-asc', label: 'Nome · A → Z' },
@@ -46,6 +48,25 @@ function compareTimeAsc(a: string, b: string): number {
   return timeA.localeCompare(timeB);
 }
 
+function compareTimeDesc(a: string, b: string): number {
+  const timeA = a.trim();
+  const timeB = b.trim();
+
+  if (!timeA && !timeB) {
+    return 0;
+  }
+
+  if (!timeA) {
+    return 1;
+  }
+
+  if (!timeB) {
+    return -1;
+  }
+
+  return timeB.localeCompare(timeA);
+}
+
 function compareNameAsc(a: string, b: string): number {
   return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
 }
@@ -58,6 +79,15 @@ export function compareHabitsByPreference<T extends HabitSortable>(
   switch (sort) {
     case 'time-asc': {
       const timeCmp = compareTimeAsc(a.time, b.time);
+
+      if (timeCmp !== 0) {
+        return timeCmp;
+      }
+
+      return compareNameAsc(a.name, b.name);
+    }
+    case 'time-desc': {
+      const timeCmp = compareTimeDesc(a.time, b.time);
 
       if (timeCmp !== 0) {
         return timeCmp;

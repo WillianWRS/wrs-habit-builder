@@ -3,7 +3,8 @@ export type DayHistoryEntryStatus = 'done' | 'not_done';
 export interface DayHistoryEntry {
   habitId: string;
   reminderDisplay: string;
-  title: string;
+  name: string;
+  meta: string;
   status: DayHistoryEntryStatus;
 }
 
@@ -23,8 +24,8 @@ export interface MonthHeatmapCell {
   inCurrentMonth: boolean;
   completionCount: number;
   expectedCount: number;
-  /** Intensidade visual do círculo: 0 = sem círculo, 1–4 escalonado, 5 = 5+ conclusões. */
-  intensity: 0 | 1 | 2 | 3 | 4 | 5;
+  /** Intensidade visual: 0 = sem destaque, 1 = baixa, 2 = média, 3 = todos concluídos. */
+  intensity: 0 | 1 | 2 | 3;
   isFuture: boolean;
   isClickable: boolean;
   hasExpectedHabits: boolean;

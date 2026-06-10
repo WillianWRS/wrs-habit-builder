@@ -180,46 +180,147 @@ const MINIMUM_ACTION_MAX = 140;
       padding: 0.375rem 0.625rem;
       font-size: 0.75rem;
       line-height: 1;
-      color: var(--brand-light-text-secondary);
+      color: var(--accent-light);
     }
 
     :host-context(.dark) .slot-input-group__icon {
       border-right-color: var(--brand-border);
-      color: var(--brand-text-secondary);
+      color: var(--accent-dark);
+    }
+
+    .slot-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding-top: 0.25rem;
+      transition: gap 0.2s ease;
+    }
+
+    .slot-control-row--single {
+      gap: 0;
+    }
+
+    .slot-control-btn-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      overflow: hidden;
+      transition:
+        width 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .slot-control-btn-slot--collapsed {
+      width: 0;
+      opacity: 0;
     }
 
     .slot-control-btn {
       display: inline-flex;
       height: 2rem;
       width: 2rem;
+      flex-shrink: 0;
       align-items: center;
       justify-content: center;
-      border-radius: 9999px;
-      border: 1px solid var(--brand-light-border);
-      background-color: var(--brand-light-bg);
-      font-size: 1.125rem;
-      line-height: 1;
-      color: var(--brand-light-text-secondary);
+      border-radius: 0.375rem;
+      border: 1px solid transparent;
+      background-color: transparent;
       transition:
         border-color 150ms ease,
         color 150ms ease,
         background-color 150ms ease;
     }
 
-    .slot-control-btn:hover {
+    .slot-control-btn i {
+      display: block;
+      font-size: 0.875rem;
+      line-height: 1;
+    }
+
+    .slot-control-btn--add {
+      border-color: color-mix(in srgb, var(--accent-light) 45%, transparent);
+      color: var(--accent-light);
+    }
+
+    .slot-control-btn--add:hover {
       border-color: var(--accent-light);
-      color: var(--brand-light-text-primary);
+      background-color: rgb(var(--accent-rgb-light) / 0.1);
     }
 
-    :host-context(.dark) .slot-control-btn {
-      border-color: var(--brand-border);
-      background-color: var(--brand-bg);
-      color: var(--brand-text-secondary);
+    .slot-control-btn--remove {
+      border-color: rgb(239 68 68 / 0.45);
+      color: rgb(220 38 38);
     }
 
-    :host-context(.dark) .slot-control-btn:hover {
+    .slot-control-btn--remove:hover {
+      border-color: rgb(239 68 68 / 0.7);
+      background-color: rgb(239 68 68 / 0.1);
+    }
+
+    :host-context(.dark) .slot-control-btn--add {
+      border-color: rgb(var(--accent-rgb-dark) / 0.45);
+      color: var(--accent-dark);
+    }
+
+    :host-context(.dark) .slot-control-btn--add:hover {
       border-color: var(--accent-dark);
-      color: var(--brand-text-primary);
+      background-color: rgb(var(--accent-rgb-dark) / 0.12);
+    }
+
+    :host-context(.dark) .slot-control-btn--remove {
+      border-color: rgb(248 113 113 / 0.45);
+      color: rgb(248 113 113);
+    }
+
+    :host-context(.dark) .slot-control-btn--remove:hover {
+      border-color: rgb(248 113 113 / 0.75);
+      background-color: rgb(239 68 68 / 0.15);
+    }
+
+    @keyframes slot-control-btn-in {
+      from {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes slot-control-btn-out {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+    }
+
+    .slot-control-btn-enter {
+      animation: slot-control-btn-in 0.2s ease-out forwards;
+    }
+
+    .slot-control-btn-leave {
+      animation: slot-control-btn-out 0.15s ease-in forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slot-control-row,
+      .slot-control-btn-slot {
+        transition: none;
+      }
+
+      .slot-control-btn-enter,
+      .slot-control-btn-leave {
+        animation: none;
+      }
     }
   `,
   template: `
@@ -575,27 +676,46 @@ const MINIMUM_ACTION_MAX = 140;
                     }
 
                     @if (canAddTrigger() || canRemoveTrigger()) {
-                      <div class="flex items-center justify-center gap-2 pt-1">
-                        @if (canRemoveTrigger()) {
-                          <button
-                            type="button"
-                            class="slot-control-btn"
-                            aria-label="Ocultar gatilho"
-                            (click)="removeTriggerSlot()"
-                          >
-                            −
-                          </button>
-                        }
-                        @if (canAddTrigger()) {
-                          <button
-                            type="button"
-                            class="slot-control-btn"
-                            aria-label="Adicionar gatilho"
-                            (click)="addTriggerSlot()"
-                          >
-                            +
-                          </button>
-                        }
+                      <div
+                        class="slot-control-row"
+                        [class.slot-control-row--single]="
+                          !canAddTrigger() || !canRemoveTrigger()
+                        "
+                      >
+                        <div
+                          class="slot-control-btn-slot"
+                          [class.slot-control-btn-slot--collapsed]="!canAddTrigger()"
+                        >
+                          @if (canAddTrigger()) {
+                            <button
+                              type="button"
+                              class="slot-control-btn slot-control-btn--add"
+                              animate.enter="slot-control-btn-enter"
+                              animate.leave="slot-control-btn-leave"
+                              aria-label="Adicionar gatilho"
+                              (click)="addTriggerSlot()"
+                            >
+                              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                            </button>
+                          }
+                        </div>
+                        <div
+                          class="slot-control-btn-slot"
+                          [class.slot-control-btn-slot--collapsed]="!canRemoveTrigger()"
+                        >
+                          @if (canRemoveTrigger()) {
+                            <button
+                              type="button"
+                              class="slot-control-btn slot-control-btn--remove"
+                              animate.enter="slot-control-btn-enter"
+                              animate.leave="slot-control-btn-leave"
+                              aria-label="Ocultar gatilho"
+                              (click)="removeTriggerSlot()"
+                            >
+                              <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                            </button>
+                          }
+                        </div>
                       </div>
                     }
                   </div>
@@ -673,27 +793,46 @@ const MINIMUM_ACTION_MAX = 140;
                     }
 
                     @if (canAddMotivation() || canRemoveMotivation()) {
-                      <div class="flex items-center justify-center gap-2 pt-1">
-                        @if (canRemoveMotivation()) {
-                          <button
-                            type="button"
-                            class="slot-control-btn"
-                            aria-label="Ocultar recompensa"
-                            (click)="removeMotivationSlot()"
-                          >
-                            −
-                          </button>
-                        }
-                        @if (canAddMotivation()) {
-                          <button
-                            type="button"
-                            class="slot-control-btn"
-                            aria-label="Adicionar recompensa"
-                            (click)="addMotivationSlot()"
-                          >
-                            +
-                          </button>
-                        }
+                      <div
+                        class="slot-control-row"
+                        [class.slot-control-row--single]="
+                          !canAddMotivation() || !canRemoveMotivation()
+                        "
+                      >
+                        <div
+                          class="slot-control-btn-slot"
+                          [class.slot-control-btn-slot--collapsed]="!canAddMotivation()"
+                        >
+                          @if (canAddMotivation()) {
+                            <button
+                              type="button"
+                              class="slot-control-btn slot-control-btn--add"
+                              animate.enter="slot-control-btn-enter"
+                              animate.leave="slot-control-btn-leave"
+                              aria-label="Adicionar recompensa"
+                              (click)="addMotivationSlot()"
+                            >
+                              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                            </button>
+                          }
+                        </div>
+                        <div
+                          class="slot-control-btn-slot"
+                          [class.slot-control-btn-slot--collapsed]="!canRemoveMotivation()"
+                        >
+                          @if (canRemoveMotivation()) {
+                            <button
+                              type="button"
+                              class="slot-control-btn slot-control-btn--remove"
+                              animate.enter="slot-control-btn-enter"
+                              animate.leave="slot-control-btn-leave"
+                              aria-label="Ocultar recompensa"
+                              (click)="removeMotivationSlot()"
+                            >
+                              <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                            </button>
+                          }
+                        </div>
                       </div>
                     }
                   </div>

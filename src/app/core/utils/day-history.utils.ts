@@ -3,7 +3,6 @@ import type { HabitCompletion } from '../models/habit-completion.model';
 import type { Habit } from '../models/habit.model';
 import { parseDateKey } from './date.utils';
 import {
-  formatHabitCardTitle,
   resolveHabitDisplayMeta,
   resolveHabitDisplayReminder,
 } from './habit-meta.utils';
@@ -35,13 +34,13 @@ function buildDayHistoryEntry(
   completedHabitIds: Set<string>,
 ): DayHistoryEntry & { sortKey: string } {
   const reminder = resolveHabitDisplayReminder(habit, date).trim();
-  const meta = resolveHabitDisplayMeta(habit, date);
-  const title = formatHabitCardTitle(habit.name, meta);
+  const meta = resolveHabitDisplayMeta(habit, date).trim();
 
   return {
     habitId: habit.id,
     reminderDisplay: reminder || '--:--',
-    title,
+    name: habit.name,
+    meta,
     status: completedHabitIds.has(habit.id) ? 'done' : 'not_done',
     sortKey: reminder || NO_REMINDER_SORT_KEY,
   };

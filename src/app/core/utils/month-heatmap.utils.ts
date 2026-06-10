@@ -6,16 +6,21 @@ import { getExpectedHabitsForDate } from './day-history.utils';
 
 export function resolveHeatmapIntensity(
   completionCount: number,
+  expectedCount: number,
 ): MonthHeatmapCell['intensity'] {
-  if (completionCount <= 0) {
+  if (expectedCount === 0 || completionCount <= 0) {
     return 0;
   }
 
-  if (completionCount >= 5) {
-    return 5;
+  if (completionCount >= expectedCount) {
+    return 3;
   }
 
-  return completionCount as MonthHeatmapCell['intensity'];
+  if (completionCount * 2 >= expectedCount) {
+    return 2;
+  }
+
+  return 1;
 }
 
 export function countExpectedCompletionsForDate(
@@ -80,9 +85,9 @@ export function buildMonthHeatmapCells(
       inCurrentMonth,
       completionCount,
       expectedCount,
-      intensity: resolveHeatmapIntensity(completionCount),
+      intensity: resolveHeatmapIntensity(completionCount, expectedCount),
       isFuture,
-      isClickable: !isFuture,
+      isClickable: inCurrentMonth && !isFuture,
       hasExpectedHabits,
     });
   }

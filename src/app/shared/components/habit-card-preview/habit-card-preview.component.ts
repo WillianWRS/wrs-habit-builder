@@ -99,11 +99,11 @@ export class HabitCardPreviewComponent {
   );
 
   protected readonly cardName = computed(() =>
-    previewTextOrPlaceholder(this.formState().name, 'Nome não informado'),
+    previewTextOrPlaceholder(this.formState().name, 'Nome'),
   );
 
   protected readonly cardCategory = computed(() =>
-    previewTextOrPlaceholder(this.formState().category, 'Categoria não informada'),
+    previewTextOrPlaceholder(this.formState().category, 'Categoria'),
   );
 
   protected readonly cardAccent = computed(() =>
@@ -118,38 +118,32 @@ export class HabitCardPreviewComponent {
     const state = this.formState();
 
     if (!state.metasDinamicas) {
-      return previewTextOrPlaceholder(state.metaGeral, 'Meta não informada');
+      return previewTextOrPlaceholder(state.metaGeral, 'Meta');
     }
 
     if (this.visiblePreviewDays().length === 0) {
-      return previewTextOrPlaceholder('', 'Meta não informada');
+      return previewTextOrPlaceholder('', 'Meta');
     }
 
     const goal = this.activeWeekdayGoal();
 
-    return previewTextOrPlaceholder(goal?.meta ?? '', 'Meta não informada');
+    return previewTextOrPlaceholder(goal?.meta ?? '', 'Meta');
   });
 
   protected readonly cardMinimumAction = computed(() => {
     const state = this.formState();
 
     if (!state.metasDinamicas) {
-      return previewTextOrPlaceholder(
-        state.minimumAction,
-        'Ação mínima não informada',
-      );
+      return previewTextOrPlaceholder(state.minimumAction, 'Ação mínima');
     }
 
     if (this.visiblePreviewDays().length === 0) {
-      return previewTextOrPlaceholder('', 'Ação mínima não informada');
+      return previewTextOrPlaceholder('', 'Ação mínima');
     }
 
     const goal = this.activeWeekdayGoal();
 
-    return previewTextOrPlaceholder(
-      goal?.minimumAction ?? '',
-      'Ação mínima não informada',
-    );
+    return previewTextOrPlaceholder(goal?.minimumAction ?? '', 'Ação mínima');
   });
 
   protected readonly cardTime = computed(() => {

@@ -36,19 +36,15 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
         </p>
       </header>
 
-      <section
-        class="rounded-2xl border border-brand-light-border bg-brand-light-surface p-4 sm:p-6 dark:border-brand-border dark:bg-brand-surface"
-      >
-        <app-month-heatmap
-          [year]="visibleYear()"
-          [month]="visibleMonth()"
-          [habits]="storage.habitsReadonly()"
-          [completions]="storage.completionsReadonly()"
-          [todayKey]="currentDay.todayKey()"
-          (monthChange)="onMonthChange($event)"
-          (dayClick)="openDay($event)"
-        />
-      </section>
+      <app-month-heatmap
+        [year]="visibleYear()"
+        [month]="visibleMonth()"
+        [habits]="storage.habitsReadonly()"
+        [completions]="storage.completionsReadonly()"
+        [todayKey]="currentDay.todayKey()"
+        (monthChange)="onMonthChange($event)"
+        (dayClick)="openDay($event)"
+      />
     </main>
 
     @if (selectedSnapshot(); as snapshot) {

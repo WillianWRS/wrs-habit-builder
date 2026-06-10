@@ -34,12 +34,8 @@ function createEmptyPreviewState(): HabitCardPreviewFormState {
 
 describe('habit-card-preview.utils', () => {
   it('usa placeholder para texto vazio', () => {
-    expect(previewTextOrPlaceholder('', 'Nome não informado')).toBe(
-      'Nome não informado',
-    );
-    expect(previewTextOrPlaceholder('  Treinar  ', 'Nome não informado')).toBe(
-      'Treinar',
-    );
+    expect(previewTextOrPlaceholder('', 'Nome')).toBe('Nome');
+    expect(previewTextOrPlaceholder('  Treinar  ', 'Nome')).toBe('Treinar');
   });
 
   it('usa --:-- para horário vazio', () => {
@@ -51,8 +47,8 @@ describe('habit-card-preview.utils', () => {
     const items = buildPreviewMarqueeItems(createEmptyPreviewState());
 
     expect(items).toEqual([
-      { type: 'trigger', text: 'Gatilho não informado' },
-      { type: 'motivation', text: 'Recompensa não informada' },
+      { type: 'trigger', text: 'Gatilho' },
+      { type: 'motivation', text: 'Recompensa' },
     ]);
   });
 });
