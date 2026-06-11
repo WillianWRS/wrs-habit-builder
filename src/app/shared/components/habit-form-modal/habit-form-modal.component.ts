@@ -311,6 +311,38 @@ const MINIMUM_ACTION_MAX = 140;
       animation: slot-control-btn-out 0.15s ease-in forwards;
     }
 
+    @keyframes habit-form-reveal-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes habit-form-reveal-out {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+    }
+
+    .habit-form-reveal-enter {
+      animation: habit-form-reveal-in 0.22s ease-out forwards;
+    }
+
+    .habit-form-reveal-leave {
+      animation: habit-form-reveal-out 0.18s ease-in forwards;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .slot-control-row,
       .slot-control-btn-slot {
@@ -318,7 +350,9 @@ const MINIMUM_ACTION_MAX = 140;
       }
 
       .slot-control-btn-enter,
-      .slot-control-btn-leave {
+      .slot-control-btn-leave,
+      .habit-form-reveal-enter,
+      .habit-form-reveal-leave {
         animation: none;
       }
     }
@@ -385,7 +419,7 @@ const MINIMUM_ACTION_MAX = 140;
                     formControlName="name"
                     autocomplete="off"
                     class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                    placeholder="Treinar musculação"
+                    placeholder="Exemplo: Leitura ou Caminhada"
                   />
                   @if (showError('name', 'required')) {
                     <p class="mt-1 text-xs text-red-500">Informe o nome do hábito.</p>
@@ -413,13 +447,17 @@ const MINIMUM_ACTION_MAX = 140;
                 </label>
 
                 @if (!metasDinamicasActive()) {
-                  <div class="space-y-5">
+                  <div
+                    class="space-y-5"
+                    animate.enter="habit-form-reveal-enter"
+                    animate.leave="habit-form-reveal-leave"
+                  >
                     <div>
                       <label
                         for="habit-meta-geral"
                         class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                       >
-                        Meta geral
+                        Meta
                       </label>
                       <input
                         id="habit-meta-geral"
@@ -427,30 +465,25 @@ const MINIMUM_ACTION_MAX = 140;
                         formControlName="metaGeral"
                         autocomplete="off"
                         class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                        placeholder="Ex.: 30 minutos de leitura"
+                        placeholder="Exemplo: Ler 10 páginas"
                       />
                     </div>
 
                     <div class="flex items-start gap-3">
                       <div class="min-w-0 flex-[8]">
-                        <div class="mb-1.5 flex items-center justify-between gap-3">
-                          <label
-                            for="habit-minimum-action"
-                            class="text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                          >
-                            Ação mínima geral
-                          </label>
-                          <span class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                            {{ minimumActionLength() }}/{{ minimumActionMax }}
-                          </span>
-                        </div>
+                        <label
+                          for="habit-minimum-action"
+                          class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
+                        >
+                          Ação mínima
+                        </label>
                         <input
                           id="habit-minimum-action"
                           type="text"
                           formControlName="minimumAction"
                           maxlength="140"
                           class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                          placeholder="Ex.: Fazer 1 série de qualquer exercício"
+                          placeholder="Exemplo: Ler 3 páginas"
                         />
                         @if (showError('minimumAction', 'required')) {
                           <p class="mt-1 text-xs text-red-500">Informe a ação mínima.</p>
@@ -467,7 +500,7 @@ const MINIMUM_ACTION_MAX = 140;
                           for="habit-reminder"
                           class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                         >
-                          Horário geral
+                          Horário
                         </label>
                         <input
                           id="habit-reminder"
@@ -482,7 +515,11 @@ const MINIMUM_ACTION_MAX = 140;
                     </div>
                   </div>
                 } @else {
-                  <div class="space-y-4">
+                  <div
+                    class="space-y-4"
+                    animate.enter="habit-form-reveal-enter"
+                    animate.leave="habit-form-reveal-leave"
+                  >
                     <p
                       class="text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                     >
@@ -491,6 +528,8 @@ const MINIMUM_ACTION_MAX = 140;
                     @for (day of visibleWeekdayItems(); track day.weekday) {
                       <div
                         class="overflow-hidden rounded-lg border border-brand-light-border dark:border-brand-border"
+                        animate.enter="habit-form-reveal-enter"
+                        animate.leave="habit-form-reveal-leave"
                       >
                         <div
                           class="border-b border-brand-light-border bg-brand-light-bg px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-bg"
@@ -597,7 +636,7 @@ const MINIMUM_ACTION_MAX = 140;
                     formControlName="category"
                     autocomplete="off"
                     class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                    placeholder="Ex.: Corpo"
+                    placeholder="Exemplo: Conhecimento"
                   />
                   @if (showError('category', 'required')) {
                     <p class="mt-1 text-xs text-red-500">Informe a categoria.</p>
@@ -629,7 +668,7 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="trigger1"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Ao vestir o tênis de treino"
+                          placeholder="Exemplo: Alongue-se"
                         />
                       </div>
                       @if (showError('trigger1', 'required')) {
@@ -638,7 +677,12 @@ const MINIMUM_ACTION_MAX = 140;
                     }
 
                     @if (form.controls.trigger2Visible.value) {
-                      <div class="weekday-input-group">
+                      <div
+                        class="space-y-2"
+                        animate.enter="habit-form-reveal-enter"
+                        animate.leave="habit-form-reveal-leave"
+                      >
+                        <div class="weekday-input-group">
                         <span class="slot-input-group__icon" aria-hidden="true">
                           <i class="bi bi-lightning-charge"></i>
                         </span>
@@ -648,16 +692,22 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="trigger2"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Depois do alongamento"
+                          placeholder="Exemplo: Alongue-se"
                         />
                       </div>
                       @if (showError('trigger2', 'required')) {
                         <p class="text-xs text-red-500">Informe o gatilho.</p>
                       }
+                      </div>
                     }
 
                     @if (form.controls.trigger3Visible.value) {
-                      <div class="weekday-input-group">
+                      <div
+                        class="space-y-2"
+                        animate.enter="habit-form-reveal-enter"
+                        animate.leave="habit-form-reveal-leave"
+                      >
+                        <div class="weekday-input-group">
                         <span class="slot-input-group__icon" aria-hidden="true">
                           <i class="bi bi-lightning-charge"></i>
                         </span>
@@ -667,12 +717,13 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="trigger3"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Ao abrir o app de treino"
+                          placeholder="Exemplo: Alongue-se"
                         />
                       </div>
                       @if (showError('trigger3', 'required')) {
                         <p class="text-xs text-red-500">Informe o gatilho.</p>
                       }
+                      </div>
                     }
 
                     @if (canAddTrigger() || canRemoveTrigger()) {
@@ -746,7 +797,7 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="motivation1"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Corpo mais forte"
+                          placeholder="Exemplo: Corpo em forma"
                         />
                       </div>
                       @if (showError('motivation1', 'required')) {
@@ -755,7 +806,12 @@ const MINIMUM_ACTION_MAX = 140;
                     }
 
                     @if (form.controls.motivation2Visible.value) {
-                      <div class="weekday-input-group">
+                      <div
+                        class="space-y-2"
+                        animate.enter="habit-form-reveal-enter"
+                        animate.leave="habit-form-reveal-leave"
+                      >
+                        <div class="weekday-input-group">
                         <span class="slot-input-group__icon" aria-hidden="true">
                           <i class="bi bi-trophy"></i>
                         </span>
@@ -765,16 +821,22 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="motivation2"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Disciplina diária"
+                          placeholder="Exemplo: Corpo em forma"
                         />
                       </div>
                       @if (showError('motivation2', 'required')) {
                         <p class="text-xs text-red-500">Informe a recompensa.</p>
                       }
+                      </div>
                     }
 
                     @if (form.controls.motivation3Visible.value) {
-                      <div class="weekday-input-group">
+                      <div
+                        class="space-y-2"
+                        animate.enter="habit-form-reveal-enter"
+                        animate.leave="habit-form-reveal-leave"
+                      >
+                        <div class="weekday-input-group">
                         <span class="slot-input-group__icon" aria-hidden="true">
                           <i class="bi bi-trophy"></i>
                         </span>
@@ -784,12 +846,13 @@ const MINIMUM_ACTION_MAX = 140;
                           formControlName="motivation3"
                           autocomplete="off"
                           class="weekday-input-group__control"
-                          placeholder="Ex.: Mais energia no dia"
+                          placeholder="Exemplo: Corpo em forma"
                         />
                       </div>
                       @if (showError('motivation3', 'required')) {
                         <p class="text-xs text-red-500">Informe a recompensa.</p>
                       }
+                      </div>
                     }
 
                     @if (canAddMotivation() || canRemoveMotivation()) {
@@ -1049,10 +1112,6 @@ export class HabitFormModalComponent {
         this.syncDynamicValidators(true);
       });
     });
-  }
-
-  protected minimumActionLength(): number {
-    return this.form.controls.minimumAction.value.length;
   }
 
   protected weekdayGoalMetaControl(index: number) {
