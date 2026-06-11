@@ -23,14 +23,14 @@ import type {
   TodayHabitCard,
 } from '../models/today-habit-card.model';
 import { ALL_WEEKDAYS } from '../models/habit.model';
-import { normalizeHabit } from '../utils/habit-normalizer';
-import { isLegacyTriggerMotivationHabit } from '../utils/habit-trigger-motivation.utils';
+import { padSlots } from '../models/habit-slot.model';
 import { getWeekday } from '../utils/date.utils';
 import {
   buildInitialScheduleDaySince,
   detectAutomaticFreezesNeeded,
   mergeScheduleDaySince,
 } from '../utils/habit-streak.utils';
+import { migrateStorage } from '../migrations/migrate-storage';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 import { CurrentDayService } from './current-day.service';
 
@@ -84,11 +84,17 @@ export class HabitStorageService {
         return;
       }
 
-      const migrated = this.migrate(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      const { data: migrated, sourceVersion } = migrateStorage(parsed);
+
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
       this.freezeUsed.set(migrated.freezeUsed);
       this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
+
+      if (sourceVersion < CURRENT_STORAGE_VERSION) {
+        this.persist();
+      }
     } catch (error) {
       console.warn('[HabitStorage] load failed, starting empty', error);
       this.habits.set([]);
@@ -195,8 +201,8 @@ export class HabitStorageService {
     const updated: Habit = {
       ...existing,
       name: dto.name.trim(),
-      metaGeral: dto.metaGeral.trim(),
-      metasDinamicas: dto.metasDinamicas,
+      generalGoal: dto.generalGoal.trim(),
+      dynamicGoals: dto.dynamicGoals,
       weekdayGoals: dto.weekdayGoals.map((entry) => ({
         weekday: entry.weekday,
         meta: entry.meta.trim(),
@@ -204,18 +210,18 @@ export class HabitStorageService {
         optionalReminder: entry.optionalReminder.trim(),
       })),
       category: dto.category.trim(),
-      trigger1: dto.trigger1.trim(),
-      trigger2: dto.trigger2.trim(),
-      trigger3: dto.trigger3.trim(),
-      trigger1Visible: dto.trigger1Visible,
-      trigger2Visible: dto.trigger2Visible,
-      trigger3Visible: dto.trigger3Visible,
-      motivation1: dto.motivation1.trim(),
-      motivation2: dto.motivation2.trim(),
-      motivation3: dto.motivation3.trim(),
-      motivation1Visible: dto.motivation1Visible,
-      motivation2Visible: dto.motivation2Visible,
-      motivation3Visible: dto.motivation3Visible,
+      triggers: padSlots(
+        dto.triggers.map((slot) => ({
+          text: slot.text.trim(),
+          visible: slot.visible,
+        })),
+      ),
+      motivations: padSlots(
+        dto.motivations.map((slot) => ({
+          text: slot.text.trim(),
+          visible: slot.visible,
+        })),
+      ),
       minimumAction: dto.minimumAction.trim(),
       scheduleDays: nextScheduleDays,
       scheduleDaySince: mergeScheduleDaySince(
@@ -244,8 +250,8 @@ export class HabitStorageService {
     const habit: Habit = {
       id: crypto.randomUUID(),
       name: dto.name.trim(),
-      metaGeral: dto.metaGeral.trim(),
-      metasDinamicas: dto.metasDinamicas,
+      generalGoal: dto.generalGoal.trim(),
+      dynamicGoals: dto.dynamicGoals,
       weekdayGoals: dto.weekdayGoals.map((entry) => ({
         weekday: entry.weekday,
         meta: entry.meta.trim(),
@@ -253,18 +259,18 @@ export class HabitStorageService {
         optionalReminder: entry.optionalReminder.trim(),
       })),
       category: dto.category.trim(),
-      trigger1: dto.trigger1.trim(),
-      trigger2: dto.trigger2.trim(),
-      trigger3: dto.trigger3.trim(),
-      trigger1Visible: dto.trigger1Visible,
-      trigger2Visible: dto.trigger2Visible,
-      trigger3Visible: dto.trigger3Visible,
-      motivation1: dto.motivation1.trim(),
-      motivation2: dto.motivation2.trim(),
-      motivation3: dto.motivation3.trim(),
-      motivation1Visible: dto.motivation1Visible,
-      motivation2Visible: dto.motivation2Visible,
-      motivation3Visible: dto.motivation3Visible,
+      triggers: padSlots(
+        dto.triggers.map((slot) => ({
+          text: slot.text.trim(),
+          visible: slot.visible,
+        })),
+      ),
+      motivations: padSlots(
+        dto.motivations.map((slot) => ({
+          text: slot.text.trim(),
+          visible: slot.visible,
+        })),
+      ),
       minimumAction: dto.minimumAction.trim(),
       scheduleDays,
       scheduleDaySince: buildInitialScheduleDaySince(scheduleDays, createdDateKey),
@@ -289,61 +295,12 @@ export class HabitStorageService {
     };
   }
 
-  needsTriggerMotivationSchemaUpgrade(): boolean {
-    if (!isPlatformBrowser(this.platformId)) {
-      return false;
-    }
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-
-      if (!raw) {
-        return false;
-      }
-
-      const data = JSON.parse(raw) as Partial<AppStorage>;
-
-      return (data.habits ?? []).some((habit) =>
-        isLegacyTriggerMotivationHabit(habit),
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  upgradeTriggerMotivationSchema(): boolean {
-    if (!isPlatformBrowser(this.platformId)) {
-      return false;
-    }
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-
-      if (!raw) {
-        return false;
-      }
-
-      const data = JSON.parse(raw) as Partial<AppStorage>;
-      const habits = (data.habits ?? []).map((habit) => normalizeHabit(habit));
-
-      this.habits.set(habits);
-      this.completions.set(data.completions ?? []);
-      this.freezeUsed.set(data.freezeUsed ?? []);
-      this.persist();
-
-      return true;
-    } catch (error) {
-      console.error('[HabitStorage] trigger/motivation upgrade failed', error);
-      return false;
-    }
-  }
-
   importStorage(raw: unknown): { ok: true } | { ok: false; message: string } {
     if (!isPlatformBrowser(this.platformId)) {
       return { ok: false, message: 'Importação indisponível neste ambiente.' };
     }
 
-    const migrated = this.migrate(raw);
+    const { data: migrated } = migrateStorage(raw);
     const payload: AppStorage = {
       version: CURRENT_STORAGE_VERSION,
       habits: migrated.habits,
@@ -446,28 +403,6 @@ export class HabitStorageService {
     return this.habits().map((habit) =>
       mapHabitToListCard(habit, completions, freezeUsed, date),
     );
-  }
-
-  private migrate(raw: unknown): AppStorage {
-    if (!raw || typeof raw !== 'object') {
-      return {
-        version: CURRENT_STORAGE_VERSION,
-        habits: [],
-        completions: [],
-        freezeUsed: [],
-      };
-    }
-
-    const data = raw as Partial<AppStorage>;
-    const habits = (data.habits ?? []).map((habit) => normalizeHabit(habit));
-    const version = data.version ?? 0;
-
-    return {
-      version: CURRENT_STORAGE_VERSION,
-      habits,
-      completions: data.completions ?? [],
-      freezeUsed: version >= 7 ? (data.freezeUsed ?? []) : [],
-    };
   }
 
   private persist(): void {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
-import type { Habit } from '../models/habit.model';
+import { createTestHabit } from '../testing/test-habit.factory';
 import { addDays, parseDateKey, toDateKey } from './date.utils';
 import {
   buildInitialScheduleDaySince,
@@ -15,38 +15,8 @@ import {
   isExpectedScheduleDay,
 } from './habit-streak.utils';
 
-function createHabit(overrides: Partial<Habit> = {}): Habit {
-  return {
-    id: 'habit-1',
-    name: 'Teste',
-    metaGeral: '',
-    metasDinamicas: false,
-    weekdayGoals: [],
-    category: 'outro',
-    trigger1: 'Se X',
-    trigger2: 'Então Y',
-    trigger3: '',
-    trigger1Visible: true,
-    trigger2Visible: true,
-    trigger3Visible: false,
-    motivation1: 'Motivação',
-    motivation2: 'Motivação 2',
-    motivation3: '',
-    motivation1Visible: true,
-    motivation2Visible: true,
-    motivation3Visible: false,
-    minimumAction: '1 passo',
-    scheduleDays: [0, 1, 2, 3, 4, 5, 6],
-    scheduleDaySince: buildInitialScheduleDaySince(
-      [0, 1, 2, 3, 4, 5, 6],
-      '2026-01-01',
-    ),
-    optionalReminder: '',
-    archived: false,
-    createdAt: '2026-01-01T12:00:00.000Z',
-    showOnToday: true,
-    ...overrides,
-  };
+function createHabit(overrides: Parameters<typeof createTestHabit>[0] = {}) {
+  return createTestHabit(overrides);
 }
 
 function completion(habitId: string, completedOn: string): HabitCompletion {

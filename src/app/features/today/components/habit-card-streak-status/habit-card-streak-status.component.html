@@ -1,0 +1,20 @@
+<div
+  class="habit-card-streak-status shrink-0 text-right"
+  [attr.aria-label]="ariaLabel()"
+>
+  <!-- Mobile: inline -->
+  <p class="text-sm md:hidden">
+    <span class="streak-status-title font-medium">{{ streakTitle() }}</span>
+    <span class="streak-status-subtitle">{{ mobileSubtitleSeparator() }}{{ streakSubtitle() }}</span>
+  </p>
+
+  <!-- Desktop: stacked -->
+  <div class="hidden md:block">
+    <p class="streak-status-title text-sm font-medium">
+      {{ streakTitle() }}
+    </p>
+    <p class="streak-status-subtitle mt-0.5 text-sm">
+      {{ streakSubtitle() }}
+    </p>
+  </div>
+</div>

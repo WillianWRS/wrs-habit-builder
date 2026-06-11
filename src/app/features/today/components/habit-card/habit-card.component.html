@@ -1,0 +1,186 @@
+<article
+  class="habit-card relative rounded-xl p-4 motion-reduce:transition-none"
+  [class.habit-card--completed]="completed()"
+  [attr.data-streak-tier]="streakTier()"
+  [class.border-l-4]="!completed() && streakTier() === 0"
+  [class.border-l-brand-accent-orange]="!completed() && streakTier() === 0 && accent() === 'physical'"
+  [class.border-l-brand-accent-purple]="!completed() && streakTier() === 0 && accent() === 'wellness'"
+>
+  @if (showCompleteOverlay()) {
+    <div class="habit-card-complete-bg" aria-hidden="true">
+      @for (band of completeSweepBands; track band) {
+        <div
+          class="habit-card-complete-band"
+          [class.habit-card-complete-band--sweep-in]="completeSweepPhase() === 'in'"
+          [class.habit-card-complete-band--sweep-out]="completeSweepPhase() === 'out'"
+          [attr.data-band]="band"
+        ></div>
+      }
+    </div>
+  }
+  <div class="relative z-[1]">
+    <div class="flex items-start justify-between gap-3 md:items-center">
+      <div class="flex min-w-0 flex-1 gap-3">
+        <div
+          class="habit-card-day-count flex shrink-0 flex-col items-center gap-1.5 self-start"
+        >
+          <span
+            class="flex size-5 items-center justify-center rounded-full border-2 transition-all duration-200 motion-reduce:transition-none"
+            [class]="
+              completed()
+                ? 'border-brand-light-primary bg-brand-light-primary dark:border-brand-primary dark:bg-brand-primary'
+                : 'habit-card-field habit-card-field--circle border-brand-light-text-secondary/40 dark:border-brand-text-secondary/50'
+            "
+            aria-hidden="true"
+          >
+            @if (completed()) {
+              <svg
+                class="size-3 text-white transition-transform duration-200 motion-reduce:transition-none dark:text-brand-bg"
+                viewBox="0 0 12 12"
+                fill="none"
+              >
+                <path
+                  d="M2.5 6L5 8.5L9.5 3.5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            }
+          </span>
+
+          <div
+            class="flex flex-col items-center leading-none"
+            [attr.aria-label]="dayCount() + ' dias'"
+          >
+            <span
+              class="text-[10px] font-medium text-brand-light-text-secondary dark:text-brand-text-secondary"
+              >dia</span
+            >
+            <span
+              class="day-count-value text-2xl font-bold tabular-nums"
+              [class]="dayCountStyleClass()"
+              >{{ dayCount() }}</span
+            >
+          </div>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+            <h2
+              class="habit-card-field habit-card-field--primary min-w-0 flex-1 font-medium"
+            >
+              {{ displayTitle() }}
+            </h2>
+            <span
+              class="habit-card-field habit-card-field--secondary hidden shrink-0 text-xs italic md:inline"
+              >{{ time() }} · {{ category() }}</span
+            >
+          </div>
+
+          <p class="habit-card-field habit-card-field--secondary mt-1 text-sm md:hidden">
+            Min: {{ minimumAction() }}
+          </p>
+
+          <app-weekday-schedule
+            class="habit-card-weekdays mt-0 md:mt-2"
+            [selectedDays]="scheduleDays()"
+            [highlightWeekday]="todayWeekday()"
+            [readonly]="true"
+          />
+
+          <app-habit-marquee class="mt-1 block" [items]="marqueeItems()" />
+
+          <div class="mt-1 grid gap-1 md:grid-cols-[1fr_auto] md:items-start md:gap-3">
+            <p
+              class="habit-card-field habit-card-field--secondary hidden min-w-0 text-sm md:block"
+            >
+              Mínimo: {{ minimumAction() }}
+            </p>
+
+            <app-habit-card-streak-status
+              class="md:col-start-2 md:row-start-1"
+              [dayCount]="dayCount()"
+              [completed]="completed()"
+              [isDayOne]="isDayOne()"
+              [freezeReassurance]="freezeReassurance()"
+            />
+
+            <p
+              class="habit-card-field habit-card-field--secondary text-right text-xs italic md:hidden"
+            >
+              {{ time() }} · {{ category() }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hidden shrink-0 md:block">
+        @if (completed()) {
+          <span
+            class="habit-card-field habit-card-field--accent text-sm font-medium"
+            >✓ Feito</span
+          >
+        } @else {
+          <button
+            type="button"
+            class="habit-mark-btn rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+            [attr.aria-label]="'Marcar ' + name() + ' como feito'"
+            (click)="markToggle.emit()"
+          >
+            Marcar ✓
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="mt-1 md:hidden">
+      @if (completed()) {
+        <div class="relative flex items-center justify-center py-1.5">
+          <button
+            type="button"
+            class="habit-unmark-btn habit-card-field habit-card-field--secondary absolute left-0 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            [attr.aria-label]="'Desmarcar ' + name()"
+            (click)="markToggle.emit()"
+          >
+            <i
+              class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
+              aria-hidden="true"
+            ></i>
+            Desmarcar
+          </button>
+          <span class="habit-card-field habit-card-field--accent text-sm font-medium"
+            >✓ Feito</span
+          >
+        </div>
+      } @else {
+        <div class="flex justify-end">
+          <button
+            type="button"
+            class="habit-mark-btn w-[30%] rounded-lg bg-brand-light-primary px-3 py-1.5 text-center text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+            [attr.aria-label]="'Marcar ' + name() + ' como feito'"
+            (click)="markToggle.emit()"
+          >
+            Marcar ✓
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (completed()) {
+      <button
+        type="button"
+        class="habit-unmark-btn habit-card-field habit-card-field--secondary mt-3 hidden items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary md:inline-flex dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+        [attr.aria-label]="'Desmarcar ' + name()"
+        (click)="markToggle.emit()"
+      >
+        <i
+          class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
+          aria-hidden="true"
+        ></i>
+        Desmarcar
+      </button>
+    }
+  </div>
+</article>

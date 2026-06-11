@@ -1,0 +1,48 @@
+{
+  "version": 7,
+  "habits": [
+    {
+      "id": "habit-v7-1",
+      "name": "Leitura diária",
+      "metaGeral": "30 minutos por dia",
+      "metasDinamicas": false,
+      "weekdayGoals": [],
+      "category": "Mente",
+      "trigger1": "Após o café",
+      "trigger2": "Antes de dormir",
+      "trigger3": "",
+      "trigger1Visible": true,
+      "trigger2Visible": true,
+      "trigger3Visible": false,
+      "motivation1": "Aprender",
+      "motivation2": "Relaxar",
+      "motivation3": "",
+      "motivation1Visible": true,
+      "motivation2Visible": true,
+      "motivation3Visible": false,
+      "minimumAction": "1 página",
+      "scheduleDays": [0, 1, 2, 3, 4, 5, 6],
+      "scheduleDaySince": {
+        "0": "2026-01-01",
+        "1": "2026-01-01",
+        "2": "2026-01-01",
+        "3": "2026-01-01",
+        "4": "2026-01-01",
+        "5": "2026-01-01",
+        "6": "2026-01-01"
+      },
+      "optionalReminder": "",
+      "archived": false,
+      "createdAt": "2026-01-01T12:00:00.000Z",
+      "showOnToday": true
+    }
+  ],
+  "completions": [
+    {
+      "id": "completion-v7-1",
+      "habitId": "habit-v7-1",
+      "completedOn": "2026-06-01"
+    }
+  ],
+  "freezeUsed": []
+}

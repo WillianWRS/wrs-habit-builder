@@ -13,7 +13,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { WEEKDAY_SCHEDULE_ITEMS } from '../../../core/constants/weekday-schedule.constants';
-import { ALL_WEEKDAYS } from '../../../core/models/habit.model';
+import { ALL_WEEKDAYS, type Habit } from '../../../core/models/habit.model';
+import { MAX_HABIT_SLOTS } from '../../../core/models/habit-slot.model';
 import { createDefaultWeekdayGoals } from '../../../core/models/habit-weekday-goal.model';
 import type { Weekday } from '../../../core/models/weekday.model';
 import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
@@ -21,9 +22,12 @@ import { HabitStorageService } from '../../../core/services/habit-storage.servic
 import {
   DEFAULT_NEW_HABIT_MOTIVATION,
   DEFAULT_NEW_HABIT_TRIGGER,
+  mapStorageSlotsToVisibleForm,
+  mapVisibleFormSlotsToStorage,
 } from '../../../core/utils/habit-trigger-motivation.utils';
 import { HabitCardPreviewComponent } from '../habit-card-preview/habit-card-preview.component';
 import type { HabitCardPreviewFormState } from '../habit-card-preview/habit-card-preview.model';
+import { TriggerSlotsFieldsetComponent } from '../trigger-slots-fieldset/trigger-slots-fieldset.component';
 import { WeekdayScheduleComponent } from '../weekday-schedule/weekday-schedule.component';
 
 const MINIMUM_ACTION_MAX = 140;
@@ -31,928 +35,14 @@ const MINIMUM_ACTION_MAX = 140;
 @Component({
   selector: 'app-habit-form-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, WeekdayScheduleComponent, HabitCardPreviewComponent],
-  styles: `
-    .habit-form-checkbox {
-      appearance: none;
-      width: 1.25rem;
-      height: 1.25rem;
-      flex-shrink: 0;
-      cursor: pointer;
-      border-radius: 0.375rem;
-      border: 2px solid var(--brand-light-border);
-      background-color: transparent;
-      transition:
-        background-color 150ms ease,
-        border-color 150ms ease,
-        box-shadow 150ms ease;
-    }
-
-    .habit-form-checkbox:checked {
-      border-color: var(--accent-light);
-      background-color: var(--accent-light);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11 12.5 4.8' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-size: 0.875rem 0.875rem;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-
-    .habit-form-checkbox:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px rgb(var(--accent-rgb-light) / 0.28);
-    }
-
-    :host-context(.dark) .habit-form-checkbox {
-      border-color: var(--brand-border);
-    }
-
-    :host-context(.dark) .habit-form-checkbox:checked {
-      border-color: var(--accent-dark);
-      background-color: var(--accent-dark);
-    }
-
-    :host-context(.dark) .habit-form-checkbox:focus-visible {
-      box-shadow: 0 0 0 2px rgb(var(--accent-rgb-dark) / 0.32);
-    }
-
-    .weekday-input-group {
-      display: flex;
-      min-width: 0;
-      overflow: hidden;
-      border: 1px solid var(--brand-light-border);
-      border-radius: 0.5rem;
-      background-color: var(--brand-light-bg);
-      transition:
-        border-color 150ms ease,
-        box-shadow 150ms ease;
-    }
-
-    .weekday-input-group:focus-within {
-      border-color: var(--accent-light);
-      box-shadow: 0 0 0 1px var(--accent-light);
-    }
-
-    .weekday-input-group__label {
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-      gap: 0.25rem;
-      align-self: stretch;
-      border-right: 1px solid var(--brand-light-border);
-      padding: 0.375rem 0.625rem;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--brand-light-text-secondary);
-    }
-
-    .weekday-input-group__label-icon {
-      font-size: 0.6875rem;
-      line-height: 1;
-      color: var(--brand-light-text-secondary);
-    }
-
-    .weekday-input-group__control {
-      min-width: 0;
-      flex: 1;
-      border: 0;
-      background: transparent;
-      padding: 0.375rem 0.625rem;
-      font-size: 0.875rem;
-      color: var(--brand-light-text-primary);
-      outline: none;
-    }
-
-    .weekday-input-group__control[type='time'] {
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    .weekday-input-group__control[type='time']::-webkit-calendar-picker-indicator,
-    .habit-form-time-control::-webkit-calendar-picker-indicator {
-      display: none;
-      -webkit-appearance: none;
-    }
-
-    .habit-form-time-control {
-      appearance: none;
-      -webkit-appearance: none;
-    }
-
-    :host-context(.dark) .weekday-input-group {
-      border-color: var(--brand-border);
-      background-color: var(--brand-bg);
-    }
-
-    :host-context(.dark) .weekday-input-group:focus-within {
-      border-color: var(--accent-dark);
-      box-shadow: 0 0 0 1px var(--accent-dark);
-    }
-
-    :host-context(.dark) .weekday-input-group__label {
-      border-right-color: var(--brand-border);
-      color: var(--brand-text-secondary);
-    }
-
-    :host-context(.dark) .weekday-input-group__control {
-      color: var(--brand-text-primary);
-    }
-
-    :host-context(.dark) .weekday-input-group__label-icon {
-      color: var(--brand-text-secondary);
-    }
-
-    .habit-form-label-icon {
-      font-size: 0.75rem;
-      line-height: 1;
-      color: var(--brand-light-text-secondary);
-    }
-
-    :host-context(.dark) .habit-form-label-icon {
-      color: var(--brand-text-secondary);
-    }
-
-    .slot-input-group__icon {
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-      align-self: stretch;
-      border-right: 1px solid var(--brand-light-border);
-      padding: 0.375rem 0.625rem;
-      font-size: 0.75rem;
-      line-height: 1;
-      color: var(--accent-light);
-    }
-
-    :host-context(.dark) .slot-input-group__icon {
-      border-right-color: var(--brand-border);
-      color: var(--accent-dark);
-    }
-
-    .slot-control-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding-top: 0.25rem;
-      transition: gap 0.2s ease;
-    }
-
-    .slot-control-row--single {
-      gap: 0;
-    }
-
-    .slot-control-btn-slot {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 2rem;
-      overflow: hidden;
-      transition:
-        width 0.2s ease,
-        opacity 0.2s ease;
-    }
-
-    .slot-control-btn-slot--collapsed {
-      width: 0;
-      opacity: 0;
-    }
-
-    .slot-control-btn {
-      display: inline-flex;
-      height: 2rem;
-      width: 2rem;
-      flex-shrink: 0;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.375rem;
-      border: 1px solid transparent;
-      background-color: transparent;
-      transition:
-        border-color 150ms ease,
-        color 150ms ease,
-        background-color 150ms ease;
-    }
-
-    .slot-control-btn i {
-      display: block;
-      font-size: 0.875rem;
-      line-height: 1;
-    }
-
-    .slot-control-btn--add {
-      border-color: color-mix(in srgb, var(--accent-light) 45%, transparent);
-      color: var(--accent-light);
-    }
-
-    .slot-control-btn--add:hover {
-      border-color: var(--accent-light);
-      background-color: rgb(var(--accent-rgb-light) / 0.1);
-    }
-
-    .slot-control-btn--remove {
-      border-color: rgb(239 68 68 / 0.45);
-      color: rgb(220 38 38);
-    }
-
-    .slot-control-btn--remove:hover {
-      border-color: rgb(239 68 68 / 0.7);
-      background-color: rgb(239 68 68 / 0.1);
-    }
-
-    :host-context(.dark) .slot-control-btn--add {
-      border-color: rgb(var(--accent-rgb-dark) / 0.45);
-      color: var(--accent-dark);
-    }
-
-    :host-context(.dark) .slot-control-btn--add:hover {
-      border-color: var(--accent-dark);
-      background-color: rgb(var(--accent-rgb-dark) / 0.12);
-    }
-
-    :host-context(.dark) .slot-control-btn--remove {
-      border-color: rgb(248 113 113 / 0.45);
-      color: rgb(248 113 113);
-    }
-
-    :host-context(.dark) .slot-control-btn--remove:hover {
-      border-color: rgb(248 113 113 / 0.75);
-      background-color: rgb(239 68 68 / 0.15);
-    }
-
-    @keyframes slot-control-btn-in {
-      from {
-        opacity: 0;
-        transform: scale(0.85);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes slot-control-btn-out {
-      from {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      to {
-        opacity: 0;
-        transform: scale(0.85);
-      }
-    }
-
-    .slot-control-btn-enter {
-      animation: slot-control-btn-in 0.2s ease-out forwards;
-    }
-
-    .slot-control-btn-leave {
-      animation: slot-control-btn-out 0.15s ease-in forwards;
-    }
-
-    @keyframes habit-form-reveal-in {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes habit-form-reveal-out {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      to {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-    }
-
-    .habit-form-reveal-enter {
-      animation: habit-form-reveal-in 0.22s ease-out forwards;
-    }
-
-    .habit-form-reveal-leave {
-      animation: habit-form-reveal-out 0.18s ease-in forwards;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .slot-control-row,
-      .slot-control-btn-slot {
-        transition: none;
-      }
-
-      .slot-control-btn-enter,
-      .slot-control-btn-leave,
-      .habit-form-reveal-enter,
-      .habit-form-reveal-leave {
-        animation: none;
-      }
-    }
-  `,
-  template: `
-    @if (modal.isOpen()) {
-      <div
-        class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 pb-8 pt-20 backdrop-blur-sm md:px-6 md:pt-24"
-        role="presentation"
-        (click)="onBackdropClick($event)"
-        (keydown.escape)="close()"
-      >
-        <div
-          class="mx-auto flex w-full max-w-5xl gap-6 lg:px-8"
-          role="presentation"
-        >
-          <div
-            class="hidden w-[7.5rem] shrink-0 md:block"
-            aria-hidden="true"
-          ></div>
-
-          <div
-            class="min-w-0 flex-1"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="habit-form-title"
-            (click)="$event.stopPropagation()"
-            (keydown)="$event.stopPropagation()"
-          >
-            <form
-              class="rounded-2xl border border-brand-light-border bg-brand-light-surface shadow-xl dark:border-brand-border dark:bg-brand-surface"
-              [formGroup]="form"
-              (ngSubmit)="submit()"
-            >
-              <div
-                class="flex items-center justify-between border-b border-brand-light-border px-5 py-4 dark:border-brand-border md:px-6"
-              >
-                <h2
-                  id="habit-form-title"
-                  class="font-display text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-                >
-                  {{ modalTitle() }}
-                </h2>
-                <button
-                  type="button"
-                  class="rounded-lg p-2 text-brand-light-text-secondary transition-colors hover:bg-brand-light-bg hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-                  aria-label="Fechar"
-                  (click)="close()"
-                >
-                  <i class="bi bi-x-lg text-sm" aria-hidden="true"></i>
-                </button>
-              </div>
-
-              <div class="space-y-5 px-5 py-5 md:px-6">
-                <div>
-                  <label
-                    for="habit-name"
-                    class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                  >
-                    <i class="bi bi-card-text habit-form-label-icon" aria-hidden="true"></i>
-                    Nome
-                  </label>
-                  <input
-                    id="habit-name"
-                    type="text"
-                    formControlName="name"
-                    autocomplete="off"
-                    class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                    placeholder="Exemplo: Leitura ou Caminhada"
-                  />
-                  @if (showError('name', 'required')) {
-                    <p class="mt-1 text-xs text-red-500">Informe o nome do hábito.</p>
-                  }
-                </div>
-
-                <div>
-                  <p
-                    class="mb-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                  >
-                    Dias da semana
-                  </p>
-                  <app-weekday-schedule [(selectedDays)]="scheduleDays" />
-                </div>
-
-                <label class="flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    formControlName="metasDinamicas"
-                    class="habit-form-checkbox"
-                  />
-                  <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
-                    Metas dinâmicas por dia
-                  </span>
-                </label>
-
-                @if (!metasDinamicasActive()) {
-                  <div
-                    class="space-y-5"
-                    animate.enter="habit-form-reveal-enter"
-                    animate.leave="habit-form-reveal-leave"
-                  >
-                    <div>
-                      <label
-                        for="habit-meta-geral"
-                        class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                      >
-                        Meta
-                      </label>
-                      <input
-                        id="habit-meta-geral"
-                        type="text"
-                        formControlName="metaGeral"
-                        autocomplete="off"
-                        class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                        placeholder="Exemplo: Ler 10 páginas"
-                      />
-                    </div>
-
-                    <div class="flex items-start gap-3">
-                      <div class="min-w-0 flex-[8]">
-                        <label
-                          for="habit-minimum-action"
-                          class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                        >
-                          Ação mínima
-                        </label>
-                        <input
-                          id="habit-minimum-action"
-                          type="text"
-                          formControlName="minimumAction"
-                          maxlength="140"
-                          class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                          placeholder="Exemplo: Ler 3 páginas"
-                        />
-                        @if (showError('minimumAction', 'required')) {
-                          <p class="mt-1 text-xs text-red-500">Informe a ação mínima.</p>
-                        }
-                        @if (showError('minimumAction', 'maxlength')) {
-                          <p class="mt-1 text-xs text-red-500">
-                            Máximo de {{ minimumActionMax }} caracteres.
-                          </p>
-                        }
-                      </div>
-
-                      <div class="min-w-0 flex-[2]">
-                        <label
-                          for="habit-reminder"
-                          class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                        >
-                          Horário
-                        </label>
-                        <input
-                          id="habit-reminder"
-                          type="time"
-                          formControlName="optionalReminder"
-                          class="habit-form-time-control w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                        />
-                        @if (showError('optionalReminder', 'required')) {
-                          <p class="mt-1 text-xs text-red-500">Informe o horário.</p>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                } @else {
-                  <div
-                    class="space-y-4"
-                    animate.enter="habit-form-reveal-enter"
-                    animate.leave="habit-form-reveal-leave"
-                  >
-                    <p
-                      class="text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                    >
-                      Configuração por dia
-                    </p>
-                    @for (day of visibleWeekdayItems(); track day.weekday) {
-                      <div
-                        class="overflow-hidden rounded-lg border border-brand-light-border dark:border-brand-border"
-                        animate.enter="habit-form-reveal-enter"
-                        animate.leave="habit-form-reveal-leave"
-                      >
-                        <div
-                          class="border-b border-brand-light-border bg-brand-light-bg px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-bg"
-                        >
-                          <p
-                            class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-                          >
-                            {{ day.fullLabel }}
-                          </p>
-                        </div>
-
-                        <div class="space-y-2 p-3">
-                          <div class="weekday-input-group">
-                            <label
-                              [for]="'habit-meta-day-' + day.weekday"
-                              class="weekday-input-group__label"
-                            >
-                              <i class="bi bi-bullseye weekday-input-group__label-icon" aria-hidden="true"></i>
-                              Meta
-                            </label>
-                            <input
-                              [id]="'habit-meta-day-' + day.weekday"
-                              type="text"
-                              autocomplete="off"
-                              class="weekday-input-group__control"
-                              [formControl]="weekdayGoalMetaControl(weekdayGoalIndex(day.weekday))"
-                              [placeholder]="'Meta de ' + day.fullLabel.toLowerCase()"
-                            />
-                          </div>
-
-                          <div class="flex items-start gap-2">
-                            <div class="weekday-input-group min-w-0 flex-[8]">
-                              <label
-                                [for]="'habit-minimum-day-' + day.weekday"
-                                class="weekday-input-group__label"
-                              >
-                                <i class="bi bi-arrow-down-circle weekday-input-group__label-icon" aria-hidden="true"></i>
-                                Mín.
-                              </label>
-                              <input
-                                [id]="'habit-minimum-day-' + day.weekday"
-                                type="text"
-                                maxlength="140"
-                                autocomplete="off"
-                                class="weekday-input-group__control"
-                                [formControl]="weekdayGoalMinimumControl(weekdayGoalIndex(day.weekday))"
-                                [placeholder]="'Mínimo de ' + day.fullLabel.toLowerCase()"
-                              />
-                            </div>
-
-                            <div class="weekday-input-group min-w-0 flex-[2]">
-                              <label
-                                [for]="'habit-reminder-day-' + day.weekday"
-                                class="weekday-input-group__label"
-                              >
-                                <i class="bi bi-clock weekday-input-group__label-icon" aria-hidden="true"></i>
-                                Hora
-                              </label>
-                              <input
-                                [id]="'habit-reminder-day-' + day.weekday"
-                                type="time"
-                                class="weekday-input-group__control"
-                                [formControl]="weekdayGoalReminderControl(weekdayGoalIndex(day.weekday))"
-                              />
-                            </div>
-                          </div>
-
-                          @if (
-                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required') ||
-                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength') ||
-                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'optionalReminder', 'required')
-                          ) {
-                            <div class="space-y-0.5">
-                              @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required')) {
-                                <p class="text-xs text-red-500">Informe a ação mínima.</p>
-                              }
-                              @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')) {
-                                <p class="text-xs text-red-500">
-                                  Máximo de {{ minimumActionMax }} caracteres.
-                                </p>
-                              }
-                              @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'optionalReminder', 'required')) {
-                                <p class="text-xs text-red-500">Informe o horário.</p>
-                              }
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-
-                <div>
-                  <label
-                    for="habit-category"
-                    class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-                  >
-                    <i class="bi bi-bookmark habit-form-label-icon" aria-hidden="true"></i>
-                    Categoria
-                  </label>
-                  <input
-                    id="habit-category"
-                    type="text"
-                    formControlName="category"
-                    autocomplete="off"
-                    class="w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
-                    placeholder="Exemplo: Conhecimento"
-                  />
-                  @if (showError('category', 'required')) {
-                    <p class="mt-1 text-xs text-red-500">Informe a categoria.</p>
-                  }
-                </div>
-
-                <div
-                  class="overflow-hidden rounded-lg border border-brand-light-border dark:border-brand-border"
-                >
-                  <div
-                    class="border-b border-brand-light-border bg-brand-light-bg px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-bg"
-                  >
-                    <p
-                      class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-                    >
-                      Tarefas gatilho
-                    </p>
-                  </div>
-
-                  <div class="space-y-2 p-3">
-                    @if (form.controls.trigger1Visible.value) {
-                      <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-lightning-charge"></i>
-                        </span>
-                        <input
-                          id="habit-trigger1"
-                          type="text"
-                          formControlName="trigger1"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Alongue-se"
-                        />
-                      </div>
-                      @if (showError('trigger1', 'required')) {
-                        <p class="text-xs text-red-500">Informe o gatilho.</p>
-                      }
-                    }
-
-                    @if (form.controls.trigger2Visible.value) {
-                      <div
-                        class="space-y-2"
-                        animate.enter="habit-form-reveal-enter"
-                        animate.leave="habit-form-reveal-leave"
-                      >
-                        <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-lightning-charge"></i>
-                        </span>
-                        <input
-                          id="habit-trigger2"
-                          type="text"
-                          formControlName="trigger2"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Alongue-se"
-                        />
-                      </div>
-                      @if (showError('trigger2', 'required')) {
-                        <p class="text-xs text-red-500">Informe o gatilho.</p>
-                      }
-                      </div>
-                    }
-
-                    @if (form.controls.trigger3Visible.value) {
-                      <div
-                        class="space-y-2"
-                        animate.enter="habit-form-reveal-enter"
-                        animate.leave="habit-form-reveal-leave"
-                      >
-                        <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-lightning-charge"></i>
-                        </span>
-                        <input
-                          id="habit-trigger3"
-                          type="text"
-                          formControlName="trigger3"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Alongue-se"
-                        />
-                      </div>
-                      @if (showError('trigger3', 'required')) {
-                        <p class="text-xs text-red-500">Informe o gatilho.</p>
-                      }
-                      </div>
-                    }
-
-                    @if (canAddTrigger() || canRemoveTrigger()) {
-                      <div
-                        class="slot-control-row"
-                        [class.slot-control-row--single]="
-                          !canAddTrigger() || !canRemoveTrigger()
-                        "
-                      >
-                        <div
-                          class="slot-control-btn-slot"
-                          [class.slot-control-btn-slot--collapsed]="!canAddTrigger()"
-                        >
-                          @if (canAddTrigger()) {
-                            <button
-                              type="button"
-                              class="slot-control-btn slot-control-btn--add"
-                              animate.enter="slot-control-btn-enter"
-                              animate.leave="slot-control-btn-leave"
-                              aria-label="Adicionar gatilho"
-                              (click)="addTriggerSlot()"
-                            >
-                              <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                            </button>
-                          }
-                        </div>
-                        <div
-                          class="slot-control-btn-slot"
-                          [class.slot-control-btn-slot--collapsed]="!canRemoveTrigger()"
-                        >
-                          @if (canRemoveTrigger()) {
-                            <button
-                              type="button"
-                              class="slot-control-btn slot-control-btn--remove"
-                              animate.enter="slot-control-btn-enter"
-                              animate.leave="slot-control-btn-leave"
-                              aria-label="Ocultar gatilho"
-                              (click)="removeTriggerSlot()"
-                            >
-                              <i class="bi bi-dash-lg" aria-hidden="true"></i>
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-
-                <div
-                  class="overflow-hidden rounded-lg border border-brand-light-border dark:border-brand-border"
-                >
-                  <div
-                    class="border-b border-brand-light-border bg-brand-light-bg px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-bg"
-                  >
-                    <p
-                      class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-                    >
-                      Recompensas deste hábito
-                    </p>
-                  </div>
-
-                  <div class="space-y-2 p-3">
-                    @if (form.controls.motivation1Visible.value) {
-                      <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-trophy"></i>
-                        </span>
-                        <input
-                          id="habit-motivation1"
-                          type="text"
-                          formControlName="motivation1"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Corpo em forma"
-                        />
-                      </div>
-                      @if (showError('motivation1', 'required')) {
-                        <p class="text-xs text-red-500">Informe a recompensa.</p>
-                      }
-                    }
-
-                    @if (form.controls.motivation2Visible.value) {
-                      <div
-                        class="space-y-2"
-                        animate.enter="habit-form-reveal-enter"
-                        animate.leave="habit-form-reveal-leave"
-                      >
-                        <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-trophy"></i>
-                        </span>
-                        <input
-                          id="habit-motivation2"
-                          type="text"
-                          formControlName="motivation2"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Corpo em forma"
-                        />
-                      </div>
-                      @if (showError('motivation2', 'required')) {
-                        <p class="text-xs text-red-500">Informe a recompensa.</p>
-                      }
-                      </div>
-                    }
-
-                    @if (form.controls.motivation3Visible.value) {
-                      <div
-                        class="space-y-2"
-                        animate.enter="habit-form-reveal-enter"
-                        animate.leave="habit-form-reveal-leave"
-                      >
-                        <div class="weekday-input-group">
-                        <span class="slot-input-group__icon" aria-hidden="true">
-                          <i class="bi bi-trophy"></i>
-                        </span>
-                        <input
-                          id="habit-motivation3"
-                          type="text"
-                          formControlName="motivation3"
-                          autocomplete="off"
-                          class="weekday-input-group__control"
-                          placeholder="Exemplo: Corpo em forma"
-                        />
-                      </div>
-                      @if (showError('motivation3', 'required')) {
-                        <p class="text-xs text-red-500">Informe a recompensa.</p>
-                      }
-                      </div>
-                    }
-
-                    @if (canAddMotivation() || canRemoveMotivation()) {
-                      <div
-                        class="slot-control-row"
-                        [class.slot-control-row--single]="
-                          !canAddMotivation() || !canRemoveMotivation()
-                        "
-                      >
-                        <div
-                          class="slot-control-btn-slot"
-                          [class.slot-control-btn-slot--collapsed]="!canAddMotivation()"
-                        >
-                          @if (canAddMotivation()) {
-                            <button
-                              type="button"
-                              class="slot-control-btn slot-control-btn--add"
-                              animate.enter="slot-control-btn-enter"
-                              animate.leave="slot-control-btn-leave"
-                              aria-label="Adicionar recompensa"
-                              (click)="addMotivationSlot()"
-                            >
-                              <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                            </button>
-                          }
-                        </div>
-                        <div
-                          class="slot-control-btn-slot"
-                          [class.slot-control-btn-slot--collapsed]="!canRemoveMotivation()"
-                        >
-                          @if (canRemoveMotivation()) {
-                            <button
-                              type="button"
-                              class="slot-control-btn slot-control-btn--remove"
-                              animate.enter="slot-control-btn-enter"
-                              animate.leave="slot-control-btn-leave"
-                              aria-label="Ocultar recompensa"
-                              (click)="removeMotivationSlot()"
-                            >
-                              <i class="bi bi-dash-lg" aria-hidden="true"></i>
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-
-                <label class="flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    formControlName="showOnToday"
-                    class="habit-form-checkbox"
-                  />
-                  <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
-                    Exibir na tela Hoje
-                  </span>
-                </label>
-
-                <div class="space-y-3 pt-1">
-                  <p
-                    class="text-center text-sm font-semibold text-brand-light-primary dark:text-brand-primary"
-                  >
-                    Pré-visualização
-                  </p>
-                  <app-habit-card-preview [formState]="previewFormState()" />
-                </div>
-              </div>
-
-              <div
-                class="flex justify-end gap-3 border-t border-brand-light-border px-5 py-4 dark:border-brand-border md:px-6"
-              >
-                <button
-                  type="button"
-                  class="rounded-lg border border-brand-light-border px-4 py-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:bg-brand-light-bg hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-                  (click)="close()"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  class="rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg disabled:cursor-not-allowed disabled:opacity-60 dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-                  [disabled]="form.invalid"
-                >
-                  {{ submitLabel() }}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div
-            class="hidden w-[4.5rem] shrink-0 md:block"
-            aria-hidden="true"
-          ></div>
-        </div>
-      </div>
-    }
-  `,
+  imports: [
+    ReactiveFormsModule,
+    WeekdayScheduleComponent,
+    HabitCardPreviewComponent,
+    TriggerSlotsFieldsetComponent,
+  ],
+  templateUrl: './habit-form-modal.component.html',
+  styleUrl: './habit-form-modal.component.scss',
 })
 export class HabitFormModalComponent {
   private readonly fb = inject(NonNullableFormBuilder);
@@ -961,23 +51,29 @@ export class HabitFormModalComponent {
   protected readonly modal = inject(HabitFormModalService);
   protected readonly minimumActionMax = MINIMUM_ACTION_MAX;
   protected readonly scheduleDays = signal<Weekday[]>([...ALL_WEEKDAYS]);
-  protected readonly metasDinamicasActive = signal(false);
+  protected readonly dynamicGoalsActive = signal(false);
   private readonly modalSessionKey = signal<string | null>(null);
   private readonly formPreviewVersion = signal(0);
 
   protected readonly previewFormState = computed((): HabitCardPreviewFormState => {
     this.formPreviewVersion();
     this.scheduleDays();
-    this.metasDinamicasActive();
+    this.dynamicGoalsActive();
 
     const value = this.form.getRawValue();
+    const triggers = mapVisibleFormSlotsToStorage(
+      value.triggers.map((slot) => ({ text: slot.text, visible: true })),
+    );
+    const motivations = mapVisibleFormSlotsToStorage(
+      value.motivations.map((slot) => ({ text: slot.text, visible: true })),
+    );
 
     return {
       name: value.name,
       category: value.category,
       scheduleDays: this.scheduleDays(),
-      metasDinamicas: value.metasDinamicas,
-      metaGeral: value.metaGeral,
+      dynamicGoals: value.dynamicGoals,
+      generalGoal: value.generalGoal,
       minimumAction: value.minimumAction,
       optionalReminder: value.optionalReminder,
       weekdayGoals: value.weekdayGoals.map((entry) => ({
@@ -986,18 +82,8 @@ export class HabitFormModalComponent {
         minimumAction: entry.minimumAction,
         optionalReminder: entry.optionalReminder,
       })),
-      trigger1: value.trigger1,
-      trigger2: value.trigger2,
-      trigger3: value.trigger3,
-      trigger1Visible: value.trigger1Visible,
-      trigger2Visible: value.trigger2Visible,
-      trigger3Visible: value.trigger3Visible,
-      motivation1: value.motivation1,
-      motivation2: value.motivation2,
-      motivation3: value.motivation3,
-      motivation1Visible: value.motivation1Visible,
-      motivation2Visible: value.motivation2Visible,
-      motivation3Visible: value.motivation3Visible,
+      triggers,
+      motivations,
     };
   });
 
@@ -1019,8 +105,8 @@ export class HabitFormModalComponent {
 
   protected readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
-    metaGeral: [''],
-    metasDinamicas: [false],
+    generalGoal: [''],
+    dynamicGoals: [false],
     weekdayGoals: this.fb.array(
       createDefaultWeekdayGoals().map((entry) =>
         this.fb.group({
@@ -1032,18 +118,8 @@ export class HabitFormModalComponent {
       ),
     ),
     category: ['', [Validators.required, Validators.minLength(1)]],
-    trigger1: ['', [Validators.required, Validators.minLength(1)]],
-    trigger2: [''],
-    trigger3: [''],
-    trigger1Visible: [true],
-    trigger2Visible: [false],
-    trigger3Visible: [false],
-    motivation1: ['', [Validators.required, Validators.minLength(1)]],
-    motivation2: [''],
-    motivation3: [''],
-    motivation1Visible: [true],
-    motivation2Visible: [false],
-    motivation3Visible: [false],
+    triggers: this.fb.array([this.createSlotGroup(DEFAULT_NEW_HABIT_TRIGGER)]),
+    motivations: this.fb.array([this.createSlotGroup(DEFAULT_NEW_HABIT_MOTIVATION)]),
     minimumAction: [
       '',
       [Validators.required, Validators.maxLength(MINIMUM_ACTION_MAX)],
@@ -1057,8 +133,8 @@ export class HabitFormModalComponent {
       this.formPreviewVersion.update((version) => version + 1);
     });
 
-    this.form.controls.metasDinamicas.valueChanges.subscribe((enabled) => {
-      this.metasDinamicasActive.set(enabled);
+    this.form.controls.dynamicGoals.valueChanges.subscribe((enabled) => {
+      this.dynamicGoalsActive.set(enabled);
       this.syncDynamicValidators(enabled);
     });
 
@@ -1104,7 +180,7 @@ export class HabitFormModalComponent {
     });
 
     effect(() => {
-      if (!this.metasDinamicasActive()) {
+      if (!this.dynamicGoalsActive()) {
         return;
       }
 
@@ -1142,67 +218,55 @@ export class HabitFormModalComponent {
   }
 
   protected canAddTrigger(): boolean {
-    return this.countVisibleTriggerSlots() < 3;
+    return this.form.controls.triggers.length < MAX_HABIT_SLOTS;
   }
 
   protected canRemoveTrigger(): boolean {
-    return this.countVisibleTriggerSlots() > 1;
+    return this.form.controls.triggers.length > 1;
   }
 
   protected canAddMotivation(): boolean {
-    return this.countVisibleMotivationSlots() < 3;
+    return this.form.controls.motivations.length < MAX_HABIT_SLOTS;
   }
 
   protected canRemoveMotivation(): boolean {
-    return this.countVisibleMotivationSlots() > 1;
+    return this.form.controls.motivations.length > 1;
   }
 
   protected addTriggerSlot(): void {
-    const value = this.form.getRawValue();
-
-    if (!value.trigger2Visible) {
-      this.form.patchValue({ trigger2Visible: true });
-    } else if (!value.trigger3Visible) {
-      this.form.patchValue({ trigger3Visible: true });
+    if (!this.canAddTrigger()) {
+      return;
     }
 
-    this.syncTriggerMotivationValidators();
+    this.form.controls.triggers.push(this.createSlotGroup(''));
+    this.formPreviewVersion.update((version) => version + 1);
   }
 
   protected removeTriggerSlot(): void {
-    const value = this.form.getRawValue();
-
-    if (value.trigger3Visible) {
-      this.form.patchValue({ trigger3Visible: false });
-    } else if (value.trigger2Visible) {
-      this.form.patchValue({ trigger2Visible: false });
+    if (!this.canRemoveTrigger()) {
+      return;
     }
 
-    this.syncTriggerMotivationValidators();
+    this.form.controls.triggers.removeAt(this.form.controls.triggers.length - 1);
+    this.formPreviewVersion.update((version) => version + 1);
   }
 
   protected addMotivationSlot(): void {
-    const value = this.form.getRawValue();
-
-    if (!value.motivation2Visible) {
-      this.form.patchValue({ motivation2Visible: true });
-    } else if (!value.motivation3Visible) {
-      this.form.patchValue({ motivation3Visible: true });
+    if (!this.canAddMotivation()) {
+      return;
     }
 
-    this.syncTriggerMotivationValidators();
+    this.form.controls.motivations.push(this.createSlotGroup(''));
+    this.formPreviewVersion.update((version) => version + 1);
   }
 
   protected removeMotivationSlot(): void {
-    const value = this.form.getRawValue();
-
-    if (value.motivation3Visible) {
-      this.form.patchValue({ motivation3Visible: false });
-    } else if (value.motivation2Visible) {
-      this.form.patchValue({ motivation2Visible: false });
+    if (!this.canRemoveMotivation()) {
+      return;
     }
 
-    this.syncTriggerMotivationValidators();
+    this.form.controls.motivations.removeAt(this.form.controls.motivations.length - 1);
+    this.formPreviewVersion.update((version) => version + 1);
   }
 
   protected showWeekdayGoalError(
@@ -1237,8 +301,8 @@ export class HabitFormModalComponent {
     const value = this.form.getRawValue();
     const payload = {
       name: value.name,
-      metaGeral: value.metaGeral,
-      metasDinamicas: value.metasDinamicas,
+      generalGoal: value.generalGoal,
+      dynamicGoals: value.dynamicGoals,
       weekdayGoals: value.weekdayGoals.map((entry) => ({
         weekday: entry.weekday,
         meta: entry.meta,
@@ -1246,18 +310,12 @@ export class HabitFormModalComponent {
         optionalReminder: entry.optionalReminder,
       })),
       category: value.category,
-      trigger1: value.trigger1,
-      trigger2: value.trigger2,
-      trigger3: value.trigger3,
-      trigger1Visible: value.trigger1Visible,
-      trigger2Visible: value.trigger2Visible,
-      trigger3Visible: value.trigger3Visible,
-      motivation1: value.motivation1,
-      motivation2: value.motivation2,
-      motivation3: value.motivation3,
-      motivation1Visible: value.motivation1Visible,
-      motivation2Visible: value.motivation2Visible,
-      motivation3Visible: value.motivation3Visible,
+      triggers: mapVisibleFormSlotsToStorage(
+        value.triggers.map((slot) => ({ text: slot.text, visible: true })),
+      ),
+      motivations: mapVisibleFormSlotsToStorage(
+        value.motivations.map((slot) => ({ text: slot.text, visible: true })),
+      ),
       minimumAction: value.minimumAction,
       scheduleDays: this.scheduleDays(),
       optionalReminder: value.optionalReminder,
@@ -1277,29 +335,24 @@ export class HabitFormModalComponent {
 
   private resetForm(): void {
     this.scheduleDays.set([...ALL_WEEKDAYS]);
-    this.metasDinamicasActive.set(false);
+    this.dynamicGoalsActive.set(false);
 
     this.form.reset({
       name: '',
-      metaGeral: '',
-      metasDinamicas: false,
+      generalGoal: '',
+      dynamicGoals: false,
       category: '',
-      trigger1: DEFAULT_NEW_HABIT_TRIGGER,
-      trigger2: '',
-      trigger3: '',
-      trigger1Visible: true,
-      trigger2Visible: false,
-      trigger3Visible: false,
-      motivation1: DEFAULT_NEW_HABIT_MOTIVATION,
-      motivation2: '',
-      motivation3: '',
-      motivation1Visible: true,
-      motivation2Visible: false,
-      motivation3Visible: false,
       minimumAction: '',
       optionalReminder: '',
       showOnToday: true,
     });
+
+    this.setSlotFormArray(this.form.controls.triggers, [
+      { text: DEFAULT_NEW_HABIT_TRIGGER, visible: true },
+    ]);
+    this.setSlotFormArray(this.form.controls.motivations, [
+      { text: DEFAULT_NEW_HABIT_MOTIVATION, visible: true },
+    ]);
 
     this.form.controls.weekdayGoals.controls.forEach((group, index) => {
       group.patchValue({
@@ -1311,62 +364,31 @@ export class HabitFormModalComponent {
     });
 
     this.syncDynamicValidators(false);
-    this.syncTriggerMotivationValidators();
     this.formPreviewVersion.update((version) => version + 1);
   }
 
-  private patchFormFromHabit(habit: {
-    name: string;
-    metaGeral: string;
-    metasDinamicas: boolean;
-    weekdayGoals: {
-      weekday: Weekday;
-      meta: string;
-      minimumAction: string;
-      optionalReminder: string;
-    }[];
-    scheduleDays: Weekday[];
-    category: string;
-    trigger1: string;
-    trigger2: string;
-    trigger3: string;
-    trigger1Visible: boolean;
-    trigger2Visible: boolean;
-    trigger3Visible: boolean;
-    motivation1: string;
-    motivation2: string;
-    motivation3: string;
-    motivation1Visible: boolean;
-    motivation2Visible: boolean;
-    motivation3Visible: boolean;
-    minimumAction: string;
-    optionalReminder: string;
-    showOnToday: boolean;
-  }): void {
+  private patchFormFromHabit(habit: Habit): void {
     this.scheduleDays.set([...habit.scheduleDays]);
-    this.metasDinamicasActive.set(habit.metasDinamicas);
+    this.dynamicGoalsActive.set(habit.dynamicGoals);
 
     this.form.reset({
       name: habit.name,
-      metaGeral: habit.metaGeral,
-      metasDinamicas: habit.metasDinamicas,
+      generalGoal: habit.generalGoal,
+      dynamicGoals: habit.dynamicGoals,
       category: habit.category,
-      trigger1: habit.trigger1,
-      trigger2: habit.trigger2,
-      trigger3: habit.trigger3,
-      trigger1Visible: habit.trigger1Visible,
-      trigger2Visible: habit.trigger2Visible,
-      trigger3Visible: habit.trigger3Visible,
-      motivation1: habit.motivation1,
-      motivation2: habit.motivation2,
-      motivation3: habit.motivation3,
-      motivation1Visible: habit.motivation1Visible,
-      motivation2Visible: habit.motivation2Visible,
-      motivation3Visible: habit.motivation3Visible,
       minimumAction: habit.minimumAction,
       optionalReminder: habit.optionalReminder,
       showOnToday: habit.showOnToday,
     });
+
+    this.setSlotFormArray(
+      this.form.controls.triggers,
+      mapStorageSlotsToVisibleForm(habit.triggers),
+    );
+    this.setSlotFormArray(
+      this.form.controls.motivations,
+      mapStorageSlotsToVisibleForm(habit.motivations),
+    );
 
     habit.weekdayGoals.forEach((entry, index) => {
       const group = this.form.controls.weekdayGoals.at(index);
@@ -1381,65 +403,26 @@ export class HabitFormModalComponent {
       }
     });
 
-    this.syncDynamicValidators(habit.metasDinamicas);
-    this.syncTriggerMotivationValidators();
+    this.syncDynamicValidators(habit.dynamicGoals);
     this.formPreviewVersion.update((version) => version + 1);
   }
 
-  private countVisibleTriggerSlots(): number {
-    const value = this.form.getRawValue();
-
-    return [value.trigger1Visible, value.trigger2Visible, value.trigger3Visible].filter(
-      Boolean,
-    ).length;
+  private createSlotGroup(text: string) {
+    return this.fb.group({
+      text: [text, [Validators.required, Validators.minLength(1)]],
+    });
   }
 
-  private countVisibleMotivationSlots(): number {
-    const value = this.form.getRawValue();
-
-    return [
-      value.motivation1Visible,
-      value.motivation2Visible,
-      value.motivation3Visible,
-    ].filter(Boolean).length;
-  }
-
-  private syncTriggerMotivationValidators(): void {
-    const slots = [
-      {
-        control: this.form.controls.trigger1,
-        visible: this.form.controls.trigger1Visible.value,
-      },
-      {
-        control: this.form.controls.trigger2,
-        visible: this.form.controls.trigger2Visible.value,
-      },
-      {
-        control: this.form.controls.trigger3,
-        visible: this.form.controls.trigger3Visible.value,
-      },
-      {
-        control: this.form.controls.motivation1,
-        visible: this.form.controls.motivation1Visible.value,
-      },
-      {
-        control: this.form.controls.motivation2,
-        visible: this.form.controls.motivation2Visible.value,
-      },
-      {
-        control: this.form.controls.motivation3,
-        visible: this.form.controls.motivation3Visible.value,
-      },
-    ];
+  private setSlotFormArray(
+    array: typeof this.form.controls.triggers,
+    slots: { text: string; visible: boolean }[],
+  ): void {
+    while (array.length > 0) {
+      array.removeAt(0);
+    }
 
     for (const slot of slots) {
-      if (slot.visible) {
-        slot.control.setValidators([Validators.required, Validators.minLength(1)]);
-      } else {
-        slot.control.clearValidators();
-      }
-
-      slot.control.updateValueAndValidity({ emitEvent: false });
+      array.push(this.createSlotGroup(slot.text));
     }
   }
 

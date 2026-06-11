@@ -1,0 +1,33 @@
+<div
+  class="habit-marquee-viewport overflow-hidden select-none"
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="marqueeAriaLabel()"
+  (click)="cycleMarqueeSpeed($event)"
+  (keydown.enter)="cycleMarqueeSpeed($event)"
+  (keydown.space)="cycleMarqueeSpeed($event)"
+>
+  <div
+    #marqueeTrack
+    class="habit-marquee-track habit-card-field habit-card-field--secondary text-sm"
+  >
+    @for (copy of [0, 1]; track copy) {
+      <span class="flex shrink-0 items-center gap-2 pr-8" [attr.aria-hidden]="copy === 1">
+        @for (item of items(); track item.text + item.type; let last = $last) {
+          <span class="inline-flex items-center gap-1">
+            <i
+              class="bi habit-card-field habit-card-field--accent shrink-0 text-xs"
+              [class.bi-lightning-charge]="item.type === 'trigger'"
+              [class.bi-trophy]="item.type === 'motivation'"
+              aria-hidden="true"
+            ></i>
+            <span>{{ item.text }}</span>
+          </span>
+          @if (!last) {
+            <span class="leading-none opacity-50" aria-hidden="true">·</span>
+          }
+        }
+      </span>
+    }
+  </div>
+</div>

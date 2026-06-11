@@ -1,0 +1,77 @@
+<div
+  class="overflow-hidden rounded-lg border border-brand-light-border dark:border-brand-border"
+>
+  <div
+    class="border-b border-brand-light-border bg-brand-light-bg px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-bg"
+  >
+    <p
+      class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+    >
+      {{ title() }}
+    </p>
+  </div>
+
+  <div class="space-y-2 p-3">
+    @for (_slot of formArray.controls; track $index; let slotIndex = $index) {
+      <div [formGroupName]="slotIndex" class="space-y-2">
+        <div class="weekday-input-group">
+          <span class="slot-input-group__icon" aria-hidden="true">
+            <i class="bi" [class]="iconClass()"></i>
+          </span>
+          <input
+            type="text"
+            formControlName="text"
+            autocomplete="off"
+            class="weekday-input-group__control"
+            [placeholder]="placeholder()"
+          />
+        </div>
+        @if (showError(slotIndex)) {
+          <p class="text-xs text-red-500">{{ requiredErrorMessage() }}</p>
+        }
+      </div>
+    }
+
+    @if (canAdd() || canRemove()) {
+      <div
+        class="slot-control-row"
+        [class.slot-control-row--single]="!canAdd() || !canRemove()"
+      >
+        <div
+          class="slot-control-btn-slot"
+          [class.slot-control-btn-slot--collapsed]="!canAdd()"
+        >
+          @if (canAdd()) {
+            <button
+              type="button"
+              class="slot-control-btn slot-control-btn--add"
+              animate.enter="slot-control-btn-enter"
+              animate.leave="slot-control-btn-leave"
+              [attr.aria-label]="addAriaLabel()"
+              (click)="addSlot.emit()"
+            >
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+        <div
+          class="slot-control-btn-slot"
+          [class.slot-control-btn-slot--collapsed]="!canRemove()"
+        >
+          @if (canRemove()) {
+            <button
+              type="button"
+              class="slot-control-btn slot-control-btn--remove"
+              animate.enter="slot-control-btn-enter"
+              animate.leave="slot-control-btn-leave"
+              [attr.aria-label]="removeAriaLabel()"
+              (click)="removeSlot.emit()"
+            >
+              <i class="bi bi-dash-lg" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

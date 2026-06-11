@@ -1,0 +1,41 @@
+@keyframes habit-marquee-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.habit-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: habit-marquee-left 28s linear infinite;
+}
+
+.habit-marquee-viewport {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.habit-marquee-viewport * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-marquee-track {
+    animation: none;
+  }
+
+  .habit-marquee-viewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .habit-marquee-viewport::-webkit-scrollbar {
+    display: none;
+  }
+}
