@@ -1,8 +1,9 @@
 import { ALL_WEEKDAYS } from '../models/habit.model';
+import { padSlots } from '../models/habit-slot.model';
 import type { TodayHabitCard } from '../models/today-habit-card.model';
 import { mapDemoPoolEntryToCard } from './demo-habit-card.mapper';
 import { buildDemoHabitPool } from './demo-habits-pool.data';
-import { buildMarqueeItems } from './habit-trigger-motivation.utils';
+import { buildMarqueeItemsFromSlots } from './habit-trigger-motivation.utils';
 
 function demoMarquee(
   trigger1: string,
@@ -10,20 +11,16 @@ function demoMarquee(
   motivation1: string,
   motivation2: string,
 ) {
-  return buildMarqueeItems({
-    trigger1,
-    trigger2,
-    trigger3: '',
-    trigger1Visible: true,
-    trigger2Visible: !!trigger2.trim(),
-    trigger3Visible: false,
-    motivation1,
-    motivation2,
-    motivation3: '',
-    motivation1Visible: true,
-    motivation2Visible: !!motivation2.trim(),
-    motivation3Visible: false,
-  });
+  return buildMarqueeItemsFromSlots(
+    padSlots([
+      { text: trigger1, visible: true },
+      { text: trigger2, visible: !!trigger2.trim() },
+    ]),
+    padSlots([
+      { text: motivation1, visible: true },
+      { text: motivation2, visible: !!motivation2.trim() },
+    ]),
+  );
 }
 
 function shuffleIndices(length: number): number[] {

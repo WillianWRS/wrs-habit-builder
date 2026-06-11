@@ -95,7 +95,7 @@ export class HabitCardPreviewComponent {
   });
 
   protected readonly showDaySelector = computed(
-    () => this.formState().metasDinamicas && this.visiblePreviewDays().length > 0,
+    () => this.formState().dynamicGoals && this.visiblePreviewDays().length > 0,
   );
 
   protected readonly cardName = computed(() =>
@@ -117,8 +117,8 @@ export class HabitCardPreviewComponent {
   protected readonly cardDisplayMeta = computed(() => {
     const state = this.formState();
 
-    if (!state.metasDinamicas) {
-      return previewTextOrPlaceholder(state.metaGeral, 'Meta');
+    if (!state.dynamicGoals) {
+      return previewTextOrPlaceholder(state.generalGoal, 'Meta');
     }
 
     if (this.visiblePreviewDays().length === 0) {
@@ -133,7 +133,7 @@ export class HabitCardPreviewComponent {
   protected readonly cardMinimumAction = computed(() => {
     const state = this.formState();
 
-    if (!state.metasDinamicas) {
+    if (!state.dynamicGoals) {
       return previewTextOrPlaceholder(state.minimumAction, 'Ação mínima');
     }
 
@@ -149,7 +149,7 @@ export class HabitCardPreviewComponent {
   protected readonly cardTime = computed(() => {
     const state = this.formState();
 
-    if (!state.metasDinamicas) {
+    if (!state.dynamicGoals) {
       return previewTimeOrPlaceholder(state.optionalReminder);
     }
 
@@ -168,7 +168,7 @@ export class HabitCardPreviewComponent {
       const days = this.visiblePreviewDays().map((day) => day.weekday);
 
       untracked(() => {
-        if (!state.metasDinamicas || days.length === 0) {
+        if (!state.dynamicGoals || days.length === 0) {
           this.previewDay.set(null);
           this.previousVisibleDays = days;
           return;

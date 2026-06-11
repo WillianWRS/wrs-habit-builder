@@ -1,0 +1,176 @@
+.habit-form-checkbox {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  border: 2px solid var(--brand-light-border);
+  background-color: transparent;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.habit-form-checkbox:checked {
+  border-color: var(--accent-light);
+  background-color: var(--accent-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.2 6.4 11 12.5 4.8' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 0.875rem 0.875rem;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.habit-form-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--accent-rgb-light) / 0.28);
+}
+
+:host-context(.dark) .habit-form-checkbox {
+  border-color: var(--brand-border);
+}
+
+:host-context(.dark) .habit-form-checkbox:checked {
+  border-color: var(--accent-dark);
+  background-color: var(--accent-dark);
+}
+
+:host-context(.dark) .habit-form-checkbox:focus-visible {
+  box-shadow: 0 0 0 2px rgb(var(--accent-rgb-dark) / 0.32);
+}
+
+.weekday-input-group {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--brand-light-border);
+  border-radius: 0.5rem;
+  background-color: var(--brand-light-bg);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.weekday-input-group:focus-within {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent-light);
+}
+
+.weekday-input-group__label {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: stretch;
+  border-right: 1px solid var(--brand-light-border);
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--brand-light-text-secondary);
+}
+
+.weekday-input-group__label-icon {
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--brand-light-text-secondary);
+}
+
+.weekday-input-group__control {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+  color: var(--brand-light-text-primary);
+  outline: none;
+}
+
+.weekday-input-group__control[type='time'] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.weekday-input-group__control[type='time']::-webkit-calendar-picker-indicator,
+.habit-form-time-control::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.habit-form-time-control {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+:host-context(.dark) .weekday-input-group {
+  border-color: var(--brand-border);
+  background-color: var(--brand-bg);
+}
+
+:host-context(.dark) .weekday-input-group:focus-within {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 1px var(--accent-dark);
+}
+
+:host-context(.dark) .weekday-input-group__label {
+  border-right-color: var(--brand-border);
+  color: var(--brand-text-secondary);
+}
+
+:host-context(.dark) .weekday-input-group__control {
+  color: var(--brand-text-primary);
+}
+
+:host-context(.dark) .weekday-input-group__label-icon {
+  color: var(--brand-text-secondary);
+}
+
+.habit-form-label-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--brand-light-text-secondary);
+}
+
+:host-context(.dark) .habit-form-label-icon {
+  color: var(--brand-text-secondary);
+}
+
+@keyframes habit-form-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes habit-form-reveal-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.habit-form-reveal-enter {
+  animation: habit-form-reveal-in 0.22s ease-out forwards;
+}
+
+.habit-form-reveal-leave {
+  animation: habit-form-reveal-out 0.18s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-form-reveal-enter,
+  .habit-form-reveal-leave {
+    animation: none;
+  }
+}

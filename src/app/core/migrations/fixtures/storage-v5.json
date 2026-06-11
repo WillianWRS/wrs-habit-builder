@@ -1,0 +1,73 @@
+{
+  "version": 5,
+  "habits": [
+    {
+      "id": "habit-legacy-1",
+      "name": "Leitura diária",
+      "metaGeral": "30 minutos por dia",
+      "metasDinamicas": false,
+      "weekdayGoals": [],
+      "category": "Mente",
+      "trigger1": "Após o café",
+      "trigger2": "Antes de dormir",
+      "motivation1": "Aprender",
+      "motivation2": "Relaxar",
+      "minimumAction": "1 página",
+      "scheduleDays": [0, 1, 2, 3, 4, 5, 6],
+      "scheduleDaySince": {
+        "0": "2026-01-01",
+        "1": "2026-01-01",
+        "2": "2026-01-01",
+        "3": "2026-01-01",
+        "4": "2026-01-01",
+        "5": "2026-01-01",
+        "6": "2026-01-01"
+      },
+      "optionalReminder": "",
+      "archived": false,
+      "createdAt": "2026-01-01T12:00:00.000Z",
+      "showOnToday": true
+    },
+    {
+      "id": "habit-legacy-2",
+      "name": "Exercício",
+      "metaGeral": "Mover o corpo",
+      "metasDinamicas": false,
+      "weekdayGoals": [],
+      "category": "saude",
+      "triggerText": "Ao acordar",
+      "trigger1": "",
+      "trigger2": "",
+      "motivation1": "Energia",
+      "motivation2": "",
+      "minimumAction": "10 minutos",
+      "scheduleDays": [1, 3, 5],
+      "scheduleDaySince": {
+        "1": "2026-02-01",
+        "3": "2026-02-01",
+        "5": "2026-02-01"
+      },
+      "optionalReminder": "08:00",
+      "archived": false,
+      "createdAt": "2026-02-01T08:00:00.000Z",
+      "showOnToday": true
+    }
+  ],
+  "completions": [
+    {
+      "id": "completion-1",
+      "habitId": "habit-legacy-1",
+      "completedOn": "2026-06-01"
+    },
+    {
+      "id": "completion-2",
+      "habitId": "habit-legacy-1",
+      "completedOn": "2026-06-02"
+    },
+    {
+      "id": "completion-3",
+      "habitId": "habit-legacy-2",
+      "completedOn": "2026-06-03"
+    }
+  ]
+}

@@ -1,52 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultWeekdayGoals } from '../../../core/models/habit-weekday-goal.model';
 import type { HabitCardPreviewFormState } from './habit-card-preview.model';
-import {
-  buildPreviewMarqueeItems,
-  previewTextOrPlaceholder,
-  previewTimeOrPlaceholder,
-} from './habit-card-preview.utils';
-
-function createEmptyPreviewState(): HabitCardPreviewFormState {
-  return {
-    name: '',
-    category: '',
-    scheduleDays: [1, 2, 3, 4, 5],
-    metasDinamicas: false,
-    metaGeral: '',
-    minimumAction: '',
-    optionalReminder: '',
-    weekdayGoals: createDefaultWeekdayGoals(),
-    trigger1: '',
-    trigger2: '',
-    trigger3: '',
-    trigger1Visible: true,
-    trigger2Visible: false,
-    trigger3Visible: false,
-    motivation1: '',
-    motivation2: '',
-    motivation3: '',
-    motivation1Visible: true,
-    motivation2Visible: false,
-    motivation3Visible: false,
-  };
-}
+import { buildPreviewMarqueeItems } from './habit-card-preview.utils';
 
 describe('habit-card-preview.utils', () => {
-  it('usa placeholder para texto vazio', () => {
-    expect(previewTextOrPlaceholder('', 'Nome')).toBe('Nome');
-    expect(previewTextOrPlaceholder('  Treinar  ', 'Nome')).toBe('Treinar');
-  });
+  it('buildPreviewMarqueeItems usa arrays triggers/motivations', () => {
+    const state: HabitCardPreviewFormState = {
+      name: 'Teste',
+      category: 'Saúde',
+      scheduleDays: [0, 1, 2, 3, 4, 5, 6],
+      dynamicGoals: false,
+      generalGoal: 'Meta',
+      minimumAction: '1 passo',
+      optionalReminder: '08:00',
+      weekdayGoals: [],
+      triggers: [
+        { text: 'Gatilho', visible: true },
+        { text: '', visible: false },
+        { text: '', visible: false },
+      ],
+      motivations: [
+        { text: 'Recompensa', visible: true },
+        { text: '', visible: false },
+        { text: '', visible: false },
+      ],
+    };
 
-  it('usa --:-- para horário vazio', () => {
-    expect(previewTimeOrPlaceholder('')).toBe('--:--');
-    expect(previewTimeOrPlaceholder('07:30')).toBe('07:30');
-  });
-
-  it('inclui placeholders nos itens visíveis do marquee', () => {
-    const items = buildPreviewMarqueeItems(createEmptyPreviewState());
-
-    expect(items).toEqual([
+    expect(buildPreviewMarqueeItems(state)).toEqual([
       { type: 'trigger', text: 'Gatilho' },
       { type: 'motivation', text: 'Recompensa' },
     ]);

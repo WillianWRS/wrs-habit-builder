@@ -3,7 +3,7 @@ import type { HabitCompletion } from './habit-completion.model';
 import type { HabitFreezeUsed } from './habit-freeze-used.model';
 
 export const STORAGE_KEY = 'wrs-habit-builder';
-export const CURRENT_STORAGE_VERSION = 7;
+export const CURRENT_STORAGE_VERSION = 8;
 
 export interface AppStorage {
   version: number;

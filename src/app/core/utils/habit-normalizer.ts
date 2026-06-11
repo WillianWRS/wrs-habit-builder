@@ -4,41 +4,37 @@ import {
   type HabitWeekdayGoal,
 } from '../models/habit-weekday-goal.model';
 import { ALL_WEEKDAYS, type Habit } from '../models/habit.model';
+import { padSlots } from '../models/habit-slot.model';
 import type { Weekday } from '../models/weekday.model';
 import { toDateKey } from './date.utils';
-import {
-  mergeScheduleDaySince,
-} from './habit-streak.utils';
+import { mergeScheduleDaySince } from './habit-streak.utils';
 import { resolveTriggerMotivationFields } from './habit-trigger-motivation.utils';
 
-type LegacyHabit = Partial<Habit> & {
-  triggerText?: string;
-  category?: string | HabitCategory;
-};
+type LegacyHabitPayload = Record<string, unknown>;
 
-function resolveCategory(category: LegacyHabit['category']): string {
+function resolveCategory(category: unknown): string {
   if (!category) {
     return '';
   }
 
-  if (category in HABIT_CATEGORY_LABELS) {
+  if (typeof category === 'string' && category in HABIT_CATEGORY_LABELS) {
     return HABIT_CATEGORY_LABELS[category as HabitCategory];
   }
 
   return String(category);
 }
 
-function normalizeWeekdayGoals(
-  rawGoals: LegacyHabit['weekdayGoals'],
-): HabitWeekdayGoal[] {
+function normalizeWeekdayGoals(rawGoals: unknown): HabitWeekdayGoal[] {
   const defaults = createDefaultWeekdayGoals();
 
-  if (!rawGoals || rawGoals.length === 0) {
+  if (!Array.isArray(rawGoals) || rawGoals.length === 0) {
     return defaults;
   }
 
   return defaults.map((entry) => {
-    const match = rawGoals.find((goal) => goal.weekday === entry.weekday);
+    const match = (rawGoals as HabitWeekdayGoal[]).find(
+      (goal) => goal.weekday === entry.weekday,
+    );
 
     return {
       weekday: entry.weekday,
@@ -49,21 +45,37 @@ function normalizeWeekdayGoals(
   });
 }
 
-export function normalizeHabit(raw: LegacyHabit): Habit {
+function resolveSlots(raw: LegacyHabitPayload): {
+  triggers: Habit['triggers'];
+  motivations: Habit['motivations'];
+} {
+  if (Array.isArray(raw['triggers']) && Array.isArray(raw['motivations'])) {
+    return {
+      triggers: padSlots(raw['triggers'] as Habit['triggers']),
+      motivations: padSlots(raw['motivations'] as Habit['motivations']),
+    };
+  }
+
+  throw new Error('[normalizeHabit] expected triggers/motivations arrays');
+}
+
+/** Normaliza hábito no schema atual (v8) — arrays triggers/motivations. */
+export function normalizeHabit(raw: LegacyHabitPayload): Habit {
   const scheduleDays =
-    raw.scheduleDays && raw.scheduleDays.length > 0
-      ? ([...raw.scheduleDays] as Weekday[])
+    Array.isArray(raw['scheduleDays']) && raw['scheduleDays'].length > 0
+      ? ([...raw['scheduleDays']] as Weekday[])
       : ALL_WEEKDAYS;
 
-  const createdAt = raw.createdAt ?? new Date().toISOString();
+  const createdAt =
+    typeof raw['createdAt'] === 'string' ? raw['createdAt'] : new Date().toISOString();
   const createdDateKey = toDateKey(new Date(createdAt));
   const previousScheduleDays =
-    raw.scheduleDays && raw.scheduleDays.length > 0
-      ? ([...raw.scheduleDays] as Weekday[])
+    Array.isArray(raw['scheduleDays']) && raw['scheduleDays'].length > 0
+      ? ([...raw['scheduleDays']] as Weekday[])
       : scheduleDays;
   let scheduleDaySince =
-    raw.scheduleDaySince && Object.keys(raw.scheduleDaySince).length > 0
-      ? { ...raw.scheduleDaySince }
+    raw['scheduleDaySince'] && typeof raw['scheduleDaySince'] === 'object'
+      ? { ...(raw['scheduleDaySince'] as Habit['scheduleDaySince']) }
       : {};
   scheduleDaySince = mergeScheduleDaySince(
     scheduleDaySince,
@@ -78,22 +90,79 @@ export function normalizeHabit(raw: LegacyHabit): Habit {
     }
   }
 
-  const triggerMotivation = resolveTriggerMotivationFields(raw);
+  const { triggers, motivations } = resolveSlots(raw);
 
   return {
-    id: raw.id ?? crypto.randomUUID(),
-    name: raw.name?.trim() ?? '',
-    metaGeral: raw.metaGeral?.trim() ?? '',
-    metasDinamicas: raw.metasDinamicas ?? false,
-    weekdayGoals: normalizeWeekdayGoals(raw.weekdayGoals),
-    category: resolveCategory(raw.category),
-    ...triggerMotivation,
-    minimumAction: raw.minimumAction?.trim() ?? '',
+    id: typeof raw['id'] === 'string' ? raw['id'] : crypto.randomUUID(),
+    name: String(raw['name'] ?? '').trim(),
+    generalGoal: String(raw['generalGoal'] ?? raw['metaGeral'] ?? '').trim(),
+    dynamicGoals: Boolean(raw['dynamicGoals'] ?? raw['metasDinamicas'] ?? false),
+    weekdayGoals: normalizeWeekdayGoals(raw['weekdayGoals']),
+    category: resolveCategory(raw['category']),
+    triggers,
+    motivations,
+    minimumAction: String(raw['minimumAction'] ?? '').trim(),
     scheduleDays,
     scheduleDaySince,
-    optionalReminder: raw.optionalReminder?.trim() ?? '',
-    archived: raw.archived ?? false,
+    optionalReminder: String(raw['optionalReminder'] ?? '').trim(),
+    archived: Boolean(raw['archived'] ?? false),
     createdAt,
-    showOnToday: raw.showOnToday ?? true,
+    showOnToday: raw['showOnToday'] !== false,
+  };
+}
+
+/**
+ * Normaliza hábito legado (v5) para schema v6/v7 com campos numerados.
+ * Usado apenas em migrateV5ToV6.
+ */
+export function normalizeLegacyNumberedHabit(raw: LegacyHabitPayload): LegacyHabitPayload {
+  const scheduleDays =
+    Array.isArray(raw['scheduleDays']) && raw['scheduleDays'].length > 0
+      ? ([...raw['scheduleDays']] as Weekday[])
+      : ALL_WEEKDAYS;
+
+  const createdAt =
+    typeof raw['createdAt'] === 'string' ? raw['createdAt'] : new Date().toISOString();
+  const createdDateKey = toDateKey(new Date(createdAt));
+  const previousScheduleDays =
+    Array.isArray(raw['scheduleDays']) && raw['scheduleDays'].length > 0
+      ? ([...raw['scheduleDays']] as Weekday[])
+      : scheduleDays;
+  let scheduleDaySince =
+    raw['scheduleDaySince'] && typeof raw['scheduleDaySince'] === 'object'
+      ? { ...(raw['scheduleDaySince'] as Habit['scheduleDaySince']) }
+      : {};
+  scheduleDaySince = mergeScheduleDaySince(
+    scheduleDaySince,
+    previousScheduleDays,
+    scheduleDays,
+    createdDateKey,
+  );
+
+  for (const weekday of scheduleDays) {
+    if (!scheduleDaySince[weekday]) {
+      scheduleDaySince[weekday] = createdDateKey;
+    }
+  }
+
+  const triggerMotivation = resolveTriggerMotivationFields(
+    raw as Parameters<typeof resolveTriggerMotivationFields>[0],
+  );
+
+  return {
+    id: typeof raw['id'] === 'string' ? raw['id'] : crypto.randomUUID(),
+    name: String(raw['name'] ?? '').trim(),
+    metaGeral: String(raw['metaGeral'] ?? '').trim(),
+    metasDinamicas: Boolean(raw['metasDinamicas'] ?? false),
+    weekdayGoals: normalizeWeekdayGoals(raw['weekdayGoals']),
+    category: resolveCategory(raw['category']),
+    ...triggerMotivation,
+    minimumAction: String(raw['minimumAction'] ?? '').trim(),
+    scheduleDays,
+    scheduleDaySince,
+    optionalReminder: String(raw['optionalReminder'] ?? '').trim(),
+    archived: Boolean(raw['archived'] ?? false),
+    createdAt,
+    showOnToday: raw['showOnToday'] !== false,
   };
 }

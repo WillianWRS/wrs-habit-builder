@@ -1,49 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import type { HabitCompletion } from '../models/habit-completion.model';
-import type { Habit } from '../models/habit.model';
+import { createTestHabit } from '../testing/test-habit.factory';
 import {
   buildMonthHeatmapCells,
   resolveHeatmapIntensity,
   shiftMonth,
 } from './month-heatmap.utils';
 
-function createHabit(overrides: Partial<Habit> = {}): Habit {
-  return {
-    id: 'habit-1',
+function createHabit(overrides: Parameters<typeof createTestHabit>[0] = {}) {
+  return createTestHabit({
     name: 'Caminhar',
-    metaGeral: '4KM',
-    metasDinamicas: false,
-    weekdayGoals: [],
+    generalGoal: '4KM',
     category: 'corpo',
-    trigger1: '',
-    trigger2: '',
-    trigger3: '',
-    trigger1Visible: false,
-    trigger2Visible: false,
-    trigger3Visible: false,
-    motivation1: '',
-    motivation2: '',
-    motivation3: '',
-    motivation1Visible: false,
-    motivation2Visible: false,
-    motivation3Visible: false,
     minimumAction: '1 km',
-    scheduleDays: [0, 1, 2, 3, 4, 5, 6],
-    scheduleDaySince: {
-      0: '2026-01-01',
-      1: '2026-01-01',
-      2: '2026-01-01',
-      3: '2026-01-01',
-      4: '2026-01-01',
-      5: '2026-01-01',
-      6: '2026-01-01',
-    },
-    optionalReminder: '07:00',
-    archived: false,
-    createdAt: '2026-01-01T12:00:00.000Z',
-    showOnToday: true,
+    triggers: [
+      { text: '', visible: false },
+      { text: '', visible: false },
+      { text: '', visible: false },
+    ],
+    motivations: [
+      { text: '', visible: false },
+      { text: '', visible: false },
+      { text: '', visible: false },
+    ],
     ...overrides,
-  };
+  });
 }
 
 describe('resolveHeatmapIntensity', () => {

@@ -1,0 +1,126 @@
+@if (placement() === 'dropup') {
+  <div
+    animate.enter="ui-dropdown-up-enter"
+    animate.leave="ui-dropdown-up-leave"
+    class="settings-menu-panel settings-menu-panel--dropup absolute right-0 z-40 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
+    role="menu"
+    aria-label="Configurações"
+  >
+    <ng-container *ngTemplateOutlet="menuItems" />
+  </div>
+} @else {
+  <div
+    animate.enter="ui-dropdown-enter"
+    animate.leave="ui-dropdown-leave"
+    class="settings-menu-panel settings-menu-panel--dropdown absolute right-0 z-40 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
+    role="menu"
+    aria-label="Configurações"
+  >
+    <ng-container *ngTemplateOutlet="menuItems" />
+  </div>
+}
+
+<ng-template #menuItems>
+  @if (demoMode.isActive()) {
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+      role="menuitem"
+      (click)="exitDemoMode()"
+    >
+      <i
+        class="bi bi-arrow-counterclockwise shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+        aria-hidden="true"
+      ></i>
+      Sair do modo demonstrativo
+    </button>
+    <div
+      class="my-1 border-t border-brand-light-border dark:border-brand-border"
+      role="separator"
+    ></div>
+  }
+
+  <button
+    type="button"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    role="menuitem"
+    (click)="toggleTheme()"
+  >
+    <i
+      class="bi shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      [class.bi-sun]="themeService.theme() === 'dark'"
+      [class.bi-moon-stars]="themeService.theme() === 'light'"
+      aria-hidden="true"
+    ></i>
+    {{ themeService.theme() === 'dark' ? 'Modo claro' : 'Modo escuro' }}
+  </button>
+
+  <button
+    type="button"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    role="menuitem"
+    (click)="toggleAccentTheme()"
+  >
+    <i
+      class="bi bi-palette shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      aria-hidden="true"
+    ></i>
+    Alterar tema
+  </button>
+
+  @if (showPreviewActions()) {
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+      role="menuitem"
+      (click)="activatePredefinedDemo()"
+    >
+      <i
+        class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+        aria-hidden="true"
+      ></i>
+      Preview levels
+    </button>
+
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+      role="menuitem"
+      (click)="activateRandomDemo()"
+    >
+      <i
+        class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+        aria-hidden="true"
+      ></i>
+      Preview random
+    </button>
+  }
+
+  @if (!demoMode.isActive()) {
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+      role="menuitem"
+      (click)="openHistorico()"
+    >
+      <i
+        class="bi bi-calendar2-week shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+        aria-hidden="true"
+      ></i>
+      Histórico
+    </button>
+  }
+
+  <button
+    type="button"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    role="menuitem"
+    (click)="openDataManagement()"
+  >
+    <i
+      class="bi bi-database shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      aria-hidden="true"
+    ></i>
+    Gerenciar dados
+  </button>
+</ng-template>
