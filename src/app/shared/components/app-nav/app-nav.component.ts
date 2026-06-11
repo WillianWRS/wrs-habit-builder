@@ -37,7 +37,7 @@ export type AppNavTab = 'today' | 'habits' | 'historico' | 'create';
             (dblclick)="revealPreviewActions($event)"
           >
             <img
-              src="/habit builder.png"
+              src="/habit-builder.png"
               alt="Habit Builder"
               class="h-11 w-auto rounded-[18%] object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-[filter] duration-200 group-hover:drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] lg:h-12"
               width="120"

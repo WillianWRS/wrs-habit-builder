@@ -18,6 +18,7 @@ import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
       class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6 pt-16 backdrop-blur-sm sm:items-center sm:p-4"
       role="presentation"
       (click)="dismissed.emit()"
+      (keydown.escape)="dismissed.emit()"
     >
       <div
         class="flex max-h-[min(80dvh,32rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-brand-light-border bg-brand-light-surface shadow-xl dark:border-brand-border dark:bg-brand-surface"
@@ -25,6 +26,7 @@ import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
         aria-modal="true"
         aria-labelledby="day-history-title"
         (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
       >
         <div class="border-b border-brand-light-border px-5 py-4 dark:border-brand-border">
           <h2

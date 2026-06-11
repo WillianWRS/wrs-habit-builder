@@ -1,3 +1,4 @@
+import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { Habit } from '../models/habit.model';
 import type {
@@ -11,7 +12,11 @@ import {
   resolveHabitDisplayMinimumAction,
   resolveHabitDisplayReminder,
 } from './habit-meta.utils';
-import { computeHabitStreakMetrics } from './habit-streak.utils';
+import {
+  computeHabitStreakSnapshot,
+  formatFreezeReassurance,
+  getFreezeUsedInCurrentWeek,
+} from './habit-streak.utils';
 import { buildMarqueeItems } from './habit-trigger-motivation.utils';
 
 function mapAccent(category: string): HabitCardAccent {
@@ -31,10 +36,12 @@ function mapAccent(category: string): HabitCardAccent {
 export function mapHabitToTodayCard(
   habit: Habit,
   completions: HabitCompletion[],
+  freezeUsed: HabitFreezeUsed[] = [],
   date: Date = new Date(),
 ): TodayHabitCard {
   const dateKey = toDateKey(date);
-  const streak = computeHabitStreakMetrics(habit, completions, date);
+  const streak = computeHabitStreakSnapshot(habit, completions, freezeUsed, date);
+  const recentFreeze = getFreezeUsedInCurrentWeek(habit.id, freezeUsed, date);
 
   return {
     id: habit.id,
@@ -45,9 +52,13 @@ export function mapHabitToTodayCard(
     category: habit.category,
     marqueeItems: buildMarqueeItems(habit),
     minimumAction: resolveHabitDisplayMinimumAction(habit, date),
-    dayCount: streak.dayCount,
-    missCount: streak.missCount,
+    dayCount: streak.currentStreak,
+    bestStreak: streak.bestStreak,
+    totalCompletions: streak.totalCompletions,
     isDayOne: streak.isDayOne,
+    freezeReassurance: recentFreeze
+      ? formatFreezeReassurance(recentFreeze.dateKey)
+      : null,
     completed: completions.some(
       (completion) =>
         completion.habitId === habit.id && completion.completedOn === dateKey,
@@ -59,10 +70,11 @@ export function mapHabitToTodayCard(
 export function mapHabitToListCard(
   habit: Habit,
   completions: HabitCompletion[],
+  freezeUsed: HabitFreezeUsed[] = [],
   date: Date = new Date(),
 ): HabitListCardView {
   return {
-    ...mapHabitToTodayCard(habit, completions, date),
+    ...mapHabitToTodayCard(habit, completions, freezeUsed, date),
     archived: habit.archived,
     showOnToday: habit.showOnToday,
   };

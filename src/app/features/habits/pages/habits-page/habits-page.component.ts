@@ -17,11 +17,11 @@ import { HabitListCardComponent } from '../../components/habit-list-card/habit-l
 import { HabitDeleteConfirmModalComponent } from '../../../../shared/components/habit-delete-confirm-modal/habit-delete-confirm-modal.component';
 import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
 
-type PendingDelete = { id: string; name: string };
+interface PendingDelete { id: string; name: string }
 
 export type HabitsFilter = 'active' | 'archived' | 'today';
 
-const FILTER_OPTIONS: ReadonlyArray<{ id: HabitsFilter; label: string }> = [
+const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
   { id: 'active', label: 'Ativos' },
   { id: 'today', label: 'Na tela Hoje' },
   { id: 'archived', label: 'Arquivados' },

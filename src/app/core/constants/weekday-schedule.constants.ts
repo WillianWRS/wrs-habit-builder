@@ -6,7 +6,7 @@ export interface WeekdayScheduleItem {
   fullLabel: string;
 }
 
-export const WEEKDAY_SCHEDULE_ITEMS: ReadonlyArray<WeekdayScheduleItem> = [
+export const WEEKDAY_SCHEDULE_ITEMS: readonly WeekdayScheduleItem[] = [
   { weekday: 0, label: 'D', fullLabel: 'Domingo' },
   { weekday: 1, label: 'S', fullLabel: 'Segunda' },
   { weekday: 2, label: 'T', fullLabel: 'Terça' },

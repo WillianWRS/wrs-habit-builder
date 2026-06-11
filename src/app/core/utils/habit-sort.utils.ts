@@ -6,10 +6,10 @@ export type HabitSort =
   | 'name-asc'
   | 'name-desc';
 
-export const HABIT_SORT_OPTIONS: ReadonlyArray<{
+export const HABIT_SORT_OPTIONS: readonly {
   id: HabitSort;
   label: string;
-}> = [
+}[] = [
   { id: 'time-asc', label: 'Horário · mais cedo primeiro' },
   { id: 'time-desc', label: 'Horário · mais tarde primeiro' },
   { id: 'days-desc', label: 'Dias · maior primeiro' },
@@ -18,11 +18,11 @@ export const HABIT_SORT_OPTIONS: ReadonlyArray<{
   { id: 'name-desc', label: 'Nome · Z → A' },
 ];
 
-type HabitSortable = {
+interface HabitSortable {
   dayCount: number;
   name: string;
   time: string;
-};
+}
 
 /**
  * Compara horários no formato HH:mm.

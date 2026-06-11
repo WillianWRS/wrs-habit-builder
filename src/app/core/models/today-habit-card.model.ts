@@ -13,9 +13,13 @@ export interface TodayHabitCard {
   category: string;
   marqueeItems: MarqueeItem[];
   minimumAction: string;
+  /** Sequência atual (dias agendados consecutivos). */
   dayCount: number;
-  missCount: number;
+  bestStreak: number;
+  totalCompletions: number;
   isDayOne: boolean;
+  /** Copy de reasseguramento quando freeze foi consumido na semana corrente. */
+  freezeReassurance: string | null;
   completed: boolean;
   accent: HabitCardAccent;
 }

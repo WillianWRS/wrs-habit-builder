@@ -1,13 +1,14 @@
+import { describe, expect, it } from 'vitest';
 import {
   compareHabitsByPreference,
   sortHabitsByPreference,
 } from './habit-sort.utils';
 
-type TestHabit = {
+interface TestHabit {
   dayCount: number;
   name: string;
   time: string;
-};
+}
 
 function habit(
   name: string,

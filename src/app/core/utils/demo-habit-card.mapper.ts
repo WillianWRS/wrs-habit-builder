@@ -1,6 +1,5 @@
 import type { DemoHabitPoolEntry } from '../models/demo-habit-pool-entry.model';
 import type { HabitCardAccent, TodayHabitCard } from '../models/today-habit-card.model';
-import { STREAK_MISS_TOLERANCE } from './habit-streak.utils';
 import { buildMarqueeItems } from './habit-trigger-motivation.utils';
 import {
   resolveHabitDisplayMeta,
@@ -62,8 +61,10 @@ export function mapDemoPoolEntryToCard(
     }),
     minimumAction: resolveHabitDisplayMinimumAction(entry, date),
     dayCount,
-    missCount: streakSeed % STREAK_MISS_TOLERANCE,
+    bestStreak: dayCount,
+    totalCompletions: dayCount + (streakSeed % 10),
     isDayOne: dayCount === 0,
+    freezeReassurance: streakSeed % 11 === 0 ? 'Protegido na terça — sequência intacta' : null,
     completed,
     accent: mapAccent(entry.category),
   };

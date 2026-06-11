@@ -116,7 +116,7 @@ export function resolveTriggerMotivationFields(
 export function buildMarqueeItems(habit: TriggerMotivationFields): MarqueeItem[] {
   const items: MarqueeItem[] = [];
 
-  const triggers: Array<{ text: string; visible: boolean }> = [
+  const triggers: { text: string; visible: boolean }[] = [
     { text: habit.trigger1, visible: habit.trigger1Visible },
     { text: habit.trigger2, visible: habit.trigger2Visible },
     { text: habit.trigger3, visible: habit.trigger3Visible },
@@ -130,7 +130,7 @@ export function buildMarqueeItems(habit: TriggerMotivationFields): MarqueeItem[]
     }
   }
 
-  const motivations: Array<{ text: string; visible: boolean }> = [
+  const motivations: { text: string; visible: boolean }[] = [
     { text: habit.motivation1, visible: habit.motivation1Visible },
     { text: habit.motivation2, visible: habit.motivation2Visible },
     { text: habit.motivation3, visible: habit.motivation3Visible },

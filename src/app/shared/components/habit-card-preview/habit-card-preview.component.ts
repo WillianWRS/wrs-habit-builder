@@ -73,7 +73,7 @@ import {
           [marqueeItems]="cardMarqueeItems()"
           [minimumAction]="cardMinimumAction()"
           [dayCount]="1"
-          [missCount]="0"
+          [freezeReassurance]="null"
           [isDayOne]="false"
           [completed]="true"
           [accent]="cardAccent()"

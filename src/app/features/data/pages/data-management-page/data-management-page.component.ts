@@ -11,7 +11,7 @@ import { HabitStorageService } from '../../../../core/services/habit-storage.ser
 import { toDateKey } from '../../../../core/utils/date.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 
-type ImportFeedback = { type: 'error'; message: string };
+interface ImportFeedback { type: 'error'; message: string }
 
 const IMPORT_STEP_LABELS = [
   'Validando JSON',

@@ -363,6 +363,7 @@ const MINIMUM_ACTION_MAX = 140;
         class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 pb-8 pt-20 backdrop-blur-sm md:px-6 md:pt-24"
         role="presentation"
         (click)="onBackdropClick($event)"
+        (keydown.escape)="close()"
       >
         <div
           class="mx-auto flex w-full max-w-5xl gap-6 lg:px-8"
@@ -379,6 +380,7 @@ const MINIMUM_ACTION_MAX = 140;
             aria-modal="true"
             aria-labelledby="habit-form-title"
             (click)="$event.stopPropagation()"
+            (keydown)="$event.stopPropagation()"
           >
             <form
               class="rounded-2xl border border-brand-light-border bg-brand-light-surface shadow-xl dark:border-brand-border dark:bg-brand-surface"
@@ -1317,12 +1319,12 @@ export class HabitFormModalComponent {
     name: string;
     metaGeral: string;
     metasDinamicas: boolean;
-    weekdayGoals: Array<{
+    weekdayGoals: {
       weekday: Weekday;
       meta: string;
       minimumAction: string;
       optionalReminder: string;
-    }>;
+    }[];
     scheduleDays: Weekday[];
     category: string;
     trigger1: string;

@@ -8,12 +8,12 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { COMPLETION_RESTORE_PATCH } from '../data/completion-restore.patch';
 import {
   CURRENT_STORAGE_VERSION,
   STORAGE_KEY,
   type AppStorage,
 } from '../models/app-storage.model';
+import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { CreateHabitDto } from '../models/create-habit.dto';
 import type { UpdateHabitDto } from '../models/update-habit.dto';
@@ -25,16 +25,12 @@ import type {
 import { ALL_WEEKDAYS } from '../models/habit.model';
 import { normalizeHabit } from '../utils/habit-normalizer';
 import { isLegacyTriggerMotivationHabit } from '../utils/habit-trigger-motivation.utils';
-import { getWeekday, toDateKey } from '../utils/date.utils';
+import { getWeekday } from '../utils/date.utils';
 import {
   buildInitialScheduleDaySince,
-  getHabitIdsToReset,
+  detectAutomaticFreezesNeeded,
   mergeScheduleDaySince,
 } from '../utils/habit-streak.utils';
-import {
-  applyCompletionRestorePatch,
-  completionRestorePatchNeedsApplication,
-} from '../utils/completion-restore.utils';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 import { CurrentDayService } from './current-day.service';
 
@@ -45,9 +41,11 @@ export class HabitStorageService {
 
   private readonly habits = signal<Habit[]>([]);
   private readonly completions = signal<HabitCompletion[]>([]);
+  private readonly freezeUsed = signal<HabitFreezeUsed[]>([]);
 
   readonly habitsReadonly = this.habits.asReadonly();
   readonly completionsReadonly = this.completions.asReadonly();
+  readonly freezeUsedReadonly = this.freezeUsed.asReadonly();
 
   readonly todayHabitCards = computed(() => {
     const date = this.currentDay.today();
@@ -64,9 +62,10 @@ export class HabitStorageService {
     effect(() => {
       this.habits();
       this.completions();
+      this.freezeUsed();
       const referenceDate = this.currentDay.today();
 
-      untracked(() => this.reconcileStreakResets(referenceDate));
+      untracked(() => this.applyAutomaticFreezes(referenceDate));
     });
   }
 
@@ -81,17 +80,20 @@ export class HabitStorageService {
       if (!raw) {
         this.habits.set([]);
         this.completions.set([]);
+        this.freezeUsed.set([]);
         return;
       }
 
       const migrated = this.migrate(JSON.parse(raw));
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
-      this.applyCompletionRestoreIfNeeded();
+      this.freezeUsed.set(migrated.freezeUsed);
+      this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
     } catch (error) {
       console.warn('[HabitStorage] load failed, starting empty', error);
       this.habits.set([]);
       this.completions.set([]);
+      this.freezeUsed.set([]);
     }
   }
 
@@ -152,6 +154,9 @@ export class HabitStorageService {
     this.habits.update((list) => list.filter((item) => item.id !== id));
     this.completions.update((list) =>
       list.filter((completion) => completion.habitId !== id),
+    );
+    this.freezeUsed.update((list) =>
+      list.filter((event) => event.habitId !== id),
     );
     this.persist();
   }
@@ -280,6 +285,7 @@ export class HabitStorageService {
       version: CURRENT_STORAGE_VERSION,
       habits: this.habits(),
       completions: this.completions(),
+      freezeUsed: this.freezeUsed(),
     };
   }
 
@@ -322,6 +328,7 @@ export class HabitStorageService {
 
       this.habits.set(habits);
       this.completions.set(data.completions ?? []);
+      this.freezeUsed.set(data.freezeUsed ?? []);
       this.persist();
 
       return true;
@@ -341,13 +348,14 @@ export class HabitStorageService {
       version: CURRENT_STORAGE_VERSION,
       habits: migrated.habits,
       completions: migrated.completions,
+      freezeUsed: migrated.freezeUsed,
     };
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
-      this.applyCompletionRestoreIfNeeded();
+      this.freezeUsed.set(migrated.freezeUsed);
       return { ok: true };
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
@@ -384,74 +392,60 @@ export class HabitStorageService {
     this.persist();
   }
 
-  private reconcileStreakResets(referenceDate: Date): void {
+  private applyAutomaticFreezes(
+    referenceDate: Date,
+    options: { persist?: boolean } = { persist: true },
+  ): void {
     const habits = this.habits();
     const completions = this.completions();
-    const habitIdsToReset = new Set(
-      getHabitIdsToReset(habits, completions, referenceDate),
-    );
+    const existingFreezes = this.freezeUsed();
+    const newEvents: HabitFreezeUsed[] = [];
 
-    if (habitIdsToReset.size === 0) {
+    let allFreezes = existingFreezes;
+
+    for (const habit of habits) {
+      if (habit.archived) {
+        continue;
+      }
+
+      const habitEvents = detectAutomaticFreezesNeeded(
+        habit,
+        completions,
+        allFreezes,
+        referenceDate,
+      );
+
+      newEvents.push(...habitEvents);
+      allFreezes = [...allFreezes, ...habitEvents];
+    }
+
+    if (newEvents.length === 0) {
       return;
     }
 
-    this.completions.update((list) =>
-      list.filter((completion) => !habitIdsToReset.has(completion.habitId)),
-    );
-    this.persist();
+    this.freezeUsed.update((list) => [...list, ...newEvents]);
+
+    if (options.persist !== false) {
+      this.persist();
+    }
   }
 
   private buildTodayCards(date: Date): TodayHabitCard[] {
     const completions = this.completions();
+    const freezeUsed = this.freezeUsed();
 
     return this.getTodayHabits(date).map((habit) =>
-      mapHabitToTodayCard(habit, completions, date),
+      mapHabitToTodayCard(habit, completions, freezeUsed, date),
     );
   }
 
   private buildAllHabitListCards(date: Date): HabitListCardView[] {
     const completions = this.completions();
+    const freezeUsed = this.freezeUsed();
 
     return this.habits().map((habit) =>
-      mapHabitToListCard(habit, completions, date),
+      mapHabitToListCard(habit, completions, freezeUsed, date),
     );
-  }
-
-  private applyCompletionRestoreIfNeeded(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
-    const habits = this.habits();
-    const completions = this.completions();
-
-    if (
-      !completionRestorePatchNeedsApplication(
-        habits,
-        completions,
-        COMPLETION_RESTORE_PATCH,
-      )
-    ) {
-      return;
-    }
-
-    const result = applyCompletionRestorePatch(
-      habits,
-      completions,
-      COMPLETION_RESTORE_PATCH,
-    );
-
-    if (result.unmatchedHabits.length > 0) {
-      console.warn(
-        '[HabitStorage] completion restore: hábitos não encontrados',
-        result.unmatchedHabits,
-      );
-    }
-
-    if (result.addedCount > 0) {
-      this.completions.set(result.completions);
-      this.persist();
-    }
   }
 
   private migrate(raw: unknown): AppStorage {
@@ -460,16 +454,19 @@ export class HabitStorageService {
         version: CURRENT_STORAGE_VERSION,
         habits: [],
         completions: [],
+        freezeUsed: [],
       };
     }
 
     const data = raw as Partial<AppStorage>;
     const habits = (data.habits ?? []).map((habit) => normalizeHabit(habit));
+    const version = data.version ?? 0;
 
     return {
       version: CURRENT_STORAGE_VERSION,
       habits,
       completions: data.completions ?? [],
+      freezeUsed: version >= 7 ? (data.freezeUsed ?? []) : [],
     };
   }
 
@@ -483,6 +480,7 @@ export class HabitStorageService {
         version: CURRENT_STORAGE_VERSION,
         habits: this.habits(),
         completions: this.completions(),
+        freezeUsed: this.freezeUsed(),
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));

@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { getWeekday } from '../../../../core/utils/date.utils';
-import { STREAK_MISS_TOLERANCE } from '../../../../core/utils/habit-streak.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 import {
   formatMarqueeLabel,
@@ -852,16 +851,12 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
                       <p class="streak-status-subtitle mt-0.5 text-sm">
                         {{ dayOneMessage.subtitle }}
                       </p>
-                    } @else if (showMissMessage()) {
-                      <p
-                        class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
-                      >
-                        {{ streakAtRiskHint() }}
+                    } @else if (freezeReassurance()) {
+                      <p class="streak-status-title text-sm font-medium">
+                        {{ freezeReassurance() }}
                       </p>
-                      <p
-                        class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-                      >
-                        {{ streakAtRiskEncouragement() }}
+                      <p class="streak-status-subtitle mt-0.5 text-sm">
+                        {{ streakTierMessage().subtitle }}
                       </p>
                     } @else {
                       <p class="streak-status-title text-sm font-medium">
@@ -942,16 +937,10 @@ const MARQUEE_FAST_PLAYBACK_RATE = 28 / 9;
             class="habit-card-streak-status text-right"
             [attr.aria-label]="streakStatusAriaLabel()"
           >
-            @if (showMissMessage()) {
-              <p
-                class="text-[10px] leading-snug text-brand-light-text-secondary/80 dark:text-brand-text-secondary/80"
-              >
-                {{ streakAtRiskHint() }}
-              </p>
-              <p
-                class="mt-0.5 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-              >
-                {{ streakAtRiskEncouragement() }}
+            @if (freezeReassurance()) {
+              <p class="text-sm">
+                <span class="streak-status-title font-medium">{{ freezeReassurance() }}</span>
+                <span class="streak-status-subtitle"> — {{ mobileSequenceSubtitle() }}</span>
               </p>
             } @else {
               <p class="text-sm">
@@ -1046,7 +1035,7 @@ export class HabitCardComponent {
   readonly marqueeItems = input.required<MarqueeItem[]>();
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
-  readonly missCount = input<number>(0);
+  readonly freezeReassurance = input<string | null>(null);
   readonly isDayOne = input(false);
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
@@ -1098,11 +1087,6 @@ export class HabitCardComponent {
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));
 
   protected readonly dayOneMessage = DAY_ONE_MESSAGE;
-
-  /** Falta em dia esperado e ainda não marcou hoje → mensagem de risco */
-  protected readonly showMissMessage = computed(
-    () => !this.isDayOne() && this.missCount() > 0 && !this.completed(),
-  );
 
   protected readonly streakTierMessage = computed(
     () => STREAK_TIER_MESSAGES[this.streakTier()],
@@ -1175,20 +1159,6 @@ export class HabitCardComponent {
     }
   }
 
-  protected readonly streakAtRiskHint = computed(() => {
-    const remaining = STREAK_MISS_TOLERANCE - this.missCount();
-    const label = remaining === 1 ? 'falta' : 'faltas';
-
-    return `mais ${remaining} ${label} seguidas interrompem a sequência`;
-  });
-
-  protected readonly streakAtRiskEncouragement = computed(() => {
-    const misses = this.missCount();
-    const label = misses === 1 ? 'falta' : 'faltas';
-
-    return `${misses} ${label}, não desanime, complete a tarefa hoje`;
-  });
-
   protected readonly mobileSequenceTitle = computed(() => {
     if (this.isDayOne() && !this.completed()) {
       return this.dayOneMessage.title;
@@ -1210,8 +1180,8 @@ export class HabitCardComponent {
       return `${this.dayOneMessage.title}. ${this.dayOneMessage.subtitle}`;
     }
 
-    if (this.showMissMessage()) {
-      return `${this.streakAtRiskHint()}. ${this.streakAtRiskEncouragement()}`;
+    if (this.freezeReassurance()) {
+      return `${this.freezeReassurance()}. ${this.streakTierMessage().subtitle}`;
     }
 
     const message = this.streakTierMessage();

@@ -13,6 +13,7 @@ import {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
       role="presentation"
       (click)="dismissed.emit()"
+      (keydown.escape)="dismissed.emit()"
     >
       <div
         class="w-full max-w-sm rounded-2xl border border-brand-light-border bg-brand-light-surface p-5 shadow-xl dark:border-brand-border dark:bg-brand-surface"
@@ -21,6 +22,7 @@ import {
         aria-labelledby="habit-delete-title"
         aria-describedby="habit-delete-description"
         (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
       >
         <h2
           id="habit-delete-title"

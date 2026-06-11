@@ -27,7 +27,7 @@ export function mapPreviewAccent(category: string): HabitCardAccent {
 export function buildPreviewMarqueeItems(state: HabitCardPreviewFormState): MarqueeItem[] {
   const items: MarqueeItem[] = [];
 
-  const triggers: Array<{ text: string; visible: boolean }> = [
+  const triggers: { text: string; visible: boolean }[] = [
     { text: state.trigger1, visible: state.trigger1Visible },
     { text: state.trigger2, visible: state.trigger2Visible },
     { text: state.trigger3, visible: state.trigger3Visible },
@@ -42,7 +42,7 @@ export function buildPreviewMarqueeItems(state: HabitCardPreviewFormState): Marq
     }
   }
 
-  const motivations: Array<{ text: string; visible: boolean }> = [
+  const motivations: { text: string; visible: boolean }[] = [
     { text: state.motivation1, visible: state.motivation1Visible },
     { text: state.motivation2, visible: state.motivation2Visible },
     { text: state.motivation3, visible: state.motivation3Visible },

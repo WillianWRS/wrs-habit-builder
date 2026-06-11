@@ -62,7 +62,10 @@ export function buildDayHistory(
   const entries = expectedHabits
     .map((habit) => buildDayHistoryEntry(habit, date, completedHabitIds))
     .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
-    .map(({ sortKey: _sortKey, ...entry }) => entry);
+    .map(({ sortKey, ...entry }) => {
+      void sortKey;
+      return entry;
+    });
 
   return {
     dateKey,
