@@ -16,7 +16,7 @@ description: >-
 | Persistência | **localStorage** no browser (sem API/backend no MVP) |
 | Modo demo | **Não existe** — dados reais do usuário desde o primeiro uso |
 | Idioma | **PT-BR** em labels, copy e empty states |
-| Nome | **Habit Builder** (marca); repo `wrs-habit-builder` |
+| Nome | **Habitua** (marca em adoção); repo `wrs-habit-builder` |
 
 Se o relatório de descoberta mencionar JWT, Spring ou PostgreSQL, **ignore** — escopo atual é frontend-only.
 
@@ -73,6 +73,8 @@ Detalhes de persistência: skill `habit-builder-localstorage`.
 | RN-04 | Adesão = dias concluídos ÷ dias **esperados** no período (7 ou 30 dias) |
 | RN-05 | Arquivar **não apaga** histórico de completions |
 | RN-06 | `minimumAction` limitado a **140 caracteres** |
+| RN-07 | Streak **derivada** do log; quebra na 1ª falta em dia agendado não coberta por freeze; recorde e total **nunca** regridem |
+| RN-08 | Freeze: **+1/semana/hábito**, consumo **automático** na falta, teto **1** (free) / **2** (premium); gravado como evento `freeze-used` |
 
 ### Cálculo de adesão (RN-04)
 
@@ -84,10 +86,26 @@ adesão = diasEsperados > 0 ? round(diasConcluidos / diasEsperados * 100) : 0
 
 Períodos padrão na UI: **7 dias** e **30 dias** (rolling, incluindo hoje).
 
-### Streak (P2 — implementar quando pedido)
+### Streak e freeze (RN-07, RN-08)
 
-- Contar dias consecutivos **esperados** concluídos, olhando para trás a partir de ontem/hoje.
-- **Não zerar histórico** ao falhar — streak pode pausar; heatmap e adesão permanecem.
+Especificação completa: `docs/07-REGRAS-STREAK-E-FREEZE.md`.
+
+**Streak (interpretação, não estado gravado):**
+
+- `currentStreak`: dias agendados consecutivos concluídos, de hoje/ontem para trás, até quebra não coberta.
+- `bestStreak`: maior sequência histórica.
+- `totalCompletions`: total de dias marcados.
+- Quebra na **1ª falta** em dia agendado, salvo freeze automático; **2ª falta na mesma semana** sempre quebra.
+- Hoje não marcado **não** quebra; dias fora de `scheduleDays` não contam como falta; não retroagir antes de `createdAt`.
+- **Nunca** deletar completions para “zerar” streak.
+
+**Freeze (por hábito):**
+
+- +1 por semana; consumo automático na falta; teto 1 (free) / 2 (premium).
+- Evento append-only: `HabitFreezeUsed { habitId, dateKey, usedAt }`.
+- Heatmap: escudo no dia protegido (não finge conclusão). Card Hoje: sem inventário de escudos; detalhe do hábito mostra estoque.
+
+**Modo férias (futuro — Horizonte 2+):** pausa planejada de 1+ hábitos, até 3 semanas, só agendamento futuro, ícone de férias no heatmap, cooldown de 7 dias ativos antes de nova pausa. Ver `docs/07-REGRAS-STREAK-E-FREEZE.md` §4.
 
 ## Rotas
 
@@ -115,7 +133,7 @@ Redirect padrão: `/` → dashboard Hoje.
 | RF-06 | Editar e arquivar hábito | P1 |
 | RF-07 | Detalhe: heatmap 30–66 dias | P1 |
 | RF-08 | Taxa de adesão 7d / 30d | P1 |
-| RF-09 | Streak atual sem apagar histórico | P2 |
+| RF-09 | Streak atual + recorde + total; freeze semanal | P1 (Sprint 1) |
 
 ## Fluxo principal (sem auth)
 
@@ -147,7 +165,7 @@ src/app/
 
 ## Checklist antes de considerar feature pronta
 
-- [ ] Respeita RN-01 a RN-06
+- [ ] Respeita RN-01 a RN-08
 - [ ] Sem auth, sem chamadas HTTP para persistência
 - [ ] Copy em PT-BR, tom sem culpa
 - [ ] Hábito fora de `scheduleDays` não aparece em Hoje

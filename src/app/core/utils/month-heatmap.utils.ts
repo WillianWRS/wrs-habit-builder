@@ -41,14 +41,16 @@ export function countExpectedCompletionsForDate(
   };
 }
 
+const MONTH_GRID_WEEKS = 6;
+const MONTH_GRID_DAYS = MONTH_GRID_WEEKS * 7;
+
 function getMonthGridBounds(
   year: number,
   month: number,
 ): { gridStart: Date; gridEnd: Date } {
   const firstOfMonth = new Date(year, month, 1);
-  const lastOfMonth = new Date(year, month + 1, 0);
   const gridStart = addDays(firstOfMonth, -firstOfMonth.getDay());
-  const gridEnd = addDays(lastOfMonth, 6 - lastOfMonth.getDay());
+  const gridEnd = addDays(gridStart, MONTH_GRID_DAYS - 1);
 
   return { gridStart, gridEnd };
 }

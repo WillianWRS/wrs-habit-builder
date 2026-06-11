@@ -87,6 +87,20 @@ describe('buildMonthHeatmapCells', () => {
     expect(futureCell?.isClickable).toBe(false);
   });
 
+  it('sempre renderiza 6 semanas (42 células) para altura estável na transição', () => {
+    const habits = [createHabit()];
+    const months = [
+      { year: 2026, month: 1 },
+      { year: 2026, month: 4 },
+      { year: 2026, month: 5 },
+    ];
+
+    for (const { year, month } of months) {
+      const cells = buildMonthHeatmapCells(year, month, habits, [], '2026-12-31');
+      expect(cells).toHaveLength(42);
+    }
+  });
+
   it('inclui dias adjacentes no grid com número e sem clique', () => {
     const cells = buildMonthHeatmapCells(
       2026,

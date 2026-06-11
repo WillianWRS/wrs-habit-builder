@@ -61,23 +61,42 @@ import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 
                     @if (entry.status === 'done') {
                       <span
-                        class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-light-primary dark:bg-brand-primary"
+                        class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-light-primary dark:bg-brand-primary"
                         [attr.aria-label]="entryLabel(entry) + ', feito'"
                       >
-                        <i
-                          class="bi bi-check text-[10px] text-white dark:text-brand-bg"
+                        <svg
+                          class="size-3 text-white dark:text-brand-bg"
+                          viewBox="0 0 12 12"
+                          fill="none"
                           aria-hidden="true"
-                        ></i>
+                        >
+                          <path
+                            d="M2.5 6L5 8.5L9.5 3.5"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                        </svg>
                       </span>
                     } @else {
                       <span
-                        class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-brand-light-text-secondary/45 dark:border-white/85"
+                        class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-brand-light-text-secondary/45 dark:border-white/85"
                         [attr.aria-label]="entryLabel(entry) + ', não feito'"
                       >
-                        <i
-                          class="bi bi-x text-xs text-brand-light-text-secondary dark:text-white/90"
+                        <svg
+                          class="size-3 text-brand-light-text-secondary dark:text-white/90"
+                          viewBox="0 0 12 12"
+                          fill="none"
                           aria-hidden="true"
-                        ></i>
+                        >
+                          <path
+                            d="M3 3L9 9M9 3L3 9"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                          />
+                        </svg>
                       </span>
                     }
                   </div>
