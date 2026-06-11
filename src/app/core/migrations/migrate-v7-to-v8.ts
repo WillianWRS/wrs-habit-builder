@@ -1,6 +1,5 @@
 import type { AppStorage } from '../models/app-storage.model';
 import type { Habit } from '../models/habit.model';
-import { padSlots } from '../models/habit-slot.model';
 import { normalizeHabit } from '../utils/habit-normalizer';
 import { mapNumberedFieldsToSlots } from './numbered-habit-fields.utils';
 

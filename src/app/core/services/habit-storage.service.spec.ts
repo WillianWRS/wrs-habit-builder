@@ -256,7 +256,7 @@ describe('HabitStorageService', () => {
 
     it('inicia estado vazio com JSON inválido sem lançar exceção', () => {
       localStorageMock.setItem(STORAGE_KEY, '{ invalid json');
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(vi.fn());
 
       let service: HabitStorageService | undefined;
       expect(() => {

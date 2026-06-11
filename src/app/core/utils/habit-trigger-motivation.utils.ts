@@ -11,7 +11,7 @@ export interface MarqueeItem {
   text: string;
 }
 
-type LegacyNumberedFields = {
+interface LegacyNumberedFields {
   triggerText?: string;
   trigger1?: string;
   trigger2?: string;
@@ -25,7 +25,7 @@ type LegacyNumberedFields = {
   motivation1Visible?: boolean;
   motivation2Visible?: boolean;
   motivation3Visible?: boolean;
-};
+}
 
 /** Resolve campos numerados legados — usado apenas na cadeia de migração v5→v8. */
 export function resolveTriggerMotivationFields(raw: LegacyNumberedFields): {
