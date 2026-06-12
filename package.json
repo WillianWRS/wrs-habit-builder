@@ -9,6 +9,8 @@
     "test": "ng test",
     "test:ci": "ng test --watch=false",
     "ci": "npm run lint && npm run test:ci && npm run build",
+    "deploy": "firebase deploy --only hosting",
+    "deploy:prod": "npm run ci && npm run deploy",
     "serve:ssr:wrs-habit-builder": "node dist/wrs-habit-builder/server/server.mjs",
     "lint": "ng lint"
   },
