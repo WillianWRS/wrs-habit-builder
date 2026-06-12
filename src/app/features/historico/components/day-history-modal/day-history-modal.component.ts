@@ -9,13 +9,16 @@ import type {
   DayHistorySnapshot,
 } from '../../../../core/models/day-history.model';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
+import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-focus-trap.directive';
 
 @Component({
   selector: 'app-day-history-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ModalFocusTrapDirective],
   template: `
     <div
       class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6 pt-16 backdrop-blur-sm sm:items-center sm:p-4"
+      appModalFocusTrap
       role="presentation"
       (click)="dismissed.emit()"
       (keydown.escape)="dismissed.emit()"

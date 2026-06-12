@@ -1,53 +1,63 @@
 ---
 name: habit-builder-localstorage
 description: >-
-  localStorage persistence layer for WRS Habit Builder: schema, keys, repository
+  IndexedDB persistence layer for WRS Habit Builder: schema, keys, repository
   service, migrations, and date handling. Use when reading/writing habits, completions,
   seeding data, or implementing HabitStore/StorageService.
 ---
 
-# Habit Builder — localStorage
+# Habit Builder — persistência (IndexedDB)
 
-Persistência **única** do app. Sem API, sem IndexedDB no MVP, sem modo demo com seed fake.
+Persistência **única** do app. Sem API. Dados de hábitos vivem no **IndexedDB**; preferências leves (tema, accent) permanecem no `localStorage`.
 
-## Chaves e schema versionado
+## Backend e chaves
+
+| Item | Valor |
+|------|-------|
+| Database IndexedDB | `wrs-habit-builder` |
+| Object store | `app-storage` |
+| Documento único | chave `current` → `AppStorage` versionado |
+| Chave legada localStorage | `wrs-habit-builder` — **não é mais lida** (fluxo manual export/import) |
+| Tema / accent | `wrs-habit-builder-theme`, `wrs-habit-builder-accent` (localStorage) |
 
 ```typescript
-const STORAGE_KEY = 'wrs-habit-builder';
-const CURRENT_VERSION = 1;
-
 interface AppStorage {
   version: number;
   habits: Habit[];
   completions: HabitCompletion[];
+  freezeUsed: HabitFreezeUsed[];
 }
 ```
 
-Serialização: `JSON.stringify` / `JSON.parse` com try/catch.
+## Arquitetura
 
-## Serviço central
-
-Um único serviço (`HabitStorageService` ou `StorageService`) em `src/app/core/`:
+- **`StorageBackend`** — interface (`read` / `write` assíncronos)
+- **`IndexedDbStorageBackend`** — produção (browser)
+- **`MemoryStorageBackend`** — testes
+- **`HabitStorageService`** — único ponto de mutação; signals + `persist()` assíncrono
 
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class HabitStorageService {
-  private readonly habits = signal<Habit[]>([]);
-  private readonly completions = signal<HabitCompletion[]>([]);
+  readonly ready = signal(false);
 
-  readonly habitsReadonly = this.habits.asReadonly();
-  readonly completionsReadonly = this.completions.asReadonly();
-
-  constructor() {
-    this.load();
-  }
-
-  load(): void { /* read localStorage → signals */ }
-  private persist(): void { /* signals → localStorage */ }
+  async initialize(): Promise<void> { /* APP_INITIALIZER */ }
 }
 ```
 
-**Regra:** toda mutação passa pelo serviço → atualiza signals → `persist()`. Componentes **não** acessam `localStorage` diretamente.
+**Regra:** toda mutação passa pelo serviço → atualiza signals → `persist()`. Componentes **não** acessam IndexedDB diretamente.
+
+Bootstrap: `APP_INITIALIZER` chama `initialize()` **antes** da UI renderizar (sem flash de estado vazio).
+
+## Migração localStorage → IndexedDB
+
+**Não há migração automática.** Fluxo manual:
+
+1. Usuário exporta JSON em `/data` (antes de atualizar)
+2. App novo ignora chave legada no localStorage; listagem vazia
+3. Usuário importa JSON → dados gravados no IndexedDB
+
+Import aceita JSONs antigos (v5+) via `migrateStorage()`.
 
 ## Operações obrigatórias
 
@@ -62,147 +72,47 @@ export class HabitStorageService {
 | `toggleCompletion(habitId, date)` | RN-01: idempotente por dia |
 | `isCompleted(habitId, date)` | boolean |
 | `getTodayHabits(date?)` | Ativos + weekday ∈ scheduleDays |
+| `exportStorage()` / `importStorage(raw)` | Backup JSON (formato inalterado) |
 
 ### toggleCompletion (RN-01)
 
-```typescript
-toggleCompletion(habitId: string, date: string): void {
-  const exists = this.completions().some(
-    c => c.habitId === habitId && c.completedOn === date
-  );
-  if (exists) {
-    this.completions.update(list =>
-      list.filter(c => !(c.habitId === habitId && c.completedOn === date))
-    );
-  } else {
-    this.completions.update(list => [
-      ...list,
-      { id: crypto.randomUUID(), habitId, completedOn: date },
-    ]);
-  }
-  this.persist();
-}
-```
+Idempotente por `habitId` + `completedOn` (data local YYYY-MM-DD).
 
 ## Datas — sempre local
 
-Usar **data local do usuário**, não UTC puro:
+Usar **data local do usuário** via `toDateKey()` / `parseDateKey()` em `src/app/core/utils/date.utils.ts`.
 
-```typescript
-/** "YYYY-MM-DD" na timezone local */
-export function toDateKey(d: Date = new Date()): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+## Migrações de schema
 
-export function parseDateKey(key: string): Date {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-```
-
-Colocar utils em `src/app/core/date.utils.ts`.
-
-## Migrações
-
-```typescript
-private migrate(raw: unknown): AppStorage {
-  if (!raw || typeof raw !== 'object') {
-    return { version: CURRENT_VERSION, habits: [], completions: [] };
-  }
-  const data = raw as Partial<AppStorage>;
-  if ((data.version ?? 0) < 1) {
-    return { version: 1, habits: data.habits ?? [], completions: data.completions ?? [] };
-  }
-  return data as AppStorage;
-}
-```
-
-Incrementar `CURRENT_VERSION` ao mudar schema; adicionar branch `if (version < 2)` etc.
+`migrate-storage.ts` encadeia v5→…→`CURRENT_STORAGE_VERSION`. Incrementar versão ao mudar schema; import e load aplicam a cadeia automaticamente.
 
 ## Tratamento de erros
 
 | Cenário | Ação |
 |---------|------|
-| JSON inválido | Log warn, iniciar estado vazio |
-| QuotaExceededError | Toast/mensagem: "Espaço insuficiente no navegador" |
-| SSR (`typeof window === 'undefined'`) | No-op load; persist guard |
+| IndexedDB indisponível/bloqueado | Toast com mensagem clara; estado vazio |
+| Falha ao persistir | Toast + log |
+| SSR (`typeof window === 'undefined'`) | `initialize()` no-op; `persist()` guard |
+
+## Testes
+
+Injetar `MemoryStorageBackend` via token `STORAGE_BACKEND`:
 
 ```typescript
-private persist(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const payload: AppStorage = {
-      version: CURRENT_VERSION,
-      habits: this.habits(),
-      completions: this.completions(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch (e) {
-    console.error('[HabitStorage] persist failed', e);
-  }
-}
+providers: [
+  { provide: STORAGE_BACKEND, useValue: new MemoryStorageBackend() },
+]
 ```
 
-## Cálculos derivados (no serviço ou `HabitStatsService`)
-
-Manter lógica de adesão **fora** dos componentes:
-
-```typescript
-adherencePercent(habitId: string, days: 7 | 30, endDate = new Date()): number {
-  const habit = this.getHabitById(habitId);
-  if (!habit) return 0;
-  const expected = countExpectedDays(habit.scheduleDays, days, endDate);
-  const done = countCompletionsInRange(habitId, days, endDate);
-  return expected > 0 ? Math.round((done / expected) * 100) : 0;
-}
-```
-
-Implementação de `countExpectedDays`: iterar N dias para trás; contar onde `weekday ∈ scheduleDays`.
-
-## Heatmap data
-
-```typescript
-interface HeatmapCell {
-  date: string;
-  status: 'done' | 'missed' | 'skipped';
-}
-
-getHeatmap(habitId: string, dayCount = 66): HeatmapCell[] {
-  // skipped = weekday ∉ scheduleDays
-  // missed = expected but no completion
-  // done = completion exists
-}
-```
-
-## Testes (Vitest)
-
-Testar sem browser real:
-
-```typescript
-const store: Record<string, string> = {};
-vi.stubGlobal('localStorage', {
-  getItem: (k: string) => store[k] ?? null,
-  setItem: (k: string, v: string) => { store[k] = v; },
-  removeItem: (k: string) => { delete store[k]; },
-});
-```
-
-Casos mínimos:
-
-- create + load roundtrip
-- toggle idempotente (RN-01)
-- archive não remove completions (RN-05)
-- getTodayHabits respeita scheduleDays (RN-03)
+Chamar `await service.initialize()` antes dos asserts.
 
 ## Anti-patterns
 
-- ❌ Múltiplas chaves soltas (`habits`, `completions` separados)
+- ❌ Ler/gravar `wrs-habit-builder` no localStorage para dados de hábitos
+- ❌ Migração automática localStorage → IndexedDB
+- ❌ Múltiplas chaves soltas para habits/completions
 - ❌ Seed de dados demo no `load()`
-- ❌ `sessionStorage` (dados devem persistir entre sessões)
-- ❌ Salvar em cada keystroke do formulário (salvar no submit)
+- ❌ Salvar em cada keystroke do formulário
 
 ## Skills relacionadas
 

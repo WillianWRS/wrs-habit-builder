@@ -3,7 +3,7 @@
         class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 pb-8 pt-20 backdrop-blur-sm md:px-6 md:pt-24"
         role="presentation"
         (click)="onBackdropClick($event)"
-        (keydown.escape)="close()"
+        (keydown.escape)="onEscapeKey()"
       >
         <div
           class="mx-auto flex w-full max-w-5xl gap-6 lg:px-8"
@@ -16,6 +16,8 @@
 
           <div
             class="min-w-0 flex-1"
+            appModalFocusTrap
+            [initialFocusSelector]="'#habit-name'"
             role="dialog"
             aria-modal="true"
             aria-labelledby="habit-form-title"
@@ -56,6 +58,7 @@
                     Nome
                   </label>
                   <input
+                    #nameInput
                     id="habit-name"
                     type="text"
                     formControlName="name"
@@ -360,4 +363,56 @@
           ></div>
         </div>
       </div>
+
+      @if (showDiscardConfirm()) {
+        <div
+          class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+          appModalFocusTrap
+          role="presentation"
+          (click)="cancelDiscard()"
+          (keydown.escape)="cancelDiscard()"
+        >
+          <div
+            class="w-full max-w-sm rounded-2xl border border-brand-light-border bg-brand-light-surface p-5 shadow-xl dark:border-brand-border dark:bg-brand-surface"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="habit-discard-title"
+            aria-describedby="habit-discard-description"
+            (click)="$event.stopPropagation()"
+            (keydown)="$event.stopPropagation()"
+          >
+            <h2
+              id="habit-discard-title"
+              class="font-display text-lg font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+            >
+              Descartar alterações?
+            </h2>
+
+            <p
+              id="habit-discard-description"
+              class="mt-3 text-sm leading-relaxed text-brand-light-text-secondary dark:text-brand-text-secondary"
+            >
+              As alterações feitas neste hábito ainda não foram salvas.
+            </p>
+
+            <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                class="inline-flex h-10 items-center justify-center rounded-lg border border-brand-light-border px-4 text-sm font-semibold text-brand-light-text-primary transition-colors hover:bg-brand-light-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-surface dark:border-brand-border dark:text-brand-text-primary dark:hover:bg-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-surface"
+                (click)="cancelDiscard()"
+              >
+                Continuar editando
+              </button>
+
+              <button
+                type="button"
+                class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-surface dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-surface"
+                (click)="confirmDiscard()"
+              >
+                Descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     }

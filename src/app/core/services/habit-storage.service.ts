@@ -8,11 +8,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import {
-  CURRENT_STORAGE_VERSION,
-  STORAGE_KEY,
-  type AppStorage,
-} from '../models/app-storage.model';
+import { CURRENT_STORAGE_VERSION, type AppStorage } from '../models/app-storage.model';
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { CreateHabitDto } from '../models/create-habit.dto';
@@ -32,7 +28,9 @@ import {
 } from '../utils/habit-streak.utils';
 import { migrateStorage } from '../migrations/migrate-storage';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
+import { STORAGE_BACKEND, StorageBackendError } from '../storage/storage-backend.model';
 import { CurrentDayService } from './current-day.service';
+import { ToastService } from './toast.service';
 
 interface PendingDeleteSnapshot {
   habit: Habit;
@@ -48,11 +46,16 @@ export type ImportStorageResult =
 export class HabitStorageService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly currentDay = inject(CurrentDayService);
+  private readonly backend = inject(STORAGE_BACKEND);
+  private readonly toast = inject(ToastService);
 
   private readonly habits = signal<Habit[]>([]);
   private readonly completions = signal<HabitCompletion[]>([]);
   private readonly freezeUsed = signal<HabitFreezeUsed[]>([]);
   private readonly pendingDeletes = new Map<string, PendingDeleteSnapshot>();
+
+  /** true após initialize() concluir — evita flash de estado vazio no boot. */
+  readonly ready = signal(false);
 
   readonly habitsReadonly = this.habits.asReadonly();
   readonly completionsReadonly = this.completions.asReadonly();
@@ -68,9 +71,11 @@ export class HabitStorageService {
   });
 
   constructor() {
-    this.load();
-
     effect(() => {
+      if (!this.ready()) {
+        return;
+      }
+
       this.habits();
       this.completions();
       this.freezeUsed();
@@ -80,38 +85,27 @@ export class HabitStorageService {
     });
   }
 
-  load(): void {
+  /** Chamado via APP_INITIALIZER antes do bootstrap da UI. */
+  async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) {
+      this.setEmptyState();
+      this.ready.set(true);
       return;
     }
 
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-
-      if (!raw) {
-        this.habits.set([]);
-        this.completions.set([]);
-        this.freezeUsed.set([]);
-        return;
-      }
-
-      const parsed = JSON.parse(raw);
-      const { data: migrated, sourceVersion } = migrateStorage(parsed);
-
-      this.habits.set(migrated.habits);
-      this.completions.set(migrated.completions);
-      this.freezeUsed.set(migrated.freezeUsed);
-      this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
-
-      if (sourceVersion < CURRENT_STORAGE_VERSION) {
-        this.persist();
-      }
+      await this.loadFromBackend();
     } catch (error) {
-      console.warn('[HabitStorage] load failed, starting empty', error);
-      this.habits.set([]);
-      this.completions.set([]);
-      this.freezeUsed.set([]);
+      console.warn('[HabitStorage] initialize failed, starting empty', error);
+      this.setEmptyState();
+      this.notifyStorageError(
+        error instanceof StorageBackendError
+          ? error.message
+          : 'Não foi possível carregar seus dados.',
+      );
     }
+
+    this.ready.set(true);
   }
 
   getHabitById(id: string): Habit | undefined {
@@ -347,7 +341,7 @@ export class HabitStorageService {
     };
   }
 
-  importStorage(raw: unknown): ImportStorageResult {
+  async importStorage(raw: unknown): Promise<ImportStorageResult> {
     if (!isPlatformBrowser(this.platformId)) {
       return { ok: false, message: 'Importação indisponível neste ambiente.' };
     }
@@ -361,7 +355,7 @@ export class HabitStorageService {
     };
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      await this.backend.write(payload);
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
       this.freezeUsed.set(migrated.freezeUsed);
@@ -371,6 +365,10 @@ export class HabitStorageService {
         completionCount: migrated.completions.length,
       };
     } catch (error) {
+      if (error instanceof StorageBackendError) {
+        return { ok: false, message: error.message };
+      }
+
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         return { ok: false, message: 'Espaço insuficiente no navegador.' };
       }
@@ -403,6 +401,26 @@ export class HabitStorageService {
     }
 
     this.persist();
+  }
+
+  private async loadFromBackend(): Promise<void> {
+    const raw = await this.backend.read();
+
+    if (!raw) {
+      this.setEmptyState();
+      return;
+    }
+
+    const { data: migrated, sourceVersion } = migrateStorage(raw);
+
+    this.habits.set(migrated.habits);
+    this.completions.set(migrated.completions);
+    this.freezeUsed.set(migrated.freezeUsed);
+    this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
+
+    if (sourceVersion < CURRENT_STORAGE_VERSION) {
+      await this.persistAsync();
+    }
   }
 
   private applyAutomaticFreezes(
@@ -471,22 +489,44 @@ export class HabitStorageService {
     );
   }
 
+  private setEmptyState(): void {
+    this.habits.set([]);
+    this.completions.set([]);
+    this.freezeUsed.set([]);
+  }
+
   private persist(): void {
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    try {
-      const payload: AppStorage = {
-        version: CURRENT_STORAGE_VERSION,
-        habits: this.habits(),
-        completions: this.completions(),
-        freezeUsed: this.freezeUsed(),
-      };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    } catch (error) {
+    void this.persistAsync().catch((error) => {
       console.error('[HabitStorage] persist failed', error);
+      this.notifyStorageError('Não foi possível salvar suas alterações.');
+    });
+  }
+
+  private async persistAsync(): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
     }
+
+    const payload: AppStorage = {
+      version: CURRENT_STORAGE_VERSION,
+      habits: this.habits(),
+      completions: this.completions(),
+      freezeUsed: this.freezeUsed(),
+    };
+
+    await this.backend.write(payload);
+  }
+
+  private notifyStorageError(message: string): void {
+    this.toast.show({
+      message,
+      type: 'success',
+      icon: 'archive',
+      durationMs: 5000,
+    });
   }
 }

@@ -4,13 +4,16 @@ import {
   input,
   output,
 } from '@angular/core';
+import { ModalFocusTrapDirective } from '../../directives/modal-focus-trap.directive';
 
 @Component({
   selector: 'app-habit-delete-confirm-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ModalFocusTrapDirective],
   template: `
     <div
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+      appModalFocusTrap
       role="presentation"
       (click)="dismissed.emit()"
       (keydown.escape)="dismissed.emit()"

@@ -24,6 +24,7 @@ import {
   sortHabitsByPreference,
   type HabitSort,
 } from '../../../../core/utils/habit-sort.utils';
+import { formatHabitCompletionAnnouncement } from '../../utils/today-completion-announcement.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
 import { DayProgressComponent } from '../../components/day-progress/day-progress.component';
@@ -39,20 +40,17 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
     <app-nav activeTab="today" [hideNewHabit]="emptyState() === 'no-habits'" />
 
     <main
-      class="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 pb-28 md:px-6 md:pb-10 lg:px-8"
-      [class]="showEmpty() ? 'pt-4 md:pt-5' : 'pt-6 md:pt-10'"
+      class="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 pb-28 pt-6 md:px-6 md:pb-10 md:pt-10 lg:px-8"
     >
-      @if (!showEmpty()) {
-        <header class="mb-6 space-y-4 md:mb-8">
-          <h1
-            class="font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary"
-          >
-            Hoje · {{ todayLabel() }}
-          </h1>
+      <header class="mb-6 space-y-4 md:mb-8">
+        <h1
+          class="font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary"
+        >
+          Hoje · {{ todayLabel() }}
+        </h1>
 
-          <app-day-progress [done]="doneCount()" [total]="totalCount()" />
-        </header>
-      }
+        <app-day-progress [done]="doneCount()" [total]="totalCount()" />
+      </header>
 
       @if (showEmpty()) {
         <section
@@ -125,6 +123,14 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
           />
         </div>
 
+        <div
+          class="sr-only"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {{ completionAnnouncement() }}
+        </div>
+
         <ul #habitList class="space-y-3" role="list">
           @for (habit of habits(); track habit.id) {
             <li [attr.data-habit-id]="habit.id" class="will-change-transform">
@@ -162,6 +168,7 @@ export class TodayPageComponent {
   private pendingFlipPositions: Map<string, DOMRect> | null = null;
 
   protected readonly sort = signal<HabitSort>('time-asc');
+  protected readonly completionAnnouncement = signal('');
 
   protected readonly habits = computed(() => {
     const source = this.demoMode.isActive()
@@ -225,6 +232,16 @@ export class TodayPageComponent {
   }
 
   protected toggleHabit(id: string): void {
+    const habit = this.habits().find((entry) => entry.id === id);
+
+    if (!habit) {
+      return;
+    }
+
+    const wasCompleted = habit.completed;
+    const doneBefore = this.doneCount();
+    const total = this.totalCount();
+
     if (shouldAnimateHabitList()) {
       const list = this.habitListRef()?.nativeElement;
 
@@ -239,7 +256,24 @@ export class TodayPageComponent {
       this.storage.toggleCompletion(id);
     }
 
+    const doneAfter = wasCompleted ? doneBefore - 1 : doneBefore + 1;
+    const isNowCompleted = !wasCompleted;
+
+    this.announceCompletion(
+      formatHabitCompletionAnnouncement(
+        habit.name,
+        isNowCompleted,
+        doneAfter,
+        total,
+      ),
+    );
+
     this.scheduleListFlip();
+  }
+
+  private announceCompletion(message: string): void {
+    this.completionAnnouncement.set('');
+    queueMicrotask(() => this.completionAnnouncement.set(message));
   }
 
   private scheduleListFlip(): void {

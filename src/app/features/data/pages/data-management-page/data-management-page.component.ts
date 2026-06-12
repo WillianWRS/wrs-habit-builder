@@ -132,7 +132,7 @@ export class DataManagementPageComponent {
     const reader = new FileReader();
 
     reader.onload = () => {
-      this.handleImportFile(String(reader.result), input);
+      void this.handleImportFile(String(reader.result), input);
     };
 
     reader.onerror = () => {
@@ -147,7 +147,10 @@ export class DataManagementPageComponent {
     reader.readAsText(file);
   }
 
-  private handleImportFile(content: string, input: HTMLInputElement): void {
+  private async handleImportFile(
+    content: string,
+    input: HTMLInputElement,
+  ): Promise<void> {
     let raw: unknown;
 
     try {
@@ -165,7 +168,7 @@ export class DataManagementPageComponent {
     this.feedback.set(null);
     this.isImporting.set(true);
 
-    const result = this.storage.importStorage(raw);
+    const result = await this.storage.importStorage(raw);
 
     this.isImporting.set(false);
     input.value = '';
