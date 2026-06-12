@@ -34,6 +34,16 @@ import { migrateStorage } from '../migrations/migrate-storage';
 import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.mapper';
 import { CurrentDayService } from './current-day.service';
 
+interface PendingDeleteSnapshot {
+  habit: Habit;
+  completions: HabitCompletion[];
+  freezeUsed: HabitFreezeUsed[];
+}
+
+export type ImportStorageResult =
+  | { ok: true; habitCount: number; completionCount: number }
+  | { ok: false; message: string };
+
 @Injectable({ providedIn: 'root' })
 export class HabitStorageService {
   private readonly platformId = inject(PLATFORM_ID);
@@ -42,6 +52,7 @@ export class HabitStorageService {
   private readonly habits = signal<Habit[]>([]);
   private readonly completions = signal<HabitCompletion[]>([]);
   private readonly freezeUsed = signal<HabitFreezeUsed[]>([]);
+  private readonly pendingDeletes = new Map<string, PendingDeleteSnapshot>();
 
   readonly habitsReadonly = this.habits.asReadonly();
   readonly completionsReadonly = this.completions.asReadonly();
@@ -157,14 +168,55 @@ export class HabitStorageService {
       return;
     }
 
-    this.habits.update((list) => list.filter((item) => item.id !== id));
-    this.completions.update((list) =>
-      list.filter((completion) => completion.habitId !== id),
-    );
-    this.freezeUsed.update((list) =>
-      list.filter((event) => event.habitId !== id),
-    );
+    this.removeHabitData(id);
     this.persist();
+  }
+
+  stagePermanentDelete(id: string): boolean {
+    const habit = this.getHabitById(id);
+
+    if (!habit || !habit.archived) {
+      return false;
+    }
+
+    this.pendingDeletes.set(id, {
+      habit: structuredClone(habit),
+      completions: structuredClone(
+        this.completions().filter((completion) => completion.habitId === id),
+      ),
+      freezeUsed: structuredClone(
+        this.freezeUsed().filter((event) => event.habitId === id),
+      ),
+    });
+
+    this.removeHabitData(id);
+    this.persist();
+
+    return true;
+  }
+
+  restorePendingDelete(id: string): boolean {
+    const snapshot = this.pendingDeletes.get(id);
+
+    if (!snapshot) {
+      return false;
+    }
+
+    this.habits.update((list) => [...list, snapshot.habit]);
+    this.completions.update((list) => [...list, ...snapshot.completions]);
+    this.freezeUsed.update((list) => [...list, ...snapshot.freezeUsed]);
+    this.pendingDeletes.delete(id);
+    this.persist();
+
+    return true;
+  }
+
+  commitPendingDelete(id: string): void {
+    this.pendingDeletes.delete(id);
+  }
+
+  hasPendingDelete(id: string): boolean {
+    return this.pendingDeletes.has(id);
   }
 
   getTodayHabits(date?: Date): Habit[] {
@@ -295,7 +347,7 @@ export class HabitStorageService {
     };
   }
 
-  importStorage(raw: unknown): { ok: true } | { ok: false; message: string } {
+  importStorage(raw: unknown): ImportStorageResult {
     if (!isPlatformBrowser(this.platformId)) {
       return { ok: false, message: 'Importação indisponível neste ambiente.' };
     }
@@ -313,7 +365,11 @@ export class HabitStorageService {
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
       this.freezeUsed.set(migrated.freezeUsed);
-      return { ok: true };
+      return {
+        ok: true,
+        habitCount: migrated.habits.length,
+        completionCount: migrated.completions.length,
+      };
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         return { ok: false, message: 'Espaço insuficiente no navegador.' };
@@ -402,6 +458,16 @@ export class HabitStorageService {
 
     return this.habits().map((habit) =>
       mapHabitToListCard(habit, completions, freezeUsed, date),
+    );
+  }
+
+  private removeHabitData(id: string): void {
+    this.habits.update((list) => list.filter((item) => item.id !== id));
+    this.completions.update((list) =>
+      list.filter((completion) => completion.habitId !== id),
+    );
+    this.freezeUsed.update((list) =>
+      list.filter((event) => event.habitId !== id),
     );
   }
 

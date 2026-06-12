@@ -34,6 +34,13 @@
   --card-bg-light: var(--brand-light-surface);
   --card-border-rgb-dark: 72 72 78;
   --card-bg-dark: #323238;
+
+  /* Botão Ativar — verde claro distinto do accent laranja */
+  --action-activate-border: #86efac;
+  --action-activate-text: #15803d;
+  --action-activate-border-hover: #4ade80;
+  --action-activate-bg-hover: rgb(134 239 172 / 0.15);
+  --action-activate-ring: #4ade80;
 }
 
 :root.accent-emerald {
@@ -65,6 +72,13 @@
   --card-bg-light: var(--brand-light-surface);
   --card-border-rgb-dark: 87 83 78;
   --card-bg-dark: #353330;
+
+  /* Botão Ativar — teal claro, distinto do primary esmeralda */
+  --action-activate-border: #5eead4;
+  --action-activate-text: #0f766e;
+  --action-activate-border-hover: #2dd4bf;
+  --action-activate-bg-hover: rgb(94 234 212 / 0.15);
+  --action-activate-ring: #2dd4bf;
 }
 
 @layer base {

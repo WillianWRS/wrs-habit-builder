@@ -145,7 +145,11 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
             </div>
 
             <div class="flex shrink-0 flex-col gap-2">
-              <app-action-icon-tooltip label="Editar" variant="primary">
+              <app-action-icon-tooltip
+                label="Editar"
+                variant="primary"
+                direction="top"
+              >
                 <button
                   type="button"
                   class="rounded-lg border border-brand-light-primary/45 p-2 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
@@ -157,7 +161,11 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
               </app-action-icon-tooltip>
 
               @if (!archived()) {
-                <app-action-icon-tooltip label="Arquivar" variant="danger">
+                <app-action-icon-tooltip
+                  label="Arquivar"
+                  variant="danger"
+                  direction="top"
+                >
                   <button
                     type="button"
                     class="rounded-lg border border-red-500/45 p-2 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
@@ -168,22 +176,35 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
                   </button>
                 </app-action-icon-tooltip>
               } @else {
-                <button
-                  type="button"
-                  class="rounded-lg border border-brand-light-border p-2 text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/40 hover:bg-brand-light-primary/10 hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:bg-brand-primary/10 dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
-                  [attr.aria-label]="'Recuperar ' + name()"
-                  (click)="restore.emit()"
+                <app-action-icon-tooltip
+                  label="Ativar"
+                  variant="success"
+                  direction="top"
                 >
-                  <i class="bi bi-arrow-counterclockwise text-sm" aria-hidden="true"></i>
-                </button>
-                <button
-                  type="button"
-                  class="rounded-lg border border-brand-light-border p-2 text-brand-light-text-secondary transition-colors hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-red-400/50 dark:hover:bg-red-500/15 dark:hover:text-red-400 dark:focus-visible:ring-red-400"
-                  [attr.aria-label]="'Excluir permanentemente ' + name()"
-                  (click)="deletePermanently.emit()"
+                  <button
+                    type="button"
+                    class="rounded-lg border border-action-activate-border/45 p-2 text-action-activate transition-colors hover:border-action-activate-border-hover hover:bg-[var(--action-activate-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-activate-ring"
+                    [attr.aria-label]="'Ativar ' + name()"
+                    (click)="restore.emit()"
+                  >
+                    <i class="bi bi-arrow-counterclockwise text-sm" aria-hidden="true"></i>
+                  </button>
+                </app-action-icon-tooltip>
+
+                <app-action-icon-tooltip
+                  label="Excluir"
+                  variant="danger"
+                  direction="top"
                 >
-                  <i class="bi bi-trash text-sm" aria-hidden="true"></i>
-                </button>
+                  <button
+                    type="button"
+                    class="rounded-lg border border-red-500/45 p-2 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
+                    [attr.aria-label]="'Excluir permanentemente ' + name()"
+                    (click)="deletePermanently.emit()"
+                  >
+                    <i class="bi bi-trash text-sm" aria-hidden="true"></i>
+                  </button>
+                </app-action-icon-tooltip>
               }
             </div>
           </div>

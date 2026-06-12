@@ -20,5 +20,6 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
     expect(element.querySelector('router-outlet')).not.toBeNull();
     expect(element.querySelector('app-habit-form-modal')).not.toBeNull();
+    expect(element.querySelector('app-toast')).not.toBeNull();
   });
 });

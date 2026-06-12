@@ -31,6 +31,11 @@ export default {
         'brand-text-secondary': 'var(--brand-text-secondary)',
         'brand-primary': 'var(--accent-dark)',
         'brand-secondary': '#1565C0',
+
+        'action-activate': 'var(--action-activate-text)',
+        'action-activate-border': 'var(--action-activate-border)',
+        'action-activate-border-hover': 'var(--action-activate-border-hover)',
+        'action-activate-ring': 'var(--action-activate-ring)',
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],

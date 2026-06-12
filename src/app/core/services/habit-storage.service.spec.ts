@@ -213,7 +213,11 @@ describe('HabitStorageService', () => {
 
       const result = fresh.importStorage(exported);
 
-      expect(result).toEqual({ ok: true });
+      expect(result).toEqual({
+        ok: true,
+        habitCount: exported.habits.length,
+        completionCount: exported.completions.length,
+      });
       expect(fresh.completionsReadonly()).toEqual(exported.completions);
       expect(fresh.habitsReadonly()).toHaveLength(exported.habits.length);
       for (const habit of fresh.habitsReadonly()) {
@@ -301,13 +305,56 @@ describe('HabitStorageService', () => {
     });
   });
 
+  describe('stagePermanentDelete / restorePendingDelete', () => {
+    it('remove da UI imediatamente e restaura snapshot ao desfazer', () => {
+      const service = createService();
+      const habit = service.createHabit(createMinimalHabitDto());
+
+      service.archiveHabit(habit.id);
+      service.toggleCompletion(habit.id, '2026-06-01');
+      service.toggleCompletion(habit.id, '2026-06-02');
+
+      const staged = service.stagePermanentDelete(habit.id);
+
+      expect(staged).toBe(true);
+      expect(service.getHabitById(habit.id)).toBeUndefined();
+      expect(service.completionsReadonly()).toHaveLength(0);
+      expect(service.hasPendingDelete(habit.id)).toBe(true);
+
+      const restored = service.restorePendingDelete(habit.id);
+
+      expect(restored).toBe(true);
+      expect(service.getHabitById(habit.id)?.archived).toBe(true);
+      expect(service.completionsReadonly()).toHaveLength(2);
+      expect(service.hasPendingDelete(habit.id)).toBe(false);
+    });
+
+    it('commitPendingDelete descarta snapshot sem alterar storage', () => {
+      const service = createService();
+      const habit = service.createHabit(createMinimalHabitDto());
+
+      service.archiveHabit(habit.id);
+      service.stagePermanentDelete(habit.id);
+
+      service.commitPendingDelete(habit.id);
+
+      expect(service.getHabitById(habit.id)).toBeUndefined();
+      expect(service.hasPendingDelete(habit.id)).toBe(false);
+      expect(service.restorePendingDelete(habit.id)).toBe(false);
+    });
+  });
+
   describe('importStorage — JSON legado', () => {
     it('importa payload v5 na versão atual', () => {
       const service = createService();
 
       const result = service.importStorage(storageV5);
 
-      expect(result).toEqual({ ok: true });
+      expect(result).toEqual({
+        ok: true,
+        habitCount: storageV5.habits.length,
+        completionCount: storageV5.completions.length,
+      });
       expect(service.completionsReadonly()).toEqual(storageV5.completions);
 
       const stored = JSON.parse(

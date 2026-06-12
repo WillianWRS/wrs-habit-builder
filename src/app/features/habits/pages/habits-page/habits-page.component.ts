@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import type { HabitListCardView } from '../../../../core/models/today-habit-card.model';
 import {
@@ -151,6 +152,7 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
 export class HabitsPageComponent {
   private readonly storage = inject(HabitStorageService);
   private readonly habitFormModal = inject(HabitFormModalService);
+  private readonly toast = inject(ToastService);
 
   protected readonly filterOptions = FILTER_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
@@ -221,10 +223,19 @@ export class HabitsPageComponent {
 
   protected archiveHabit(habitId: string): void {
     this.storage.archiveHabit(habitId);
+
+    this.toast.showUndo(
+      'Hábito arquivado',
+      () => {
+        this.storage.restoreHabit(habitId);
+      },
+      { icon: 'archive' },
+    );
   }
 
   protected restoreHabit(habitId: string): void {
     this.storage.restoreHabit(habitId);
+    this.toast.showSuccess('Hábito reativado', 'refresh');
   }
 
   protected openDeleteConfirm(habitId: string, habitName: string): void {
@@ -242,7 +253,26 @@ export class HabitsPageComponent {
       return;
     }
 
-    this.storage.permanentlyDeleteHabit(pending.id);
+    const habitId = pending.id;
+
+    if (!this.storage.stagePermanentDelete(habitId)) {
+      this.pendingDelete.set(null);
+      return;
+    }
+
     this.pendingDelete.set(null);
+
+    this.toast.showUndo(
+      'Hábito excluído',
+      () => {
+        this.storage.restorePendingDelete(habitId);
+      },
+      {
+        icon: 'trash',
+        onCommit: () => {
+          this.storage.commitPendingDelete(habitId);
+        },
+      },
+    );
   }
 }

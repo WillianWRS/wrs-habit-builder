@@ -7,6 +7,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { toDateKey } from '../../../../core/utils/date.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 
@@ -118,6 +119,7 @@ const IMPORT_STEP_LABELS = [
 })
 export class DataManagementPageComponent {
   private readonly storage = inject(HabitStorageService);
+  private readonly toast = inject(ToastService);
 
   private readonly fileInput =
     viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -217,6 +219,10 @@ export class DataManagementPageComponent {
           input.value = '';
           return;
         }
+
+        this.toast.showSuccess(
+          formatImportSuccessMessage(result.habitCount, result.completionCount),
+        );
       }
 
       await this.delay(this.randomStepDelay());
@@ -240,4 +246,18 @@ export class DataManagementPageComponent {
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
+}
+
+function formatImportSuccessMessage(
+  habitCount: number,
+  completionCount: number,
+): string {
+  const habitsLabel =
+    habitCount === 1 ? '1 hábito' : `${habitCount} hábitos`;
+  const completionsLabel =
+    completionCount === 1
+      ? '1 conclusão'
+      : `${completionCount} conclusões`;
+
+  return `${habitsLabel} e ${completionsLabel} importados`;
 }

@@ -19,6 +19,7 @@ import { createDefaultWeekdayGoals } from '../../../core/models/habit-weekday-go
 import type { Weekday } from '../../../core/models/weekday.model';
 import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../core/services/habit-storage.service';
+import { ToastService } from '../../../core/services/toast.service';
 import {
   DEFAULT_NEW_HABIT_MOTIVATION,
   DEFAULT_NEW_HABIT_TRIGGER,
@@ -47,6 +48,7 @@ const MINIMUM_ACTION_MAX = 140;
 export class HabitFormModalComponent {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly storage = inject(HabitStorageService);
+  private readonly toast = inject(ToastService);
 
   protected readonly modal = inject(HabitFormModalService);
   protected readonly minimumActionMax = MINIMUM_ACTION_MAX;
@@ -326,8 +328,10 @@ export class HabitFormModalComponent {
 
     if (editId) {
       this.storage.updateHabit(editId, payload);
+      this.toast.showSuccess('Alterações salvas');
     } else {
       this.storage.createHabit(payload);
+      this.toast.showSuccess('Hábito criado');
     }
 
     this.close();
