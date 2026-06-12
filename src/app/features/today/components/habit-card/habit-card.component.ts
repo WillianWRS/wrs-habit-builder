@@ -11,6 +11,7 @@ import {
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { getWeekday } from '../../../../core/utils/date.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
+import { previewTimeOrPlaceholder } from '../../../../shared/components/habit-card-preview/habit-card-preview.utils';
 import type { MarqueeItem } from '../../../../core/utils/habit-trigger-motivation.utils';
 import type { Weekday } from '../../../../core/models/weekday.model';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
@@ -108,6 +109,10 @@ export class HabitCardComponent {
 
   protected readonly displayTitle = computed(() =>
     formatHabitCardTitle(this.name(), this.displayMeta()),
+  );
+
+  protected readonly displayTime = computed(() =>
+    previewTimeOrPlaceholder(this.time()),
   );
 
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));

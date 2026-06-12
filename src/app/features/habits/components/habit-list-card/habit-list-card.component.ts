@@ -10,6 +10,7 @@ import type { HabitCardAccent } from '../../../../core/models/today-habit-card.m
 import type { MarqueeItem } from '../../../../core/utils/habit-trigger-motivation.utils';
 import type { Weekday } from '../../../../core/models/weekday.model';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
+import { previewTimeOrPlaceholder } from '../../../../shared/components/habit-card-preview/habit-card-preview.utils';
 import { ActionIconTooltipComponent } from '../../../../shared/components/action-icon-tooltip/action-icon-tooltip.component';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
 
@@ -76,7 +77,7 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
                 </h2>
                 <span
                   class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
-                  >{{ time() }} · {{ category() }}</span
+                  >{{ displayTime() }} · {{ category() }}</span
                 >
               </div>
 
@@ -234,6 +235,10 @@ export class HabitListCardComponent {
 
   protected readonly displayTitle = computed(() =>
     formatHabitCardTitle(this.name(), this.displayMeta()),
+  );
+
+  protected readonly displayTime = computed(() =>
+    previewTimeOrPlaceholder(this.time()),
   );
 
   protected readonly triggersPanelId = computed(

@@ -24,6 +24,11 @@ function resolveCategory(category: unknown): string {
   return String(category);
 }
 
+/** Aceita `time` (v9+) e `optionalReminder` (legado) em imports JSON. */
+export function resolveRawTime(raw: Record<string, unknown>): string {
+  return String(raw['time'] ?? raw['optionalReminder'] ?? '').trim();
+}
+
 function normalizeWeekdayGoals(rawGoals: unknown): HabitWeekdayGoal[] {
   const defaults = createDefaultWeekdayGoals();
 
@@ -32,15 +37,15 @@ function normalizeWeekdayGoals(rawGoals: unknown): HabitWeekdayGoal[] {
   }
 
   return defaults.map((entry) => {
-    const match = (rawGoals as HabitWeekdayGoal[]).find(
-      (goal) => goal.weekday === entry.weekday,
+    const match = (rawGoals as Record<string, unknown>[]).find(
+      (goal) => goal['weekday'] === entry.weekday,
     );
 
     return {
       weekday: entry.weekday,
-      meta: match?.meta?.trim() ?? '',
-      minimumAction: match?.minimumAction?.trim() ?? '',
-      optionalReminder: match?.optionalReminder?.trim() ?? '',
+      meta: String(match?.['meta'] ?? '').trim(),
+      minimumAction: String(match?.['minimumAction'] ?? '').trim(),
+      time: match ? resolveRawTime(match) : '',
     };
   });
 }
@@ -59,7 +64,7 @@ function resolveSlots(raw: LegacyHabitPayload): {
   throw new Error('[normalizeHabit] expected triggers/motivations arrays');
 }
 
-/** Normaliza hábito no schema atual (v8) — arrays triggers/motivations. */
+/** Normaliza hábito no schema atual (v9) — arrays triggers/motivations. */
 export function normalizeHabit(raw: LegacyHabitPayload): Habit {
   const scheduleDays =
     Array.isArray(raw['scheduleDays']) && raw['scheduleDays'].length > 0
@@ -104,7 +109,7 @@ export function normalizeHabit(raw: LegacyHabitPayload): Habit {
     minimumAction: String(raw['minimumAction'] ?? '').trim(),
     scheduleDays,
     scheduleDaySince,
-    optionalReminder: String(raw['optionalReminder'] ?? '').trim(),
+    time: resolveRawTime(raw),
     archived: Boolean(raw['archived'] ?? false),
     createdAt,
     showOnToday: raw['showOnToday'] !== false,
@@ -160,7 +165,7 @@ export function normalizeLegacyNumberedHabit(raw: LegacyHabitPayload): LegacyHab
     minimumAction: String(raw['minimumAction'] ?? '').trim(),
     scheduleDays,
     scheduleDaySince,
-    optionalReminder: String(raw['optionalReminder'] ?? '').trim(),
+    optionalReminder: resolveRawTime(raw),
     archived: Boolean(raw['archived'] ?? false),
     createdAt,
     showOnToday: raw['showOnToday'] !== false,

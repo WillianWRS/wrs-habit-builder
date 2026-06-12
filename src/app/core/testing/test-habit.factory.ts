@@ -24,7 +24,7 @@ export function createTestHabit(overrides: Partial<Habit> = {}): Habit {
     minimumAction: '1 passo',
     scheduleDays: [...ALL_WEEKDAYS],
     scheduleDaySince: buildInitialScheduleDaySince([...ALL_WEEKDAYS], '2026-01-01'),
-    optionalReminder: '',
+    time: '',
     archived: false,
     createdAt: '2026-01-01T12:00:00.000Z',
     showOnToday: true,

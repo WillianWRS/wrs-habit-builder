@@ -13,7 +13,7 @@ function demoEntryDisplaySource(entry: DemoHabitPoolEntry) {
     generalGoal: entry.metaGeral,
     dynamicGoals: entry.metasDinamicas,
     minimumAction: entry.minimumAction,
-    optionalReminder: entry.optionalReminder,
+    time: entry.time,
     weekdayGoals: entry.weekdayGoals,
   };
 }

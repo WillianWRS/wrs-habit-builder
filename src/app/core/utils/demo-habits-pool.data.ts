@@ -17,12 +17,12 @@ interface HabitBlueprint {
   motivation1: string;
   motivation2: string;
   minimumAction: string;
-  optionalReminder: string;
+  time: string;
   metaGeral: string;
 }
 
 function withWeekdayGoals(
-  goals: Partial<Record<Weekday, Partial<Pick<HabitWeekdayGoal, 'meta' | 'minimumAction' | 'optionalReminder'>>>>,
+  goals: Partial<Record<Weekday, Partial<Pick<HabitWeekdayGoal, 'meta' | 'minimumAction' | 'time'>>>>,
 ): HabitWeekdayGoal[] {
   return createDefaultWeekdayGoals().map((entry) => ({
     ...entry,
@@ -33,7 +33,7 @@ function withWeekdayGoals(
 function generalHabit(
   blueprint: HabitBlueprint,
   scheduleDays: Weekday[],
-  overrides: Partial<Pick<DemoHabitPoolEntry, 'metaGeral' | 'minimumAction' | 'optionalReminder'>> = {},
+  overrides: Partial<Pick<DemoHabitPoolEntry, 'metaGeral' | 'minimumAction' | 'time'>> = {},
 ): DemoHabitPoolEntry {
   return {
     ...blueprint,
@@ -67,7 +67,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Começar o dia em movimento',
     motivation2: 'Clarear a mente antes do trabalho',
     minimumAction: 'Caminhar 10 minutos',
-    optionalReminder: '06:30',
+    time: '06:30',
     metaGeral: '30 minutos',
   },
   {
@@ -78,7 +78,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Crescer um pouco todo dia',
     motivation2: 'Substituir scroll por conteúdo bom',
     minimumAction: 'Ler 2 páginas',
-    optionalReminder: '21:00',
+    time: '21:00',
     metaGeral: '15 páginas',
   },
   {
@@ -89,7 +89,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Menos ansiedade ao longo do dia',
     motivation2: 'Responder com mais calma',
     minimumAction: 'Meditar 3 minutos',
-    optionalReminder: '07:00',
+    time: '07:00',
     metaGeral: '10 minutos',
   },
   {
@@ -100,7 +100,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Ficar mais forte aos poucos',
     motivation2: 'Honrar o compromisso comigo',
     minimumAction: 'Fazer 1 série de qualquer exercício',
-    optionalReminder: '18:30',
+    time: '18:30',
     metaGeral: '45 minutos',
   },
   {
@@ -111,7 +111,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Aliviar tensão do pescoço',
     motivation2: 'Dormir com menos dor',
     minimumAction: 'Alongar pescoço e ombros por 2 min',
-    optionalReminder: '22:00',
+    time: '22:00',
     metaGeral: '8 minutos',
   },
   {
@@ -122,7 +122,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Menos dor de cabeça',
     motivation2: 'Manter energia estável',
     minimumAction: 'Beber 1 copo cheio',
-    optionalReminder: '09:00',
+    time: '09:00',
     metaGeral: '2 litros',
   },
   {
@@ -133,7 +133,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Abrir portas profissionais',
     motivation2: 'Assistir séries sem legenda',
     minimumAction: 'Completar 1 lição curta',
-    optionalReminder: '08:00',
+    time: '08:00',
     metaGeral: '20 minutos',
   },
   {
@@ -144,7 +144,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Organizar pensamentos',
     motivation2: 'Lembrar do que importou no dia',
     minimumAction: 'Escrever 3 linhas',
-    optionalReminder: '22:30',
+    time: '22:30',
     metaGeral: '1 página',
   },
   {
@@ -155,7 +155,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Comer melhor na semana',
     motivation2: 'Gastar menos com delivery',
     minimumAction: 'Separar 1 porção de proteína',
-    optionalReminder: '11:00',
+    time: '11:00',
     metaGeral: '4 marmitas',
   },
   {
@@ -166,7 +166,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Acordar sem ressaca de cansaço',
     motivation2: 'Ter energia para treinar',
     minimumAction: 'Deitar no horário combinado',
-    optionalReminder: '23:00',
+    time: '23:00',
     metaGeral: '7h30 de sono',
   },
   {
@@ -177,7 +177,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Ganhar tempo útil de manhã',
     motivation2: 'Não começar o dia correndo',
     minimumAction: 'Levantar na primeira tentativa',
-    optionalReminder: '06:45',
+    time: '06:45',
     metaGeral: 'Sem soneca',
   },
   {
@@ -188,7 +188,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Tocar uma música inteira',
     motivation2: 'Relaxar fazendo algo manual',
     minimumAction: 'Praticar 1 escala devagar',
-    optionalReminder: '20:00',
+    time: '20:00',
     metaGeral: '25 minutos',
   },
   {
@@ -199,7 +199,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Construir projetos próprios',
     motivation2: 'Ficar mais confiante no trabalho',
     minimumAction: 'Resolver 1 exercício pequeno',
-    optionalReminder: '19:00',
+    time: '19:00',
     metaGeral: '1 pomodoro',
   },
   {
@@ -210,7 +210,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Saber para onde vai o dinheiro',
     motivation2: 'Guardar para viagens',
     minimumAction: 'Registrar 1 despesa pendente',
-    optionalReminder: '10:00',
+    time: '10:00',
     metaGeral: 'Revisar extrato',
   },
   {
@@ -221,7 +221,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Entrar no dia sem bagunça',
     motivation2: 'Focar sem distrações visuais',
     minimumAction: 'Guardar 3 itens fora do lugar',
-    optionalReminder: '17:45',
+    time: '17:45',
     metaGeral: 'Mesa limpa',
   },
   {
@@ -232,7 +232,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Manter laços vivos',
     motivation2: 'Não deixar semanas passarem',
     minimumAction: 'Mandar 1 mensagem de voz',
-    optionalReminder: '19:30',
+    time: '19:30',
     metaGeral: '1 ligação',
   },
   {
@@ -243,7 +243,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Fechar o dia com leveza',
     motivation2: 'Notar o que deu certo',
     minimumAction: 'Anotar 1 coisa boa do dia',
-    optionalReminder: '22:45',
+    time: '22:45',
     metaGeral: '3 gratidões',
   },
   {
@@ -254,7 +254,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Reduzir picos de energia',
     motivation2: 'Cuidar da saúde a longo prazo',
     minimumAction: 'Tomar 1 xícara sem açúcar',
-    optionalReminder: '07:30',
+    time: '07:30',
     metaGeral: 'Zero açúcar',
   },
   {
@@ -265,7 +265,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Acordar o corpo de verdade',
     motivation2: 'Treinar desconforto controlado',
     minimumAction: '30 segundos de água fria',
-    optionalReminder: '06:50',
+    time: '06:50',
     metaGeral: '2 minutos',
   },
   {
@@ -276,7 +276,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Mobilidade para o dia inteiro',
     motivation2: 'Respirar com mais espaço',
     minimumAction: 'Fazer 1 postura com calma',
-    optionalReminder: '07:15',
+    time: '07:15',
     metaGeral: '20 minutos',
   },
   {
@@ -287,7 +287,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Melhorar condicionamento',
     motivation2: 'Clarear a cabeça',
     minimumAction: 'Correr 5 minutos',
-    optionalReminder: '06:00',
+    time: '06:00',
     metaGeral: '5 km',
   },
   {
@@ -298,7 +298,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Treino rápido e eficiente',
     motivation2: 'Gastar energia acumulada',
     minimumAction: 'Pular 1 minuto',
-    optionalReminder: '18:00',
+    time: '18:00',
     metaGeral: '10 minutos',
   },
   {
@@ -309,7 +309,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Manter a casa viva',
     motivation2: 'Pausa consciente do trabalho',
     minimumAction: 'Regar 1 vaso',
-    optionalReminder: '08:30',
+    time: '08:30',
     metaGeral: 'Todas as plantas',
   },
   {
@@ -320,7 +320,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Responder com mais clareza',
     motivation2: 'Não perder prazos',
     minimumAction: 'Arquivar ou responder 1 e-mail',
-    optionalReminder: '09:15',
+    time: '09:15',
     metaGeral: 'Inbox zero',
   },
   {
@@ -331,7 +331,7 @@ const BLUEPRINTS: HabitBlueprint[] = [
     motivation1: 'Entregar trabalho profundo',
     motivation2: 'Evitar multitarefa',
     minimumAction: '25 min sem interrupções',
-    optionalReminder: '14:00',
+    time: '14:00',
     metaGeral: '2 pomodoros',
   },
 ];
@@ -343,7 +343,7 @@ function buildVariants(blueprint: HabitBlueprint, index: number): DemoHabitPoolE
 
   variants.push(
     generalHabit(blueprint, [...WEEKDAYS], {
-      optionalReminder: shiftTime(blueprint.optionalReminder, 30),
+      time: shiftTime(blueprint.time, 30),
       minimumAction: shortenMinimum(blueprint.minimumAction),
     }),
   );
@@ -363,22 +363,22 @@ function buildVariants(blueprint: HabitBlueprint, index: number): DemoHabitPoolE
           1: {
             meta: 'Leve',
             minimumAction: shortenMinimum(blueprint.minimumAction),
-            optionalReminder: '07:00',
+            time: '07:00',
           },
           3: {
             meta: 'Moderado',
             minimumAction: blueprint.minimumAction,
-            optionalReminder: blueprint.optionalReminder,
+            time: blueprint.time,
           },
           5: {
             meta: 'Intenso',
             minimumAction: intensifyMinimum(blueprint.minimumAction),
-            optionalReminder: shiftTime(blueprint.optionalReminder, 60),
+            time: shiftTime(blueprint.time, 60),
           },
           6: {
             meta: 'Recuperação',
             minimumAction: shortenMinimum(blueprint.minimumAction),
-            optionalReminder: '10:00',
+            time: '10:00',
           },
         }),
       ),
@@ -541,7 +541,7 @@ function buildSyntheticBlueprint(index: number): HabitBlueprint {
     motivation1,
     motivation2,
     minimumAction: `Dedicar ${1 + (index % 5)} minuto(s)`,
-    optionalReminder: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+    time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
     metaGeral: `${durationMinutes} minutos`,
   };
 }
@@ -559,17 +559,17 @@ function buildSyntheticPoolEntries(count: number): DemoHabitPoolEntry[] {
           1: {
             meta: 'Leve',
             minimumAction: shortenMinimum(blueprint.minimumAction),
-            optionalReminder: '07:00',
+            time: '07:00',
           },
           3: {
             meta: 'Moderado',
             minimumAction: blueprint.minimumAction,
-            optionalReminder: blueprint.optionalReminder,
+            time: blueprint.time,
           },
           5: {
             meta: 'Intenso',
             minimumAction: intensifyMinimum(blueprint.minimumAction),
-            optionalReminder: shiftTime(blueprint.optionalReminder, 45),
+            time: shiftTime(blueprint.time, 45),
           },
         }),
       );

@@ -13,14 +13,6 @@ import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.c
 
 interface ImportFeedback { type: 'error'; message: string }
 
-const IMPORT_STEP_LABELS = [
-  'Validando JSON',
-  'Organizando hábitos',
-  'Verificando sequência',
-  'Quase lá',
-  'Dados importados com sucesso',
-] as const;
-
 @Component({
   selector: 'app-data-management-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,25 +78,6 @@ const IMPORT_STEP_LABELS = [
           (change)="onImportFile($event)"
         />
 
-        @if (showImportProgress()) {
-          <div class="mt-6" role="status" aria-live="polite">
-            <div
-              class="h-2 overflow-hidden rounded-full bg-brand-light-bg dark:bg-brand-bg"
-              aria-hidden="true"
-            >
-              <div
-                class="h-full rounded-full bg-brand-light-primary transition-[width] duration-500 ease-out dark:bg-brand-primary"
-                [style.width.%]="importProgress()"
-              ></div>
-            </div>
-            <p
-              class="mt-3 text-center text-sm font-medium text-brand-light-primary dark:text-brand-primary"
-            >
-              {{ importStepLabel() }}
-            </p>
-          </div>
-        }
-
         @if (feedback(); as message) {
           <p
             class="mt-4 text-center text-sm text-red-600 dark:text-red-400"
@@ -126,9 +99,6 @@ export class DataManagementPageComponent {
 
   protected readonly feedback = signal<ImportFeedback | null>(null);
   protected readonly isImporting = signal(false);
-  protected readonly showImportProgress = signal(false);
-  protected readonly importProgress = signal(0);
-  protected readonly importStepLabel = signal('');
 
   protected exportJson(): void {
     const payload = this.storage.exportStorage();
@@ -162,11 +132,11 @@ export class DataManagementPageComponent {
     const reader = new FileReader();
 
     reader.onload = () => {
-      void this.handleImportFile(String(reader.result), input);
+      this.handleImportFile(String(reader.result), input);
     };
 
     reader.onerror = () => {
-      this.resetImportUi();
+      this.isImporting.set(false);
       this.feedback.set({
         type: 'error',
         message: 'Não foi possível ler o arquivo.',
@@ -177,16 +147,13 @@ export class DataManagementPageComponent {
     reader.readAsText(file);
   }
 
-  private async handleImportFile(
-    content: string,
-    input: HTMLInputElement,
-  ): Promise<void> {
+  private handleImportFile(content: string, input: HTMLInputElement): void {
     let raw: unknown;
 
     try {
       raw = JSON.parse(content);
     } catch {
-      this.resetImportUi();
+      this.isImporting.set(false);
       this.feedback.set({
         type: 'error',
         message: 'Arquivo JSON inválido.',
@@ -197,54 +164,23 @@ export class DataManagementPageComponent {
 
     this.feedback.set(null);
     this.isImporting.set(true);
-    this.showImportProgress.set(true);
-    this.importProgress.set(0);
 
-    for (let step = 0; step < IMPORT_STEP_LABELS.length; step++) {
-      this.importStepLabel.set(IMPORT_STEP_LABELS[step]);
-      this.importProgress.set(((step + 1) / IMPORT_STEP_LABELS.length) * 100);
-
-      if (step === 1) {
-        const result = this.storage.importStorage(raw);
-
-        if (!result.ok) {
-          this.isImporting.set(false);
-          this.showImportProgress.set(false);
-          this.importProgress.set(0);
-          this.importStepLabel.set('');
-          this.feedback.set({
-            type: 'error',
-            message: result.message,
-          });
-          input.value = '';
-          return;
-        }
-
-        this.toast.showSuccess(
-          formatImportSuccessMessage(result.habitCount, result.completionCount),
-        );
-      }
-
-      await this.delay(this.randomStepDelay());
-    }
+    const result = this.storage.importStorage(raw);
 
     this.isImporting.set(false);
     input.value = '';
-  }
 
-  private resetImportUi(): void {
-    this.isImporting.set(false);
-    this.showImportProgress.set(false);
-    this.importProgress.set(0);
-    this.importStepLabel.set('');
-  }
+    if (!result.ok) {
+      this.feedback.set({
+        type: 'error',
+        message: result.message,
+      });
+      return;
+    }
 
-  private randomStepDelay(): number {
-    return 1000 + Math.random() * 2000;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    this.toast.showSuccess(
+      formatImportSuccessMessage(result.habitCount, result.completionCount),
+    );
   }
 }
 

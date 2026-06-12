@@ -19,7 +19,7 @@ export interface Habit {
   minimumAction: string;
   scheduleDays: Weekday[];
   scheduleDaySince: ScheduleDaySince;
-  optionalReminder: string;
+  time: string;
   archived: boolean;
   createdAt: string;
   showOnToday: boolean;

@@ -3,7 +3,7 @@ import { getWeekday } from './date.utils';
 
 type HabitDisplaySource = Pick<
   Habit,
-  'dynamicGoals' | 'generalGoal' | 'minimumAction' | 'optionalReminder' | 'weekdayGoals'
+  'dynamicGoals' | 'generalGoal' | 'minimumAction' | 'time' | 'weekdayGoals'
 >;
 
 function resolveWeekdayGoal(
@@ -44,12 +44,12 @@ export function resolveHabitDisplayReminder(
 ): string {
   if (habit.dynamicGoals) {
     return (
-      resolveWeekdayGoal(habit.weekdayGoals, date)?.optionalReminder.trim() ??
+      resolveWeekdayGoal(habit.weekdayGoals, date)?.time.trim() ??
       ''
     );
   }
 
-  return habit.optionalReminder.trim();
+  return habit.time.trim();
 }
 
 export function formatHabitCardTitle(name: string, meta: string): string {

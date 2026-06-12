@@ -10,7 +10,7 @@ export interface HabitCardPreviewFormState {
   dynamicGoals: boolean;
   generalGoal: string;
   minimumAction: string;
-  optionalReminder: string;
+  time: string;
   weekdayGoals: HabitWeekdayGoal[];
   triggers: TriggerItem[];
   motivations: MotivationItem[];

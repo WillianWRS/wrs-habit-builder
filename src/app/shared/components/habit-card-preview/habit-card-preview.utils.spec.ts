@@ -11,7 +11,7 @@ describe('habit-card-preview.utils', () => {
       dynamicGoals: false,
       generalGoal: 'Meta',
       minimumAction: '1 passo',
-      optionalReminder: '08:00',
+      time: '08:00',
       weekdayGoals: [],
       triggers: [
         { text: 'Gatilho', visible: true },

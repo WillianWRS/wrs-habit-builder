@@ -139,20 +139,20 @@
 
                       <div class="min-w-0 flex-[2]">
                         <label
-                          for="habit-reminder"
+                          for="habit-time"
                           class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                         >
                           Horário
+                          <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
+                            (Opcional)
+                          </span>
                         </label>
                         <input
-                          id="habit-reminder"
+                          id="habit-time"
                           type="time"
-                          formControlName="optionalReminder"
+                          formControlName="time"
                           class="habit-form-time-control w-full rounded-lg border border-brand-light-border bg-brand-light-bg px-3 py-2 text-sm text-brand-light-text-primary outline-none transition-colors focus:border-brand-light-primary focus:ring-1 focus:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus:border-brand-primary dark:focus:ring-brand-primary"
                         />
-                        @if (showError('optionalReminder', 'required')) {
-                          <p class="mt-1 text-xs text-red-500">Informe o horário.</p>
-                        }
                       </div>
                     </div>
                   </div>
@@ -224,25 +224,25 @@
 
                             <div class="weekday-input-group min-w-0 flex-[2]">
                               <label
-                                [for]="'habit-reminder-day-' + day.weekday"
+                                [for]="'habit-time-day-' + day.weekday"
                                 class="weekday-input-group__label"
                               >
                                 <i class="bi bi-clock weekday-input-group__label-icon" aria-hidden="true"></i>
                                 Hora
+                                <span class="font-normal opacity-70">(Opcional)</span>
                               </label>
                               <input
-                                [id]="'habit-reminder-day-' + day.weekday"
+                                [id]="'habit-time-day-' + day.weekday"
                                 type="time"
                                 class="weekday-input-group__control"
-                                [formControl]="weekdayGoalReminderControl(weekdayGoalIndex(day.weekday))"
+                                [formControl]="weekdayGoalTimeControl(weekdayGoalIndex(day.weekday))"
                               />
                             </div>
                           </div>
 
                           @if (
                             showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required') ||
-                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength') ||
-                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'optionalReminder', 'required')
+                            showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')
                           ) {
                             <div class="space-y-0.5">
                               @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required')) {
@@ -252,9 +252,6 @@
                                 <p class="text-xs text-red-500">
                                   Máximo de {{ minimumActionMax }} caracteres.
                                 </p>
-                              }
-                              @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'optionalReminder', 'required')) {
-                                <p class="text-xs text-red-500">Informe o horário.</p>
                               }
                             </div>
                           }

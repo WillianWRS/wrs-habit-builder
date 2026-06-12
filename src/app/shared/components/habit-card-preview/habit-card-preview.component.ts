@@ -150,7 +150,7 @@ export class HabitCardPreviewComponent {
     const state = this.formState();
 
     if (!state.dynamicGoals) {
-      return previewTimeOrPlaceholder(state.optionalReminder);
+      return previewTimeOrPlaceholder(state.time);
     }
 
     if (this.visiblePreviewDays().length === 0) {
@@ -159,7 +159,7 @@ export class HabitCardPreviewComponent {
 
     const goal = this.activeWeekdayGoal();
 
-    return previewTimeOrPlaceholder(goal?.optionalReminder ?? '');
+    return previewTimeOrPlaceholder(goal?.time ?? '');
   });
 
   constructor() {

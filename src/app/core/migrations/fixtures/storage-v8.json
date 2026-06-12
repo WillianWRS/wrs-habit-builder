@@ -1,0 +1,85 @@
+{
+  "version": 8,
+  "habits": [
+    {
+      "id": "habit-v8-1",
+      "name": "Leitura diária",
+      "generalGoal": "30 minutos por dia",
+      "dynamicGoals": true,
+      "weekdayGoals": [
+        {
+          "weekday": 0,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        },
+        {
+          "weekday": 1,
+          "meta": "Meta seg",
+          "minimumAction": "1 página",
+          "optionalReminder": "07:30"
+        },
+        {
+          "weekday": 2,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        },
+        {
+          "weekday": 3,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        },
+        {
+          "weekday": 4,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        },
+        {
+          "weekday": 5,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        },
+        {
+          "weekday": 6,
+          "meta": "",
+          "minimumAction": "",
+          "optionalReminder": ""
+        }
+      ],
+      "category": "Mente",
+      "triggers": [
+        { "text": "Após o café", "visible": true },
+        { "text": "", "visible": false },
+        { "text": "", "visible": false }
+      ],
+      "motivations": [
+        { "text": "Aprender", "visible": true },
+        { "text": "", "visible": false },
+        { "text": "", "visible": false }
+      ],
+      "minimumAction": "1 página",
+      "scheduleDays": [1, 3, 5],
+      "scheduleDaySince": {
+        "1": "2026-01-01",
+        "3": "2026-01-01",
+        "5": "2026-01-01"
+      },
+      "optionalReminder": "08:00",
+      "archived": false,
+      "createdAt": "2026-01-01T12:00:00.000Z",
+      "showOnToday": true
+    }
+  ],
+  "completions": [
+    {
+      "id": "completion-v8-1",
+      "habitId": "habit-v8-1",
+      "completedOn": "2026-06-01"
+    }
+  ],
+  "freezeUsed": []
+}

@@ -13,6 +13,6 @@ export interface DemoHabitPoolEntry {
   metasDinamicas: boolean;
   weekdayGoals: HabitWeekdayGoal[];
   minimumAction: string;
-  optionalReminder: string;
+  time: string;
   scheduleDays: Weekday[];
 }

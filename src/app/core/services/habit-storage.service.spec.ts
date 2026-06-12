@@ -12,6 +12,7 @@ import { ALL_WEEKDAYS } from '../models/habit.model';
 import { padSlots } from '../models/habit-slot.model';
 import { parseDateKey } from '../utils/date.utils';
 import storageV5 from '../migrations/fixtures/storage-v5.json';
+import storageV8 from '../migrations/fixtures/storage-v8.json';
 import { CurrentDayService } from './current-day.service';
 import { HabitStorageService } from './habit-storage.service';
 
@@ -57,7 +58,7 @@ function createMinimalHabitDto(): CreateHabitDto {
     motivations: padSlots([{ text: 'Porque quero', visible: true }]),
     minimumAction: '1 passo',
     scheduleDays: [...ALL_WEEKDAYS],
-    optionalReminder: '',
+    time: '',
     showOnToday: true,
   };
 }
@@ -103,6 +104,31 @@ describe('HabitStorageService', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
     vi.unstubAllGlobals();
+  });
+
+  describe('createHabit — horário opcional', () => {
+    it('permite criar hábito sem time preenchido', () => {
+      const service = createService();
+      const habit = service.createHabit(createMinimalHabitDto());
+
+      expect(habit.time).toBe('');
+    });
+
+    it('persiste time quando informado', () => {
+      const service = createService();
+      const habit = service.createHabit({
+        ...createMinimalHabitDto(),
+        time: '07:30',
+      });
+
+      expect(habit.time).toBe('07:30');
+
+      TestBed.resetTestingModule();
+      configureTestBed();
+      const reloaded = createService();
+
+      expect(reloaded.getHabitById(habit.id)?.time).toBe('07:30');
+    });
   });
 
   describe('RN-01 — toggleCompletion idempotente', () => {
@@ -284,6 +310,21 @@ describe('HabitStorageService', () => {
 
       expect(service!.habitsReadonly()).toEqual([]);
       expect(service!.completionsReadonly()).toEqual([]);
+    });
+
+    it('migra automaticamente JSON v8 preservando horários', () => {
+      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(storageV8));
+
+      const service = createService();
+
+      expect(service.habitsReadonly()[0]?.time).toBe('08:00');
+      expect(service.habitsReadonly()[0]?.weekdayGoals[1]?.time).toBe('07:30');
+
+      const stored = JSON.parse(
+        localStorageMock.getItem(STORAGE_KEY)!,
+      ) as AppStorage;
+      expect(stored.version).toBe(CURRENT_STORAGE_VERSION);
+      expect('optionalReminder' in (stored.habits[0] ?? {})).toBe(false);
     });
 
     it('migra automaticamente JSON v5 e persiste na versão atual', () => {

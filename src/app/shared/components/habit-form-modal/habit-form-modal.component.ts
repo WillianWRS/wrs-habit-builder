@@ -77,12 +77,12 @@ export class HabitFormModalComponent {
       dynamicGoals: value.dynamicGoals,
       generalGoal: value.generalGoal,
       minimumAction: value.minimumAction,
-      optionalReminder: value.optionalReminder,
+      time: value.time,
       weekdayGoals: value.weekdayGoals.map((entry) => ({
         weekday: entry.weekday,
         meta: entry.meta,
         minimumAction: entry.minimumAction,
-        optionalReminder: entry.optionalReminder,
+        time: entry.time,
       })),
       triggers,
       motivations,
@@ -115,7 +115,7 @@ export class HabitFormModalComponent {
           weekday: [entry.weekday],
           meta: [''],
           minimumAction: [''],
-          optionalReminder: [''],
+          time: [''],
         }),
       ),
     ),
@@ -126,7 +126,7 @@ export class HabitFormModalComponent {
       '',
       [Validators.required, Validators.maxLength(MINIMUM_ACTION_MAX)],
     ],
-    optionalReminder: ['', Validators.required],
+    time: [''],
     showOnToday: [true],
   });
 
@@ -202,8 +202,8 @@ export class HabitFormModalComponent {
     return this.form.controls.weekdayGoals.at(index).controls.minimumAction;
   }
 
-  protected weekdayGoalReminderControl(index: number) {
-    return this.form.controls.weekdayGoals.at(index).controls.optionalReminder;
+  protected weekdayGoalTimeControl(index: number) {
+    return this.form.controls.weekdayGoals.at(index).controls.time;
   }
 
   protected weekdayGoalIndex(weekday: Weekday): number {
@@ -273,7 +273,7 @@ export class HabitFormModalComponent {
 
   protected showWeekdayGoalError(
     index: number,
-    controlName: 'meta' | 'minimumAction' | 'optionalReminder',
+    controlName: 'meta' | 'minimumAction',
     errorCode: string,
   ): boolean {
     const control =
@@ -309,7 +309,7 @@ export class HabitFormModalComponent {
         weekday: entry.weekday,
         meta: entry.meta,
         minimumAction: entry.minimumAction,
-        optionalReminder: entry.optionalReminder,
+        time: entry.time,
       })),
       category: value.category,
       triggers: mapVisibleFormSlotsToStorage(
@@ -320,7 +320,7 @@ export class HabitFormModalComponent {
       ),
       minimumAction: value.minimumAction,
       scheduleDays: this.scheduleDays(),
-      optionalReminder: value.optionalReminder,
+      time: value.time,
       showOnToday: value.showOnToday,
     };
 
@@ -347,7 +347,7 @@ export class HabitFormModalComponent {
       dynamicGoals: false,
       category: '',
       minimumAction: '',
-      optionalReminder: '',
+      time: '',
       showOnToday: true,
     });
 
@@ -363,7 +363,7 @@ export class HabitFormModalComponent {
         weekday: ALL_WEEKDAYS[index],
         meta: '',
         minimumAction: '',
-        optionalReminder: '',
+        time: '',
       });
     });
 
@@ -381,7 +381,7 @@ export class HabitFormModalComponent {
       dynamicGoals: habit.dynamicGoals,
       category: habit.category,
       minimumAction: habit.minimumAction,
-      optionalReminder: habit.optionalReminder,
+      time: habit.time,
       showOnToday: habit.showOnToday,
     });
 
@@ -402,7 +402,7 @@ export class HabitFormModalComponent {
           weekday: entry.weekday,
           meta: entry.meta,
           minimumAction: entry.minimumAction,
-          optionalReminder: entry.optionalReminder,
+          time: entry.time,
         });
       }
     });
@@ -432,11 +432,9 @@ export class HabitFormModalComponent {
 
   private syncDynamicValidators(enabled: boolean): void {
     const generalMinimum = this.form.controls.minimumAction;
-    const generalReminder = this.form.controls.optionalReminder;
 
     if (enabled) {
       generalMinimum.clearValidators();
-      generalReminder.clearValidators();
 
       const selectedDays = new Set(this.scheduleDays());
 
@@ -449,10 +447,8 @@ export class HabitFormModalComponent {
             Validators.required,
             Validators.maxLength(MINIMUM_ACTION_MAX),
           ]);
-          group.controls.optionalReminder.setValidators([Validators.required]);
         } else {
           group.controls.minimumAction.clearValidators();
-          group.controls.optionalReminder.clearValidators();
         }
       });
     } else {
@@ -460,20 +456,16 @@ export class HabitFormModalComponent {
         Validators.required,
         Validators.maxLength(MINIMUM_ACTION_MAX),
       ]);
-      generalReminder.setValidators([Validators.required]);
 
       this.form.controls.weekdayGoals.controls.forEach((group) => {
         group.controls.minimumAction.clearValidators();
-        group.controls.optionalReminder.clearValidators();
       });
     }
 
     generalMinimum.updateValueAndValidity({ emitEvent: false });
-    generalReminder.updateValueAndValidity({ emitEvent: false });
 
     this.form.controls.weekdayGoals.controls.forEach((group) => {
       group.controls.minimumAction.updateValueAndValidity({ emitEvent: false });
-      group.controls.optionalReminder.updateValueAndValidity({ emitEvent: false });
     });
   }
 }

@@ -259,7 +259,7 @@ export class HabitStorageService {
         weekday: entry.weekday,
         meta: entry.meta.trim(),
         minimumAction: entry.minimumAction.trim(),
-        optionalReminder: entry.optionalReminder.trim(),
+        time: entry.time.trim(),
       })),
       category: dto.category.trim(),
       triggers: padSlots(
@@ -282,7 +282,7 @@ export class HabitStorageService {
         nextScheduleDays,
         todayKey,
       ),
-      optionalReminder: dto.optionalReminder.trim(),
+      time: dto.time.trim(),
       showOnToday: dto.showOnToday ?? existing.showOnToday,
     };
 
@@ -308,7 +308,7 @@ export class HabitStorageService {
         weekday: entry.weekday,
         meta: entry.meta.trim(),
         minimumAction: entry.minimumAction.trim(),
-        optionalReminder: entry.optionalReminder.trim(),
+        time: entry.time.trim(),
       })),
       category: dto.category.trim(),
       triggers: padSlots(
@@ -326,7 +326,7 @@ export class HabitStorageService {
       minimumAction: dto.minimumAction.trim(),
       scheduleDays,
       scheduleDaySince: buildInitialScheduleDaySince(scheduleDays, createdDateKey),
-      optionalReminder: dto.optionalReminder.trim(),
+      time: dto.time.trim(),
       archived: false,
       createdAt: new Date().toISOString(),
       showOnToday: dto.showOnToday ?? true,

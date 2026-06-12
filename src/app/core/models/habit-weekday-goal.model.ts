@@ -5,7 +5,7 @@ export interface HabitWeekdayGoal {
   weekday: Weekday;
   meta: string;
   minimumAction: string;
-  optionalReminder: string;
+  time: string;
 }
 
 export function createDefaultWeekdayGoals(): HabitWeekdayGoal[] {
@@ -13,6 +13,6 @@ export function createDefaultWeekdayGoals(): HabitWeekdayGoal[] {
     weekday,
     meta: '',
     minimumAction: '',
-    optionalReminder: '',
+    time: '',
   }));
 }

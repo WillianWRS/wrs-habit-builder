@@ -9,7 +9,7 @@ function createHabit(overrides: Parameters<typeof createTestHabit>[0] = {}) {
     generalGoal: '4KM',
     category: 'corpo',
     minimumAction: '1 km',
-    optionalReminder: '07:00',
+    time: '07:00',
     triggers: [
       { text: '', visible: false },
       { text: '', visible: false },
@@ -31,19 +31,19 @@ describe('buildDayHistory', () => {
         id: 'no-reminder',
         name: 'Meditar',
         generalGoal: '10 min',
-        optionalReminder: '',
+        time: '',
       }),
       createHabit({
         id: 'early',
         name: 'Caminhar',
         generalGoal: '4KM',
-        optionalReminder: '07:00',
+        time: '07:00',
       }),
       createHabit({
         id: 'late',
         name: 'Ler',
         generalGoal: '20 pág',
-        optionalReminder: '21:30',
+        time: '21:30',
       }),
     ];
     const completions: HabitCompletion[] = [

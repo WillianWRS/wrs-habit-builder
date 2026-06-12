@@ -12,6 +12,6 @@ export interface CreateHabitDto {
   motivations: MotivationItem[];
   minimumAction: string;
   scheduleDays: Weekday[];
-  optionalReminder: string;
+  time: string;
   showOnToday?: boolean;
 }

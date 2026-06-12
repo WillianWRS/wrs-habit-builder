@@ -5,6 +5,7 @@ import {
 import { migrateV5ToV6 } from './migrate-v5-to-v6';
 import { migrateV6ToV7 } from './migrate-v6-to-v7';
 import { migrateV7ToV8 } from './migrate-v7-to-v8';
+import { migrateV8ToV9 } from './migrate-v8-to-v9';
 
 /** Versão mínima suportada — não há backups conhecidos anteriores. */
 export const OLDEST_SUPPORTED_STORAGE_VERSION = 5;
@@ -15,6 +16,7 @@ const MIGRATION_STEPS: Partial<Record<number, MigrationStep>> = {
   5: migrateV5ToV6,
   6: migrateV6ToV7,
   7: migrateV7ToV8,
+  8: migrateV8ToV9,
 };
 
 export interface MigrateStorageResult {
