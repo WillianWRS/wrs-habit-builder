@@ -23,10 +23,14 @@ export class AccentThemeService {
 
   toggle(): void {
     const next: AccentTheme = this.accent() === 'orange' ? 'emerald' : 'orange';
-    this.apply(next);
+    this.setAccent(next);
+  }
+
+  setAccent(accent: AccentTheme): void {
+    this.apply(accent);
 
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(STORAGE_KEY, accent);
     }
   }
 

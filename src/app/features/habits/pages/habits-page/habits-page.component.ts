@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -29,6 +30,7 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
   { id: 'today', label: 'Na tela Hoje' },
   { id: 'archived', label: 'Arquivados' },
 ];
+const LIST_ITEM_ANIMATION_MS = 320;
 
 @Component({
   selector: 'app-habits-page',
@@ -40,6 +42,57 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
     HabitSortSelectComponent,
     RouterLink,
   ],
+  styles: `
+    .habit-list-item {
+      overflow: hidden;
+      transform-origin: top;
+    }
+
+    .habit-list-item--exiting {
+      pointer-events: none;
+      animation: habit-list-item-collapse ${LIST_ITEM_ANIMATION_MS}ms ease-out
+        forwards;
+    }
+
+    .habit-list-item--entering {
+      animation: habit-list-item-expand ${LIST_ITEM_ANIMATION_MS}ms ease-out;
+    }
+
+    @keyframes habit-list-item-collapse {
+      from {
+        max-height: 32rem;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+    }
+
+    @keyframes habit-list-item-expand {
+      from {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        max-height: 32rem;
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .habit-list-item--exiting,
+      .habit-list-item--entering {
+        animation: none;
+      }
+    }
+  `,
   template: `
     <app-nav activeTab="habits" />
 
@@ -179,7 +232,11 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
       } @else {
         <ul class="space-y-3" role="list">
           @for (habit of habits(); track habit.id) {
-            <li>
+            <li
+              class="habit-list-item"
+              [class.habit-list-item--exiting]="isExiting(habit.id)"
+              [class.habit-list-item--entering]="isEntering(habit.id)"
+            >
               <app-habit-list-card
                 [name]="habit.name"
                 [displayMeta]="habit.displayMeta"
@@ -189,6 +246,7 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
                 [minimumAction]="habit.minimumAction"
                 [accent]="habit.accent"
                 [archived]="habit.archived"
+                (openDetail)="openDetail(habit.id)"
                 (edit)="editHabit(habit.id)"
                 (archive)="archiveHabit(habit.id)"
                 (restore)="restoreHabit(habit.id)"
@@ -220,6 +278,9 @@ export class HabitsPageComponent {
   protected readonly filter = signal<HabitsFilter>('active');
   protected readonly sort = signal<HabitSort>('time-asc');
   protected readonly pendingDelete = signal<PendingDelete | null>(null);
+  private readonly exitingIds = signal<Set<string>>(new Set());
+  private readonly enteringIds = signal<Set<string>>(new Set());
+  private readonly pendingRestoreAnimations = signal<Set<string>>(new Set());
 
   protected readonly filterCounts = computed(() => {
     const all = this.storage.habitListCards();
@@ -283,6 +344,38 @@ export class HabitsPageComponent {
     }
   });
 
+  constructor() {
+    effect(() => {
+      const visibleIds = new Set(this.habits().map((habit) => habit.id));
+      const pending = this.pendingRestoreAnimations();
+      const toAnimate = [...pending].filter((id) => visibleIds.has(id));
+
+      if (toAnimate.length === 0) {
+        return;
+      }
+
+      this.enteringIds.update((current) => {
+        const next = new Set(current);
+        toAnimate.forEach((id) => next.add(id));
+        return next;
+      });
+
+      this.pendingRestoreAnimations.update((current) => {
+        const next = new Set(current);
+        toAnimate.forEach((id) => next.delete(id));
+        return next;
+      });
+
+      setTimeout(() => {
+        this.enteringIds.update((current) => {
+          const next = new Set(current);
+          toAnimate.forEach((id) => next.delete(id));
+          return next;
+        });
+      }, LIST_ITEM_ANIMATION_MS + 40);
+    });
+  }
+
   protected setFilter(value: HabitsFilter): void {
     this.filter.set(value);
   }
@@ -291,21 +384,30 @@ export class HabitsPageComponent {
     void this.router.navigate(['/habits', habitId, 'edit']);
   }
 
-  protected archiveHabit(habitId: string): void {
-    this.storage.archiveHabit(habitId);
+  protected openDetail(habitId: string): void {
+    void this.router.navigate(['/habits', habitId]);
+  }
 
-    this.toast.showUndo(
-      'Hábito arquivado',
-      () => {
-        this.storage.restoreHabit(habitId);
-      },
-      { icon: 'archive' },
-    );
+  protected archiveHabit(habitId: string): void {
+    this.runCollapseBeforeMutation(habitId, () => {
+      this.storage.archiveHabit(habitId);
+
+      this.toast.showUndo(
+        'Hábito arquivado',
+        () => {
+          this.queueRestoreAnimation(habitId);
+          this.storage.restoreHabit(habitId);
+        },
+        { icon: 'archive' },
+      );
+    });
   }
 
   protected restoreHabit(habitId: string): void {
-    this.storage.restoreHabit(habitId);
-    this.toast.showSuccess('Hábito reativado', 'refresh');
+    this.runCollapseBeforeMutation(habitId, () => {
+      this.storage.restoreHabit(habitId);
+      this.toast.showSuccess('Hábito reativado', 'refresh');
+    });
   }
 
   protected openDeleteConfirm(habitId: string, habitName: string): void {
@@ -324,25 +426,66 @@ export class HabitsPageComponent {
     }
 
     const habitId = pending.id;
+    this.pendingDelete.set(null);
 
-    if (!this.storage.stagePermanentDelete(habitId)) {
-      this.pendingDelete.set(null);
+    this.runCollapseBeforeMutation(habitId, () => {
+      if (!this.storage.stagePermanentDelete(habitId)) {
+        return;
+      }
+
+      this.toast.showUndo(
+        'Hábito excluído',
+        () => {
+          this.queueRestoreAnimation(habitId);
+          this.storage.restorePendingDelete(habitId);
+        },
+        {
+          icon: 'trash',
+          onCommit: () => {
+            this.storage.commitPendingDelete(habitId);
+          },
+        },
+      );
+    });
+  }
+
+  protected isExiting(habitId: string): boolean {
+    return this.exitingIds().has(habitId);
+  }
+
+  protected isEntering(habitId: string): boolean {
+    return this.enteringIds().has(habitId);
+  }
+
+  private queueRestoreAnimation(habitId: string): void {
+    this.pendingRestoreAnimations.update((current) => {
+      const next = new Set(current);
+      next.add(habitId);
+      return next;
+    });
+  }
+
+  private runCollapseBeforeMutation(
+    habitId: string,
+    action: () => void,
+  ): void {
+    if (this.exitingIds().has(habitId)) {
       return;
     }
 
-    this.pendingDelete.set(null);
+    this.exitingIds.update((current) => {
+      const next = new Set(current);
+      next.add(habitId);
+      return next;
+    });
 
-    this.toast.showUndo(
-      'Hábito excluído',
-      () => {
-        this.storage.restorePendingDelete(habitId);
-      },
-      {
-        icon: 'trash',
-        onCommit: () => {
-          this.storage.commitPendingDelete(habitId);
-        },
-      },
-    );
+    setTimeout(() => {
+      this.exitingIds.update((current) => {
+        const next = new Set(current);
+        next.delete(habitId);
+        return next;
+      });
+      action();
+    }, LIST_ITEM_ANIMATION_MS);
   }
 }

@@ -2,15 +2,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import type { MonthHeatmapCell } from '../../../../core/models/day-history.model';
 import { WEEKDAY_SCHEDULE_ITEMS } from '../../../../core/constants/weekday-schedule.constants';
 import type { HabitCompletion } from '../../../../core/models/habit-completion.model';
+import type { HabitFreezeUsed } from '../../../../core/models/habit-freeze-used.model';
 import type { Habit } from '../../../../core/models/habit.model';
 import {
+  buildHabitMonthHeatmapCells,
   buildMonthHeatmapCells,
   formatMonthYearLabel,
 } from '../../../../core/utils/month-heatmap.utils';
@@ -56,6 +60,7 @@ const MONTH_SLIDE_MS = 280;
 
       .month-grid-track {
         animation: none !important;
+        transition: none !important;
       }
     }
 
@@ -74,32 +79,22 @@ const MONTH_SLIDE_MS = 280;
       flex-shrink: 0;
     }
 
-    @keyframes month-grid-slide-to-prev {
-      from {
-        transform: translateX(-100%);
-      }
-
-      to {
-        transform: translateX(0);
-      }
+    .month-grid-track--prep-prev {
+      transform: translateX(-50%);
     }
 
-    @keyframes month-grid-slide-to-next {
-      from {
-        transform: translateX(0);
-      }
-
-      to {
-        transform: translateX(-100%);
-      }
+    .month-grid-track--prep-next {
+      transform: translateX(0);
     }
 
-    .month-grid-track--to-prev {
-      animation: month-grid-slide-to-prev ${MONTH_SLIDE_MS}ms ease-out forwards;
+    .month-grid-track--active-prev {
+      transform: translateX(0);
+      transition: transform ${MONTH_SLIDE_MS}ms ease-out;
     }
 
-    .month-grid-track--to-next {
-      animation: month-grid-slide-to-next ${MONTH_SLIDE_MS}ms ease-out forwards;
+    .month-grid-track--active-next {
+      transform: translateX(-50%);
+      transition: transform ${MONTH_SLIDE_MS}ms ease-out;
     }
   `,
   template: `
@@ -155,10 +150,21 @@ const MONTH_SLIDE_MS = 280;
         <div class="month-grid-viewport mt-1">
           @if (isAnimating()) {
             <div
+              #slideTrack
               class="month-grid-track"
-              [class.month-grid-track--to-prev]="slideDirection() === 'prev'"
-              [class.month-grid-track--to-next]="slideDirection() === 'next'"
-              (animationend)="onSlideAnimationEnd($event)"
+              [class.month-grid-track--prep-prev]="
+                slideDirection() === 'prev' && !isSlideActive()
+              "
+              [class.month-grid-track--prep-next]="
+                slideDirection() === 'next' && !isSlideActive()
+              "
+              [class.month-grid-track--active-prev]="
+                slideDirection() === 'prev' && isSlideActive()
+              "
+              [class.month-grid-track--active-next]="
+                slideDirection() === 'next' && isSlideActive()
+              "
+              (transitionend)="onSlideTransitionEnd($event)"
             >
               @if (slideDirection() === 'prev') {
                 <div
@@ -225,15 +231,24 @@ export class MonthHeatmapComponent {
   readonly habits = input.required<Habit[]>();
   readonly completions = input.required<HabitCompletion[]>();
   readonly todayKey = input.required<string>();
+  readonly mode = input<'aggregate' | 'habit'>('aggregate');
+  readonly habit = input<Habit | null>(null);
+  readonly freezeUsed = input<HabitFreezeUsed[]>([]);
 
   readonly monthChange = output<{ year: number; month: number }>();
   readonly dayClick = output<string>();
 
   protected readonly isAnimating = signal(false);
+  protected readonly isSlideActive = signal(false);
   protected readonly slideDirection = signal<MonthSlideDirection | null>(null);
   protected readonly outgoingCells = signal<MonthHeatmapCell[]>([]);
   protected readonly incomingCells = signal<MonthHeatmapCell[]>([]);
   protected readonly incomingMonthLabel = signal('');
+  private readonly pendingTarget = signal<{ year: number; month: number } | null>(
+    null,
+  );
+  private readonly slideTrackRef =
+    viewChild<ElementRef<HTMLDivElement>>('slideTrack');
 
   protected readonly weekdayLabels = WEEKDAY_SCHEDULE_ITEMS.map(
     (item) => item.label,
@@ -285,8 +300,13 @@ export class MonthHeatmapComponent {
     );
   }
 
-  protected onSlideAnimationEnd(event: AnimationEvent): void {
-    if (event.target !== event.currentTarget || !this.isAnimating()) {
+  protected onSlideTransitionEnd(event: TransitionEvent): void {
+    if (
+      event.target !== event.currentTarget ||
+      event.propertyName !== 'transform' ||
+      !this.isAnimating() ||
+      !this.isSlideActive()
+    ) {
       return;
     }
 
@@ -302,23 +322,50 @@ export class MonthHeatmapComponent {
       return;
     }
 
+    this.pendingTarget.set(target);
     this.outgoingCells.set(this.cells());
     this.incomingCells.set(this.buildCellsFor(target.year, target.month));
     this.incomingMonthLabel.set(formatMonthYearLabel(target.year, target.month));
     this.slideDirection.set(direction);
     this.isAnimating.set(true);
-    this.monthChange.emit(target);
+    this.isSlideActive.set(false);
+    this.scheduleSlideStart();
   }
 
   private finishSlideAnimation(): void {
+    const target = this.pendingTarget();
+
+    if (target) {
+      this.monthChange.emit(target);
+    }
+
     this.isAnimating.set(false);
+    this.isSlideActive.set(false);
     this.slideDirection.set(null);
     this.outgoingCells.set([]);
     this.incomingCells.set([]);
     this.incomingMonthLabel.set('');
+    this.pendingTarget.set(null);
   }
 
   private buildCellsFor(year: number, month: number): MonthHeatmapCell[] {
+    if (this.mode() === 'habit') {
+      const targetHabit = this.habit();
+
+      if (!targetHabit) {
+        return [];
+      }
+
+      return buildHabitMonthHeatmapCells(
+        year,
+        month,
+        targetHabit,
+        this.completions(),
+        this.freezeUsed(),
+        this.todayKey(),
+      );
+    }
+
     return buildMonthHeatmapCells(
       year,
       month,
@@ -333,5 +380,36 @@ export class MonthHeatmapComponent {
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     );
+  }
+
+  private scheduleSlideStart(): void {
+    if (typeof window === 'undefined') {
+      this.isSlideActive.set(true);
+      return;
+    }
+
+    // Aguarda a montagem das duas grades, força layout/pintura e só então anima.
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const track = this.slideTrackRef()?.nativeElement;
+
+        if (track) {
+          void track.getBoundingClientRect();
+          const panels = track.querySelectorAll<HTMLElement>('.month-grid-panel');
+
+          panels.forEach((panel) => {
+            void panel.getBoundingClientRect();
+          });
+        }
+
+        window.requestAnimationFrame(() => {
+          if (!this.isAnimating()) {
+            return;
+          }
+
+          this.isSlideActive.set(true);
+        });
+      });
+    });
   }
 }

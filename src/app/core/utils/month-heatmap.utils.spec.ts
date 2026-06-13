@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import { createTestHabit } from '../testing/test-habit.factory';
 import {
+  buildHabitMonthHeatmapCells,
   buildMonthHeatmapCells,
   resolveHeatmapIntensity,
   shiftMonth,
@@ -137,5 +138,52 @@ describe('shiftMonth', () => {
   it('avança e retrocede meses', () => {
     expect(shiftMonth(2026, 0, 1)).toEqual({ year: 2026, month: 1 });
     expect(shiftMonth(2026, 0, -1)).toEqual({ year: 2025, month: 11 });
+  });
+});
+
+describe('buildHabitMonthHeatmapCells', () => {
+  it('diferencia dias feitos, protegidos, perdidos e não esperados', () => {
+    const habit = createHabit({
+      id: 'h1',
+      scheduleDays: [1, 2, 3, 4, 5],
+      scheduleDaySince: {
+        1: '2026-01-01',
+        2: '2026-01-01',
+        3: '2026-01-01',
+        4: '2026-01-01',
+        5: '2026-01-01',
+      },
+    });
+    const completions: HabitCompletion[] = [
+      { id: 'c1', habitId: 'h1', completedOn: '2026-06-09' },
+    ];
+    const freezeUsed = [
+      {
+        id: 'f1',
+        habitId: 'h1',
+        dateKey: '2026-06-10',
+        usedAt: '2026-06-11T00:00:00.000Z',
+      },
+    ];
+
+    const cells = buildHabitMonthHeatmapCells(
+      2026,
+      5,
+      habit,
+      completions,
+      freezeUsed,
+      '2026-06-11',
+    );
+
+    expect(cells.find((cell) => cell.dateKey === '2026-06-09')?.status).toBe('done');
+    expect(cells.find((cell) => cell.dateKey === '2026-06-10')?.status).toBe(
+      'protected',
+    );
+    expect(cells.find((cell) => cell.dateKey === '2026-06-11')?.status).toBe(
+      'missed',
+    );
+    expect(cells.find((cell) => cell.dateKey === '2026-06-07')?.status).toBe(
+      'skipped',
+    );
   });
 });

@@ -24,10 +24,14 @@ export class ThemeService {
 
   toggle(): void {
     const next: ThemeMode = this.theme() === 'dark' ? 'light' : 'dark';
-    this.apply(next);
+    this.setTheme(next);
+  }
+
+  setTheme(mode: ThemeMode): void {
+    this.apply(mode);
 
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(STORAGE_KEY, mode);
     }
   }
 

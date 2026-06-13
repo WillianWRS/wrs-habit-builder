@@ -8,6 +8,7 @@ import {
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { buildDayHistory } from '../../../../core/utils/day-history.utils';
+import { computeHabitAdherence } from '../../../../core/utils/habit-adherence.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { DayHistoryModalComponent } from '../../components/day-history-modal/day-history-modal.component';
 import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heatmap.component';
@@ -34,6 +35,19 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
           Calendário mensal com a intensidade de hábitos concluídos por dia.
           Toque em um dia para ver o resumo.
         </p>
+
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
+            Adesão média: {{ adherenceSummary().sevenDays.percentage }}% ·
+            7d · {{ adherenceSummary().sevenDays.completed }} de
+            {{ adherenceSummary().sevenDays.expected }} hábitos feitos
+          </span>
+          <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
+            Adesão média: {{ adherenceSummary().thirtyDays.percentage }}% ·
+            30d · {{ adherenceSummary().thirtyDays.completed }} de
+            {{ adherenceSummary().thirtyDays.expected }} hábitos feitos
+          </span>
+        </div>
       </header>
 
       <app-month-heatmap
@@ -62,6 +76,37 @@ export class ProgressPageComponent {
   protected readonly visibleYear = signal(this.currentDay.today().getFullYear());
   protected readonly visibleMonth = signal(this.currentDay.today().getMonth());
   protected readonly selectedDateKey = signal<string | null>(null);
+  protected readonly adherenceSummary = computed(() => {
+    const activeHabits = this.storage
+      .habitsReadonly()
+      .filter((habit) => !habit.archived);
+    const completions = this.storage.completionsReadonly();
+    const referenceDate = this.currentDay.today();
+    const sevenDayWindows = activeHabits.map((habit) =>
+      computeHabitAdherence(habit, completions, 7, referenceDate),
+    );
+    const thirtyDayWindows = activeHabits.map((habit) =>
+      computeHabitAdherence(habit, completions, 30, referenceDate),
+    );
+
+    const summarize = (
+      windows: ReturnType<typeof computeHabitAdherence>[],
+    ) => {
+      const expected = windows.reduce((sum, item) => sum + item.expectedDays, 0);
+      const completed = windows.reduce((sum, item) => sum + item.completedDays, 0);
+
+      return {
+        expected,
+        completed,
+        percentage: expected > 0 ? Math.round((completed / expected) * 100) : 0,
+      };
+    };
+
+    return {
+      sevenDays: summarize(sevenDayWindows),
+      thirtyDays: summarize(thirtyDayWindows),
+    };
+  });
 
   protected readonly selectedSnapshot = computed(() => {
     const dateKey = this.selectedDateKey();

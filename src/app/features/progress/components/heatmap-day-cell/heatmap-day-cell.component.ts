@@ -42,18 +42,18 @@ import type { MonthHeatmapCell } from '../../../../core/models/day-history.model
         [attr.aria-label]="ariaLabel()"
         (click)="onClick()"
       >
-        @if (cell().intensity > 0) {
+        @if (fillClass()) {
           <span
             class="absolute inset-1 rounded-full"
-            [class]="intensityClass()"
+            [class]="fillClass()"
             aria-hidden="true"
           ></span>
         }
 
         <span
           class="relative z-[1]"
-          [class.text-brand-bg]="cell().intensity === 3"
-          [class.dark:text-brand-bg]="cell().intensity === 3"
+          [class.text-brand-bg]="useStrongText()"
+          [class.dark:text-brand-bg]="useStrongText()"
         >
           {{ cell().dayNumber }}
         </span>
@@ -66,7 +66,22 @@ export class HeatmapDayCellComponent {
 
   readonly dayClick = output<string>();
 
-  protected readonly intensityClass = computed(() => {
+  protected readonly fillClass = computed(() => {
+    switch (this.cell().status) {
+      case 'done':
+        return 'bg-brand-light-primary dark:bg-brand-primary';
+      case 'protected':
+        return 'bg-sky-500/45 dark:bg-sky-400/45';
+      case 'missed':
+        return 'bg-zinc-500/35 dark:bg-zinc-400/30';
+      case 'skipped':
+        return 'bg-brand-light-bg dark:bg-brand-bg';
+      case 'future':
+        return '';
+      default:
+        break;
+    }
+
     switch (this.cell().intensity) {
       case 1:
         return 'bg-brand-light-primary/25 dark:bg-brand-primary/25';
@@ -79,8 +94,25 @@ export class HeatmapDayCellComponent {
     }
   });
 
+  protected readonly useStrongText = computed(
+    () => this.cell().status === 'done' || this.cell().intensity === 3,
+  );
+
   protected ariaLabel(): string {
     const cell = this.cell();
+
+    if (cell.status) {
+      const statusLabel: Record<NonNullable<MonthHeatmapCell['status']>, string> = {
+        done: 'feito',
+        protected: 'protegido',
+        missed: 'perdido',
+        skipped: 'não esperado',
+        future: 'futuro',
+      };
+
+      return `${cell.dayNumber}, ${statusLabel[cell.status]}`;
+    }
+
     const parts = [
       `${cell.dayNumber}`,
       cell.isFuture ? 'futuro' : null,

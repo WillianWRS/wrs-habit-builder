@@ -1,8 +1,10 @@
 import type { MonthHeatmapCell } from '../models/day-history.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { Habit } from '../models/habit.model';
 import { addDays, parseDateKey, toDateKey } from './date.utils';
 import { getExpectedHabitsForDate } from './day-history.utils';
+import { isExpectedScheduleDay } from './habit-streak.utils';
 
 export function resolveHeatmapIntensity(
   completionCount: number,
@@ -91,6 +93,68 @@ export function buildMonthHeatmapCells(
       isFuture,
       isClickable: inCurrentMonth && !isFuture,
       hasExpectedHabits,
+    });
+  }
+
+  return cells;
+}
+
+export function buildHabitMonthHeatmapCells(
+  year: number,
+  month: number,
+  habit: Habit,
+  completions: HabitCompletion[],
+  freezeUsed: HabitFreezeUsed[],
+  todayKey: string,
+): MonthHeatmapCell[] {
+  const { gridStart, gridEnd } = getMonthGridBounds(year, month);
+  const cells: MonthHeatmapCell[] = [];
+  const habitCompletionKeys = new Set(
+    completions
+      .filter((completion) => completion.habitId === habit.id)
+      .map((completion) => completion.completedOn),
+  );
+  const habitFreezeKeys = new Set(
+    freezeUsed
+      .filter((event) => event.habitId === habit.id)
+      .map((event) => event.dateKey),
+  );
+
+  for (
+    let cursor = new Date(gridStart);
+    cursor <= gridEnd;
+    cursor = addDays(cursor, 1)
+  ) {
+    const dateKey = toDateKey(cursor);
+    const inCurrentMonth = cursor.getMonth() === month;
+    const isFuture = dateKey > todayKey;
+    const expected = isExpectedScheduleDay(habit, dateKey);
+    const completed = expected && habitCompletionKeys.has(dateKey);
+    const protectedByFreeze =
+      expected && !completed && habitFreezeKeys.has(dateKey);
+
+    const status = isFuture
+      ? 'future'
+      : completed
+        ? 'done'
+        : protectedByFreeze
+          ? 'protected'
+          : expected
+            ? 'missed'
+            : 'skipped';
+
+    cells.push({
+      kind: inCurrentMonth ? 'day' : 'padding',
+      dateKey,
+      dayNumber: cursor.getDate(),
+      inCurrentMonth,
+      completionCount: completed ? 1 : 0,
+      expectedCount: expected ? 1 : 0,
+      intensity: completed ? 3 : protectedByFreeze ? 1 : 0,
+      status,
+      isFuture,
+      isClickable: inCurrentMonth && !isFuture,
+      hasExpectedHabits: expected,
     });
   }
 

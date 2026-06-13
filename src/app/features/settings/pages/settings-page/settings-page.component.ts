@@ -30,7 +30,14 @@ import { DataManagementPanelComponent } from '../../../../shared/components/data
       >
         <app-appearance-settings-panel />
 
-        <hr class="border-brand-light-border dark:border-brand-border" />
+        <div class="relative mt-4 py-1" aria-hidden="true">
+          <div
+            class="h-px w-full bg-gradient-to-r from-transparent via-brand-light-border to-transparent dark:via-brand-border"
+          ></div>
+          <div
+            class="absolute left-1/2 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-light-primary/60 dark:bg-brand-primary/60"
+          ></div>
+        </div>
 
         <app-data-management-panel />
       </div>

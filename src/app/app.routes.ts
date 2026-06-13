@@ -31,6 +31,13 @@ export const routes: Routes = [
     canDeactivate: [habitFormCanDeactivateGuard],
   },
   {
+    path: 'habits/:id',
+    loadComponent: () =>
+      import(
+        './features/habit-detail/pages/habit-detail-page/habit-detail-page.component'
+      ).then((m) => m.HabitDetailPageComponent),
+  },
+  {
     path: 'habits',
     loadComponent: () =>
       import('./features/habits/pages/habits-page/habits-page.component').then(

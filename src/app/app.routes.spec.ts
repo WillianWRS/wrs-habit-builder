@@ -15,6 +15,7 @@ describe('app.routes', () => {
     expect(paths).toContain('habits');
     expect(paths).toContain('habits/new');
     expect(paths).toContain('habits/:id/edit');
+    expect(paths).toContain('habits/:id');
     expect(paths).toContain('progress');
     expect(paths).toContain('settings');
   });
@@ -23,11 +24,13 @@ describe('app.routes', () => {
     const paths = routePaths(routes);
     const newIndex = paths.indexOf('habits/new');
     const editIndex = paths.indexOf('habits/:id/edit');
+    const detailIndex = paths.indexOf('habits/:id');
     const listIndex = paths.indexOf('habits');
 
     expect(newIndex).toBeGreaterThan(-1);
     expect(editIndex).toBeGreaterThan(newIndex);
-    expect(listIndex).toBeGreaterThan(editIndex);
+    expect(detailIndex).toBeGreaterThan(editIndex);
+    expect(listIndex).toBeGreaterThan(detailIndex);
   });
 
   it('aplica canDeactivate nas páginas de formulário', () => {

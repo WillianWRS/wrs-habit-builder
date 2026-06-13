@@ -132,7 +132,7 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
               >
                 <button
                   type="button"
-                  class="rounded-lg border border-brand-light-primary/45 p-2 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
+                  class="inline-flex size-8 items-center justify-center rounded-lg border border-brand-light-primary/45 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
                   [attr.aria-label]="'Editar ' + name()"
                   (click)="edit.emit()"
                 >
@@ -142,13 +142,28 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
 
               @if (!archived()) {
                 <app-action-icon-tooltip
+                  label="Visualizar"
+                  variant="primary"
+                  direction="top"
+                >
+                  <button
+                    type="button"
+                    class="inline-flex size-8 items-center justify-center rounded-lg border border-brand-light-primary/45 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
+                    [attr.aria-label]="'Ver detalhes de ' + name()"
+                    (click)="openDetail.emit()"
+                  >
+                    <i class="bi bi-eye text-sm" aria-hidden="true"></i>
+                  </button>
+                </app-action-icon-tooltip>
+
+                <app-action-icon-tooltip
                   label="Arquivar"
                   variant="danger"
                   direction="top"
                 >
                   <button
                     type="button"
-                    class="rounded-lg border border-red-500/45 p-2 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
+                    class="inline-flex size-8 items-center justify-center rounded-lg border border-red-500/45 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
                     [attr.aria-label]="'Arquivar ' + name()"
                     (click)="archive.emit()"
                   >
@@ -163,7 +178,7 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
                 >
                   <button
                     type="button"
-                    class="rounded-lg border border-action-activate-border/45 p-2 text-action-activate transition-colors hover:border-action-activate-border-hover hover:bg-[var(--action-activate-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-activate-ring"
+                    class="inline-flex size-8 items-center justify-center rounded-lg border border-action-activate-border/45 text-action-activate transition-colors hover:border-action-activate-border-hover hover:bg-[var(--action-activate-bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-activate-ring"
                     [attr.aria-label]="'Ativar ' + name()"
                     (click)="restore.emit()"
                   >
@@ -178,7 +193,7 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
                 >
                   <button
                     type="button"
-                    class="rounded-lg border border-red-500/45 p-2 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
+                    class="inline-flex size-8 items-center justify-center rounded-lg border border-red-500/45 text-red-600 transition-colors hover:border-red-500/70 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-400/45 dark:text-red-400 dark:hover:border-red-400/70 dark:hover:bg-red-500/15 dark:focus-visible:ring-red-400"
                     [attr.aria-label]="'Excluir permanentemente ' + name()"
                     (click)="deletePermanently.emit()"
                   >
@@ -207,6 +222,7 @@ export class HabitListCardComponent {
   readonly archive = output<void>();
   readonly restore = output<void>();
   readonly deletePermanently = output<void>();
+  readonly openDetail = output<void>();
 
   protected readonly displayTitle = computed(() =>
     formatHabitCardTitle(this.name(), this.displayMeta()),
