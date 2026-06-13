@@ -26,7 +26,7 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renderiza router-outlet e modal de formulário de hábito', () => {
+  it('renderiza router-outlet e toast global', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 
@@ -34,7 +34,6 @@ describe('App', () => {
 
     expect(fixture.componentInstance).toBeTruthy();
     expect(element.querySelector('router-outlet')).not.toBeNull();
-    expect(element.querySelector('app-habit-form-modal')).not.toBeNull();
     expect(element.querySelector('app-toast')).not.toBeNull();
   });
 });

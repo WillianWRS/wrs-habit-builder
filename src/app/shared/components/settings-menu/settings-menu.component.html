@@ -4,7 +4,7 @@
     animate.leave="ui-dropdown-up-leave"
     class="settings-menu-panel settings-menu-panel--dropup absolute right-0 z-40 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
     role="menu"
-    aria-label="Configurações"
+    aria-label="Menu"
   >
     <ng-container *ngTemplateOutlet="menuItems" />
   </div>
@@ -14,7 +14,7 @@
     animate.leave="ui-dropdown-leave"
     class="settings-menu-panel settings-menu-panel--dropdown absolute right-0 z-40 min-w-[15rem] overflow-hidden rounded-xl border border-brand-light-border bg-brand-light-surface py-1 shadow-lg dark:border-brand-border dark:bg-brand-surface"
     role="menu"
-    aria-label="Configurações"
+    aria-label="Menu"
   >
     <ng-container *ngTemplateOutlet="menuItems" />
   </div>
@@ -44,31 +44,49 @@
     type="button"
     class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
     role="menuitem"
-    (click)="toggleTheme()"
+    (click)="onOpenSettings()"
   >
     <i
-      class="bi shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-      [class.bi-sun]="themeService.theme() === 'dark'"
-      [class.bi-moon-stars]="themeService.theme() === 'light'"
+      class="bi bi-gear shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
       aria-hidden="true"
     ></i>
-    {{ themeService.theme() === 'dark' ? 'Modo claro' : 'Modo escuro' }}
+    Configurações
   </button>
+
+  @if (!demoMode.isActive()) {
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+      role="menuitem"
+      (click)="onOpenProgress()"
+    >
+      <i
+        class="bi bi-bar-chart-line shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+        aria-hidden="true"
+      ></i>
+      Progresso
+    </button>
+  }
 
   <button
     type="button"
-    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-secondary transition-colors hover:bg-brand-light-bg dark:text-brand-text-secondary dark:hover:bg-brand-bg"
     role="menuitem"
-    (click)="toggleAccentTheme()"
+    (click)="onOpenSubscription()"
   >
     <i
-      class="bi bi-palette shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      class="bi bi-credit-card shrink-0 text-base text-brand-light-text-secondary dark:text-brand-text-secondary"
       aria-hidden="true"
     ></i>
-    Alterar tema
+    Assinatura
   </button>
 
   @if (showPreviewActions()) {
+    <div
+      class="my-1 border-t border-brand-light-border dark:border-brand-border"
+      role="separator"
+    ></div>
+
     <button
       type="button"
       class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
@@ -95,32 +113,4 @@
       Preview random
     </button>
   }
-
-  @if (!demoMode.isActive()) {
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-      role="menuitem"
-      (click)="openHistorico()"
-    >
-      <i
-        class="bi bi-calendar2-week shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-        aria-hidden="true"
-      ></i>
-      Histórico
-    </button>
-  }
-
-  <button
-    type="button"
-    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-    role="menuitem"
-    (click)="openDataManagement()"
-  >
-    <i
-      class="bi bi-database shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-      aria-hidden="true"
-    ></i>
-    Gerenciar dados
-  </button>
 </ng-template>

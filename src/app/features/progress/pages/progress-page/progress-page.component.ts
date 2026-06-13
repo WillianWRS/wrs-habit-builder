@@ -13,11 +13,11 @@ import { DayHistoryModalComponent } from '../../components/day-history-modal/day
 import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heatmap.component';
 
 @Component({
-  selector: 'app-historico-page',
+  selector: 'app-progress-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppNavComponent, MonthHeatmapComponent, DayHistoryModalComponent],
   template: `
-    <app-nav activeTab="historico" />
+    <app-nav />
 
     <main
       class="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pb-28 pt-6 md:max-w-2xl md:px-6 md:pb-10 md:pt-10 lg:max-w-3xl lg:px-8"
@@ -26,7 +26,7 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
         <h1
           class="font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary"
         >
-          Histórico
+          Progresso
         </h1>
         <p
           class="mt-2 max-w-2xl text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
@@ -55,7 +55,7 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
     }
   `,
 })
-export class HistoricoPageComponent {
+export class ProgressPageComponent {
   protected readonly storage = inject(HabitStorageService);
   protected readonly currentDay = inject(CurrentDayService);
 

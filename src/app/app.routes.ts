@@ -1,12 +1,34 @@
 import { Routes } from '@angular/router';
+import { habitFormCanDeactivateGuard } from './core/guards/habit-form-can-deactivate.guard';
 
 export const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
+    redirectTo: 'today',
+  },
+  {
+    path: 'today',
     loadComponent: () =>
       import('./features/today/pages/today-page/today-page.component').then(
         (m) => m.TodayPageComponent,
       ),
+  },
+  {
+    path: 'habits/new',
+    loadComponent: () =>
+      import('./features/habit-form/pages/habit-new-page/habit-new-page.component').then(
+        (m) => m.HabitNewPageComponent,
+      ),
+    canDeactivate: [habitFormCanDeactivateGuard],
+  },
+  {
+    path: 'habits/:id/edit',
+    loadComponent: () =>
+      import('./features/habit-form/pages/habit-edit-page/habit-edit-page.component').then(
+        (m) => m.HabitEditPageComponent,
+      ),
+    canDeactivate: [habitFormCanDeactivateGuard],
   },
   {
     path: 'habits',
@@ -16,17 +38,29 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'data',
+    path: 'progress',
     loadComponent: () =>
-      import(
-        './features/data/pages/data-management-page/data-management-page.component'
-      ).then((m) => m.DataManagementPageComponent),
+      import('./features/progress/pages/progress-page/progress-page.component').then(
+        (m) => m.ProgressPageComponent,
+      ),
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./features/settings/pages/settings-page/settings-page.component').then(
+        (m) => m.SettingsPageComponent,
+      ),
   },
   {
     path: 'historico',
-    loadComponent: () =>
-      import(
-        './features/historico/pages/historico-page/historico-page.component'
-      ).then((m) => m.HistoricoPageComponent),
+    redirectTo: 'progress',
+  },
+  {
+    path: 'data',
+    redirectTo: 'settings',
+  },
+  {
+    path: '**',
+    redirectTo: 'today',
   },
 ];

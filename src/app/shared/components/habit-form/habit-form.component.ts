@@ -6,6 +6,8 @@ import {
   ElementRef,
   inject,
   Injector,
+  input,
+  output,
   signal,
   untracked,
   viewChild,
@@ -23,7 +25,6 @@ import { ALL_WEEKDAYS, type Habit } from '../../../core/models/habit.model';
 import { MAX_HABIT_SLOTS } from '../../../core/models/habit-slot.model';
 import { createDefaultWeekdayGoals } from '../../../core/models/habit-weekday-goal.model';
 import type { Weekday } from '../../../core/models/weekday.model';
-import { HabitFormModalService } from '../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../core/services/habit-storage.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -46,7 +47,7 @@ import {
 const MINIMUM_ACTION_MAX = 140;
 
 @Component({
-  selector: 'app-habit-form-modal',
+  selector: 'app-habit-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
@@ -55,10 +56,10 @@ const MINIMUM_ACTION_MAX = 140;
     TriggerSlotsFieldsetComponent,
     ModalFocusTrapDirective,
   ],
-  templateUrl: './habit-form-modal.component.html',
-  styleUrl: './habit-form-modal.component.scss',
+  templateUrl: './habit-form.component.html',
+  styleUrl: './habit-form.component.scss',
 })
-export class HabitFormModalComponent {
+export class HabitFormComponent {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly storage = inject(HabitStorageService);
   private readonly toast = inject(ToastService);
@@ -67,13 +68,19 @@ export class HabitFormModalComponent {
   private readonly nameInput =
     viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
-  protected readonly modal = inject(HabitFormModalService);
+  readonly habitId = input<string | null>(null);
+
+  readonly saved = output<void>();
+  readonly cancelled = output<void>();
+
   protected readonly minimumActionMax = MINIMUM_ACTION_MAX;
   protected readonly scheduleDays = signal<Weekday[]>([...ALL_WEEKDAYS]);
   protected readonly dynamicGoalsActive = signal(false);
-  private readonly modalSessionKey = signal<string | null>(null);
+  private readonly formSessionKey = signal<string | null>(null);
   private readonly baselineSnapshot = signal<HabitFormSnapshot | null>(null);
   protected readonly showDiscardConfirm = signal(false);
+
+  private leaveResolver: ((value: boolean) => void) | null = null;
 
   protected readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
@@ -141,9 +148,9 @@ export class HabitFormModalComponent {
     return WEEKDAY_SCHEDULE_ITEMS.filter((day) => selected.has(day.weekday));
   });
 
-  protected readonly isEditing = computed(() => this.modal.editingHabitId() !== null);
+  protected readonly isEditing = computed(() => this.habitId() !== null);
 
-  protected readonly modalTitle = computed(() =>
+  protected readonly formTitle = computed(() =>
     this.isEditing() ? 'Editar hábito' : 'Novo hábito',
   );
 
@@ -157,34 +164,15 @@ export class HabitFormModalComponent {
       this.syncDynamicValidators(enabled);
     });
 
-    effect((onCleanup) => {
-      if (!this.modal.isOpen()) {
-        return;
-      }
-
-      document.body.style.overflow = 'hidden';
-      onCleanup(() => {
-        document.body.style.overflow = '';
-      });
-    });
-
     effect(() => {
-      const isOpen = this.modal.isOpen();
-
-      if (!isOpen) {
-        this.modalSessionKey.set(null);
-        this.showDiscardConfirm.set(false);
-        return;
-      }
-
-      const editId = this.modal.editingHabitId();
+      const editId = this.habitId();
       const sessionKey = editId ?? '__create__';
 
-      if (this.modalSessionKey() === sessionKey) {
+      if (this.formSessionKey() === sessionKey) {
         return;
       }
 
-      this.modalSessionKey.set(sessionKey);
+      this.formSessionKey.set(sessionKey);
 
       if (editId) {
         const habit = this.storage.getHabitById(editId);
@@ -209,6 +197,18 @@ export class HabitFormModalComponent {
       untracked(() => {
         this.syncDynamicValidators(true);
       });
+    });
+  }
+
+  confirmLeave(): Promise<boolean> {
+    if (!this.isFormDirty()) {
+      return Promise.resolve(true);
+    }
+
+    this.showDiscardConfirm.set(true);
+
+    return new Promise((resolve) => {
+      this.leaveResolver = resolve;
     });
   }
 
@@ -296,47 +296,26 @@ export class HabitFormModalComponent {
     return control.touched && control.hasError(errorCode);
   }
 
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.requestClose();
-    }
-  }
+  async requestCancel(): Promise<void> {
+    const canLeave = await this.confirmLeave();
 
-  protected onEscapeKey(): void {
-    if (this.showDiscardConfirm()) {
-      this.cancelDiscard();
+    if (!canLeave) {
       return;
     }
 
-    this.requestClose();
-  }
-
-  protected requestClose(): void {
-    if (this.isFormDirty()) {
-      this.showDiscardConfirm.set(true);
-      return;
-    }
-
-    this.closeWithoutConfirm();
+    this.cancelled.emit();
   }
 
   protected confirmDiscard(): void {
     this.showDiscardConfirm.set(false);
-    this.closeWithoutConfirm();
+    this.leaveResolver?.(true);
+    this.leaveResolver = null;
   }
 
   protected cancelDiscard(): void {
     this.showDiscardConfirm.set(false);
-  }
-
-  protected close(): void {
-    this.requestClose();
-  }
-
-  private closeWithoutConfirm(): void {
-    this.showDiscardConfirm.set(false);
-    this.modal.close();
-    this.resetForm();
+    this.leaveResolver?.(false);
+    this.leaveResolver = null;
   }
 
   protected submit(): void {
@@ -370,7 +349,7 @@ export class HabitFormModalComponent {
       showOnToday: value.showOnToday,
     };
 
-    const editId = this.modal.editingHabitId();
+    const editId = this.habitId();
 
     if (editId) {
       this.storage.updateHabit(editId, payload);
@@ -380,7 +359,8 @@ export class HabitFormModalComponent {
       this.toast.showSuccess('Hábito criado');
     }
 
-    this.closeWithoutConfirm();
+    this.updateBaseline();
+    this.saved.emit();
   }
 
   private isFormDirty(): boolean {

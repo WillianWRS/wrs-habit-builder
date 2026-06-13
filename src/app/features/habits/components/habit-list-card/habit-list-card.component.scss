@@ -1,0 +1,70 @@
+:host article {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+$habit-triggers-panel-open-duration: 0.22s;
+$habit-triggers-panel-open-ease: ease-out;
+$habit-triggers-panel-close-duration: 0.18s;
+$habit-triggers-panel-close-ease: ease-in;
+
+.habit-triggers-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $habit-triggers-panel-close-duration
+    $habit-triggers-panel-close-ease;
+}
+
+.habit-triggers-panel--expanded {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows $habit-triggers-panel-open-duration
+    $habit-triggers-panel-open-ease;
+}
+
+.habit-triggers-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.habit-triggers-panel__content {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition:
+    opacity $habit-triggers-panel-close-duration $habit-triggers-panel-close-ease,
+    transform $habit-triggers-panel-close-duration $habit-triggers-panel-close-ease;
+}
+
+.habit-triggers-panel--expanded .habit-triggers-panel__content {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition:
+    opacity $habit-triggers-panel-open-duration $habit-triggers-panel-open-ease,
+    transform $habit-triggers-panel-open-duration $habit-triggers-panel-open-ease;
+}
+
+.habit-triggers-toggle-icon {
+  transition: transform $habit-triggers-panel-open-duration $habit-triggers-panel-open-ease;
+}
+
+.habit-triggers-toggle-icon--expanded {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host article {
+    transition: none;
+  }
+
+  .habit-triggers-panel,
+  .habit-triggers-panel--expanded,
+  .habit-triggers-panel__content,
+  .habit-triggers-panel--expanded .habit-triggers-panel__content,
+  .habit-triggers-toggle-icon {
+    transition: none;
+  }
+}

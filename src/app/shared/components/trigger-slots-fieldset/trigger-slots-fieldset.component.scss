@@ -1,10 +1,104 @@
+$slot-row-open-duration: 0.22s;
+$slot-row-open-ease: ease-out;
+$slot-row-close-duration: 0.18s;
+$slot-row-close-ease: ease-in;
+
+.slot-fieldset-card {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.slot-row {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+}
+
+.slot-row__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.slot-row__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slot-row-enter {
+  grid-template-rows: 0fr;
+  animation: slot-row-expand $slot-row-open-duration $slot-row-open-ease forwards;
+}
+
+.slot-row-leave {
+  animation: slot-row-collapse $slot-row-close-duration $slot-row-close-ease forwards;
+}
+
+@keyframes slot-row-expand {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes slot-row-collapse {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+.slot-row-enter .slot-row__content {
+  animation: slot-row-content-in $slot-row-open-duration $slot-row-open-ease forwards;
+}
+
+.slot-row-leave .slot-row__content {
+  animation: slot-row-content-out $slot-row-close-duration $slot-row-close-ease forwards;
+}
+
+@keyframes slot-row-content-in {
+  from {
+    transform: translateY(-6px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slot-row-content-out {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-6px);
+  }
+}
+
 .weekday-input-group {
   display: flex;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--brand-light-border);
+  border: 1px solid var(--brand-light-input-border);
   border-radius: 0.5rem;
-  background-color: var(--brand-light-bg);
+  background-color: var(--brand-light-surface);
   transition:
     border-color 150ms ease,
     box-shadow 150ms ease;
@@ -28,7 +122,7 @@
 
 :host-context(.dark) .weekday-input-group {
   border-color: var(--brand-border);
-  background-color: var(--brand-bg);
+  background-color: var(--brand-surface);
 }
 
 :host-context(.dark) .weekday-input-group:focus-within {
@@ -45,7 +139,7 @@
   flex-shrink: 0;
   align-items: center;
   align-self: stretch;
-  border-right: 1px solid var(--brand-light-border);
+  border-right: 1px solid var(--brand-light-input-border);
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
   line-height: 1;
@@ -62,8 +156,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding-top: 0.25rem;
-  transition: gap 0.2s ease;
+  padding-top: 0.5rem;
+  transition: gap $slot-row-open-duration $slot-row-open-ease;
 }
 
 .slot-control-row--single {
@@ -181,6 +275,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .slot-fieldset-card {
+    transition: none;
+  }
+
+  .slot-row-enter,
+  .slot-row-leave,
+  .slot-row-enter .slot-row__content,
+  .slot-row-leave .slot-row__content {
+    animation: none;
+  }
+
   .slot-control-row,
   .slot-control-btn-slot {
     transition: none;

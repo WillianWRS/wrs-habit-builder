@@ -2,20 +2,21 @@
 
 > Projeto: **WRS Habit Builder** (nome oficial a definir — pendência para o fim do alfa, imediatamente antes do lançamento)  
 > Marco: **Alfa (1/3)** · Sprint anterior: **Sprint 1 (concluída)** · Capacidade: ~1 semana dev solo  
-> Objetivo: fechar o gap de confiança na UX (toasts, modais, a11y) e limpar dívidas restantes da Sprint 1.
+> Objetivo: fechar o gap de confiança na UX (toasts, modais, a11y) e limpar dívidas restantes da Sprint 1.  
+> **Status: CONCLUÍDA** (12/06/2026) · commits `f98d8da` → `e159d55` · 85 testes verdes
 
 ---
 
 ## Visão geral
 
-| # | ID | Tarefa | Prioridade | Esforço |
-|---|-----|--------|------------|---------|
-| 1 | S2-01 | Toast service + undo (arquivar/excluir) + feedbacks | P0 | M |
-| 2 | S2-02 | Limpezas restantes Sprint 1 (item 8) + rename `optionalReminder` → `time` | P1 | M |
-| 3 | S2-03 | `formPreviewVersion` → `toSignal` | P1 | S |
-| 4 | S2-04 | Confirmar descarte ao fechar modal com alterações | P1 | S |
-| 5 | S2-05 | Focus trap nos modais + a11y na marcação do dia | P1 | M |
-| 6 | S2-06 | Trocar localStorage por IndexedDB (dados de hábitos) | P1 | L |
+| # | ID | Tarefa | Prioridade | Esforço | Status |
+|---|-----|--------|------------|---------|--------|
+| 1 | S2-01 | Toast service + undo (arquivar/excluir) + feedbacks | P0 | M | ✅ |
+| 2 | S2-02 | Limpezas restantes Sprint 1 (item 8) + rename `optionalReminder` → `time` | P1 | M | ✅ |
+| 3 | S2-03 | `formPreviewVersion` → `toSignal` | P1 | S | ✅ |
+| 4 | S2-04 | Confirmar descarte ao fechar modal com alterações | P1 | S | ✅ |
+| 5 | S2-05 | Focus trap nos modais + a11y na marcação do dia | P1 | M | ✅ |
+| 6 | S2-06 | Trocar localStorage por IndexedDB (dados de hábitos) | P1 | L | ✅ |
 
 **Ordem sugerida:** Tarefa 1 → 2 → 4 → 5 → 6 → (3 em paralelo ou por último). A Tarefa 6 por último: depende do import com toast (1 e 2) e mexe na base de persistência — melhor com o resto estável.
 
@@ -62,20 +63,20 @@ Hoje arquivar remove o card sem confirmação nem desfazer; criar/editar/excluir
 
 ### Componente e service
 
-- [ ] `ToastService` singleton (signal ou Subject) + componente `app-toast` no root
-- [ ] API do toast: `message`, ação opcional `Desfazer`, `durationMs` (~5–8s para undo), tipo (`success` | `undo`)
-- [ ] **Barra de progresso na borda superior** do toast: preenchimento decrescente (100% → 0%) sincronizado com o tempo até sumir — feedback visual do tempo restante para desfazer
-- [ ] **Botão X** no canto do toast: fecha imediatamente; se for toast com undo e o usuário não desfez, **confirma/commita** a ação pendente na hora (não obriga esperar o timer)
-- [ ] Respeitar `prefers-reduced-motion` (barra pode ser estática ou pulsar uma vez, sem animação contínua agressiva)
-- [ ] Posição fixa (bottom mobile / top desktop)
-- [ ] `aria-live="polite"` no container; botão X com `aria-label="Fechar"`
+- [x] `ToastService` singleton (signal ou Subject) + componente `app-toast` no root
+- [x] API do toast: `message`, ação opcional `Desfazer`, `durationMs` (~5–8s para undo), tipo (`success` | `undo`)
+- [x] **Barra de progresso na borda superior** do toast: preenchimento decrescente (100% → 0%) sincronizado com o tempo até sumir — feedback visual do tempo restante para desfazer
+- [x] **Botão X** no canto do toast: fecha imediatamente; se for toast com undo e o usuário não desfez, **confirma/commita** a ação pendente na hora (não obriga esperar o timer)
+- [x] Respeitar `prefers-reduced-motion` (barra pode ser estática ou pulsar uma vez, sem animação contínua agressiva)
+- [x] Posição fixa (bottom mobile / top desktop)
+- [x] `aria-live="polite"` no container; botão X com `aria-label="Fechar"`
 
 ### Integrações por ação
 
-- [ ] **Arquivar:** toast "Hábito arquivado · Desfazer" → `restoreHabit(id)`; barra + X
-- [ ] **Excluir permanente:** após confirmar no modal, toast "Hábito excluído · Desfazer" com janela de undo; só persiste `permanentlyDeleteHabit` ao expirar timer ou ao fechar com X; Desfazer cancela e restaura estado
-- [ ] **Criar/editar hábito:** toast de sucesso ao fechar modal com save (sem undo; barra opcional curta ou só auto-dismiss ~3s + X)
-- [ ] **Import JSON:** toast de sucesso com contagem (ex.: "6 hábitos e 128 conclusões importados") — integra com Tarefa 2; X para dispensar
+- [x] **Arquivar:** toast "Hábito arquivado · Desfazer" → `restoreHabit(id)`; barra + X
+- [x] **Excluir permanente:** após confirmar no modal, toast "Hábito excluído · Desfazer" com janela de undo; só persiste `permanentlyDeleteHabit` ao expirar timer ou ao fechar com X; Desfazer cancela e restaura estado
+- [x] **Criar/editar hábito:** toast de sucesso ao fechar modal com save (sem undo; barra opcional curta ou só auto-dismiss ~3s + X)
+- [x] **Import JSON:** toast de sucesso com contagem (ex.: "6 hábitos e 128 conclusões importados") — integra com Tarefa 2; X para dispensar
 
 ## Escopo OUT
 
@@ -139,14 +140,14 @@ Como o campo é persistido no localStorage e aceito no import JSON, o rename exi
 
 ## Escopo IN
 
-- [ ] Remover `randomStepDelay` e etapas fictícias em `data-management-page.component.ts` — import imediato + toast de sucesso (Tarefa 1)
-- [ ] **Renomear `optionalReminder` → `time`** em: `habit.model.ts`, `habit-weekday-goal.model.ts`, `create-habit.dto.ts`, `update-habit.dto.ts`, `habit-storage.service.ts`, `habit-normalizer.ts`, `habit-meta.utils.ts`, form modal (TS + HTML), preview, demo pool/mapper, factories e specs
-- [ ] Campo `time` **sem `Validators.required`** no form (global e metas por dia) — hábito criável sem horário
-- [ ] Card/preview/histórico exibem `--:--` quando `time` vazio (não regredir comportamento atual)
-- [ ] Migração `migrate-v8-to-v9`: renomear chave nos hábitos e nos `weekdayGoals` persistidos + spec
-- [ ] Normalizer de import JSON aceita `time` e a chave legada `optionalReminder` (fallback)
-- [ ] Renomear `public/habit builder icon.png` (ou consolidar com `habit-builder-icon.png`) e atualizar referências
-- [ ] Atualizar copy do lembrete (placeholder "Opcional")
+- [x] Remover `randomStepDelay` e etapas fictícias em `data-management-page.component.ts` — import imediato + toast de sucesso (Tarefa 1)
+- [x] **Renomear `optionalReminder` → `time`** em: `habit.model.ts`, `habit-weekday-goal.model.ts`, `create-habit.dto.ts`, `update-habit.dto.ts`, `habit-storage.service.ts`, `habit-normalizer.ts`, `habit-meta.utils.ts`, form modal (TS + HTML), preview, demo pool/mapper, factories e specs
+- [x] Campo `time` **sem `Validators.required`** no form (global e metas por dia) — hábito criável sem horário
+- [x] Card/preview/histórico exibem `--:--` quando `time` vazio (não regredir comportamento atual)
+- [x] Migração `migrate-v8-to-v9`: renomear chave nos hábitos e nos `weekdayGoals` persistidos + spec
+- [x] Normalizer de import JSON aceita `time` e a chave legada `optionalReminder` (fallback)
+- [x] Renomear `public/habit builder icon.png` (ou consolidar com `habit-builder-icon.png`) e atualizar referências
+- [x] Atualizar copy do lembrete (placeholder "Opcional")
 
 ## Escopo OUT
 
@@ -207,9 +208,9 @@ O `habit-form-modal` usa um signal-contador incrementado manualmente em vários 
 
 ## Escopo IN
 
-- [ ] Remover `formPreviewVersion` e increments manuais
-- [ ] Usar `toSignal` + `computed` para `previewFormState`
-- [ ] Garantir preview reativo em todos os campos (incl. FormArray triggers/motivations)
+- [x] Remover `formPreviewVersion` e increments manuais
+- [x] Usar `toSignal` + `computed` para `previewFormState`
+- [x] Garantir preview reativo em todos os campos (incl. FormArray triggers/motivations)
 
 ## Escopo OUT
 
@@ -250,11 +251,11 @@ Clicar no backdrop ou fechar o modal de criar/editar hábito **descarta tudo sem
 
 ## Escopo IN
 
-- [ ] Detectar formulário "sujo" (`form.dirty` ou comparação com estado inicial)
-- [ ] Ao fechar via backdrop, botão X ou `Esc`: se sujo, exibir confirmação "Descartar alterações?"
-- [ ] Se confirmar: `resetForm()` + fechar; se cancelar: manter modal aberto
-- [ ] Fechamento após save bem-sucedido não exige confirmação
-- [ ] Mesmo padrão aplicável ao modal de edição (reutilizar lógica)
+- [x] Detectar formulário "sujo" (`form.dirty` ou comparação com estado inicial)
+- [x] Ao fechar via backdrop, botão X ou `Esc`: se sujo, exibir confirmação "Descartar alterações?"
+- [x] Se confirmar: `resetForm()` + fechar; se cancelar: manter modal aberto
+- [x] Fechamento após save bem-sucedido não exige confirmação
+- [x] Mesmo padrão aplicável ao modal de edição (reutilizar lógica)
 
 ## Escopo OUT
 
@@ -303,13 +304,13 @@ Modais têm `Esc` em alguns casos, mas **sem focus trap**: o foco não entra no 
 
 ## Escopo IN
 
-- [ ] **Focus trap** em: `habit-form-modal`, `habit-delete-confirm-modal`, `day-history-modal`
-- [ ] Ao abrir: mover foco para o primeiro elemento interativo do modal
-- [ ] Ao fechar: restaurar foco no elemento que disparou a abertura
-- [ ] Tab cicla apenas dentro do modal enquanto aberto
-- [ ] **`day-progress`:** `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-label` descritivo
-- [ ] **Marcar hábito em Hoje:** região `aria-live="polite"` anunciando conclusão (ex.: "Leitura marcada, 3 de 5 concluídos")
-- [ ] Respeitar `prefers-reduced-motion` (já existente — não regredir)
+- [x] **Focus trap** em: `habit-form-modal`, `habit-delete-confirm-modal`, `day-history-modal`
+- [x] Ao abrir: mover foco para o primeiro elemento interativo do modal
+- [x] Ao fechar: restaurar foco no elemento que disparou a abertura
+- [x] Tab cicla apenas dentro do modal enquanto aberto
+- [x] **`day-progress`:** `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-label` descritivo
+- [x] **Marcar hábito em Hoje:** região `aria-live="polite"` anunciando conclusão (ex.: "Leitura marcada, 3 de 5 concluídos")
+- [x] Respeitar `prefers-reduced-motion` (já existente — não regredir)
 
 ## Escopo OUT
 
@@ -376,14 +377,14 @@ Esse roundtrip export → import é o critério central de aceite da tarefa. O f
 
 ## Escopo IN
 
-- [ ] Backend IndexedDB: database `wrs-habit-builder`, object store com o documento `AppStorage` versionado
-- [ ] `habit-storage.service.ts` lê/grava via IndexedDB; **remover leitura/escrita da chave `wrs-habit-builder` do localStorage**
-- [ ] Bootstrap async (`provideAppInitializer` ou signal `ready`) sem flash de estado vazio na Today/Habits
-- [ ] Import JSON em `/data` grava no IndexedDB e restaura hábitos, completions e freezes integralmente (incl. JSONs de versões antigas, via normalizer/migrações)
-- [ ] Export JSON continua gerando o mesmo formato atual
-- [ ] Tratamento de erros: IndexedDB indisponível/bloqueado → mensagem clara (toast da Tarefa 1); manter guard SSR
-- [ ] Testes: fake do backend em memória + roundtrip export/import + migrações sobre IndexedDB
-- [ ] Atualizar skill `habit-builder-localstorage` (premissa "sem IndexedDB no MVP" deixa de valer)
+- [x] Backend IndexedDB: database `wrs-habit-builder`, object store com o documento `AppStorage` versionado
+- [x] `habit-storage.service.ts` lê/grava via IndexedDB; **remover leitura/escrita da chave `wrs-habit-builder` do localStorage**
+- [x] Bootstrap async (`provideAppInitializer` ou signal `ready`) sem flash de estado vazio na Today/Habits
+- [x] Import JSON em `/data` grava no IndexedDB e restaura hábitos, completions e freezes integralmente (incl. JSONs de versões antigas, via normalizer/migrações)
+- [x] Export JSON continua gerando o mesmo formato atual
+- [x] Tratamento de erros: IndexedDB indisponível/bloqueado → mensagem clara (toast da Tarefa 1); manter guard SSR
+- [x] Testes: fake do backend em memória + roundtrip export/import + migrações sobre IndexedDB
+- [x] Atualizar skill `habit-builder-localstorage` (premissa "sem IndexedDB no MVP" deixa de valer)
 
 ## Escopo OUT
 
@@ -432,19 +433,17 @@ Esse roundtrip export → import é o critério central de aceite da tarefa. O f
 
 ---
 
-# Próxima sprint — Sprint 3 (preview)
+---
 
-> Tema: **Tela de métricas do hábito** (`/habits/:id`) — heatmap, streak, freeze e **taxa de adesão 7d/30d implementadas juntas** nesta tela (não antecipadas na Sprint 2).
+## Evidências de conclusão (protocolo PO — 12/06/2026)
 
-| ID | Tarefa | Descrição (1 frase) |
-|----|--------|---------------------|
-| S3-01 | Tela de métricas (`/habits/:id`) | Criar rota e página com heatmap individual, streak atual/recorde/total, adesão 7d/30d (cálculo + exibição progressiva) e inventário de freeze no mesmo entregável. |
-| S3-02 | Utils de adesão | Implementar `habit-adherence.utils.ts` e specs como parte da tela de métricas, não como passo separado anterior. |
-| S3-03 | Navegação lista → métricas | Permitir abrir a tela de métricas ao tocar no card da lista `/habits` (chevron ou área clicável). |
-| S3-04 | Escudo no heatmap | Renderizar ícone de escudo nos dias protegidos por freeze, sem fingir conclusão. |
-| S3-05 | Resumo no Histórico | Adicionar bloco de resumo com visão agregada de progresso na tela `/historico` (pode usar adesão quando a tela de métricas existir). |
-| S3-06 | Chip de adesão na lista | Mostrar indicador resumido de adesão nos cards de `/habits` (opcional se couber escopo; senão empurrar para Sprint 4). |
+| Tarefa | Evidência no código |
+|--------|---------------------|
+| S2-01 | `toast.service.ts`, `app-toast.component.ts`, integrações em habits/form/data/delete |
+| S2-02 | Migração `migrate-v8-to-v9.ts`, campo `time`, import sem `randomStepDelay`; assets em `habit-builder-icon.png` / `habit-builder.png` (sem arquivos com espaço em `public/`) |
+| S2-03 | `formPreviewVersion` removido; preview via `toSignal` no form modal |
+| S2-04 | Confirmação "Descartar alterações?" em `habit-form-modal` |
+| S2-05 | `modal-focus-trap.directive.ts`, `aria-live` em Today, `role="progressbar"` em day-progress |
+| S2-06 | `indexed-db-storage.backend.ts`, `StorageBackend`, `provideAppInitializer`, 85 testes |
 
-**Fora de escopo Sprint 3:** PWA, rotas full-screen create/edit, notificações, monetização, nome oficial/marca.
-
-**Pendência pré-alfa (não é sprint de dev):** decisão de nome oficial do produto — última etapa antes de abrir o alfa ao público.
+**Próxima sprint:** [SPRINT-3.md](./SPRINT-3.md) — Tela de métricas do hábito + adesão visível.

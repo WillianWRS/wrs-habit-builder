@@ -5,9 +5,11 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
+import { Router, RouterLink } from '@angular/router';
+import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { buildHabitNewLink } from '../../../../core/utils/habit-form-return-url.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import type { HabitListCardView } from '../../../../core/models/today-habit-card.model';
 import {
@@ -36,6 +38,7 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
     HabitListCardComponent,
     HabitDeleteConfirmModalComponent,
     HabitSortSelectComponent,
+    RouterLink,
   ],
   template: `
     <app-nav activeTab="habits" />
@@ -57,43 +60,92 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
         </span>
       </header>
 
-      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div
-          class="flex flex-wrap gap-2"
-          role="group"
-          aria-label="Filtrar hábitos"
-        >
-          @for (option of filterOptions; track option.id) {
-            <button
-              type="button"
-              class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-              [class]="
-                filter() === option.id
-                  ? 'border-brand-light-primary bg-brand-light-primary text-white dark:border-brand-primary dark:bg-brand-primary dark:text-brand-bg'
-                  : 'border-brand-light-border text-brand-light-text-secondary hover:border-brand-light-primary/40 hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary'
-              "
-              [attr.aria-pressed]="filter() === option.id"
-              (click)="setFilter(option.id)"
+      @if (!showEmpty()) {
+        <div class="mb-6 grid grid-cols-[1fr_auto] items-center gap-4">
+          <div class="flex flex-col gap-2">
+            <div
+              class="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Filtrar hábitos"
             >
-              <span class="inline-flex items-center gap-1.5">
-                {{ option.label }}
-                <span
-                  class="tabular-nums"
-                  [class.opacity-75]="filter() === option.id"
+              @for (option of filterOptions; track option.id) {
+                <button
+                  type="button"
+                  class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+                  [class]="
+                    filter() === option.id
+                      ? 'border-brand-light-primary bg-brand-light-primary text-white dark:border-brand-primary dark:bg-brand-primary dark:text-brand-bg'
+                      : 'border-brand-light-border text-brand-light-text-secondary hover:border-brand-light-primary/40 hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary'
+                  "
+                  [attr.aria-pressed]="filter() === option.id"
+                  (click)="setFilter(option.id)"
                 >
-                  {{ filterCounts()[option.id] }}
-                </span>
-              </span>
-            </button>
+                  <span class="inline-flex items-center gap-1.5">
+                    {{ option.label }}
+                    <span
+                      class="tabular-nums"
+                      [class.opacity-75]="filter() === option.id"
+                    >
+                      {{ filterCounts()[option.id] }}
+                    </span>
+                  </span>
+                </button>
+              }
+            </div>
+
+            <app-habit-sort-select
+              controlId="habits-sort"
+              labelText="Ordenar"
+              [value]="sort()"
+              (valueChange)="sort.set($event)"
+            />
+          </div>
+
+          @if (!demoMode.isActive()) {
+            <a
+              [routerLink]="newHabitLink.route"
+              [queryParams]="newHabitLink.queryParams"
+              class="inline-flex h-9 shrink-0 items-center justify-center gap-2 self-center rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              aria-label="Novo hábito"
+            >
+              <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
+              <span class="hidden md:inline">Novo hábito</span>
+            </a>
           }
         </div>
-
-        <app-habit-sort-select
-          controlId="habits-sort"
-          [value]="sort()"
-          (valueChange)="sort.set($event)"
-        />
-      </div>
+      } @else {
+        <div class="mb-6 flex flex-col gap-3">
+          <div
+            class="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filtrar hábitos"
+          >
+            @for (option of filterOptions; track option.id) {
+              <button
+                type="button"
+                class="rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+                [class]="
+                  filter() === option.id
+                    ? 'border-brand-light-primary bg-brand-light-primary text-white dark:border-brand-primary dark:bg-brand-primary dark:text-brand-bg'
+                    : 'border-brand-light-border text-brand-light-text-secondary hover:border-brand-light-primary/40 hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/40 dark:hover:text-brand-text-primary'
+                "
+                [attr.aria-pressed]="filter() === option.id"
+                (click)="setFilter(option.id)"
+              >
+                <span class="inline-flex items-center gap-1.5">
+                  {{ option.label }}
+                  <span
+                    class="tabular-nums"
+                    [class.opacity-75]="filter() === option.id"
+                  >
+                    {{ filterCounts()[option.id] }}
+                  </span>
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+      }
 
       @if (showEmpty()) {
         <section
@@ -113,6 +165,16 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
           <p class="mt-2 max-w-sm text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
             {{ emptyMessage() }}
           </p>
+          @if (showCreateEmptyCta()) {
+            <a
+              [routerLink]="newHabitLink.route"
+              [queryParams]="newHabitLink.queryParams"
+              class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+            >
+              <i class="bi bi-plus-lg text-xs" aria-hidden="true"></i>
+              Criar hábito
+            </a>
+          }
         </section>
       } @else {
         <ul class="space-y-3" role="list">
@@ -121,12 +183,10 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
               <app-habit-list-card
                 [name]="habit.name"
                 [displayMeta]="habit.displayMeta"
-                [scheduleDays]="habit.scheduleDays"
                 [time]="habit.time"
                 [category]="habit.category"
                 [marqueeItems]="habit.marqueeItems"
                 [minimumAction]="habit.minimumAction"
-                [dayCount]="habit.dayCount"
                 [accent]="habit.accent"
                 [archived]="habit.archived"
                 (edit)="editHabit(habit.id)"
@@ -151,8 +211,10 @@ const FILTER_OPTIONS: readonly { id: HabitsFilter; label: string }[] = [
 })
 export class HabitsPageComponent {
   private readonly storage = inject(HabitStorageService);
-  private readonly habitFormModal = inject(HabitFormModalService);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  protected readonly demoMode = inject(DemoModeService);
+  protected readonly newHabitLink = buildHabitNewLink('/habits');
 
   protected readonly filterOptions = FILTER_OPTIONS;
   protected readonly filter = signal<HabitsFilter>('active');
@@ -191,6 +253,14 @@ export class HabitsPageComponent {
 
   protected readonly showEmpty = computed(() => this.habits().length === 0);
 
+  protected readonly showCreateEmptyCta = computed(
+    () =>
+      this.showEmpty() &&
+      this.filter() === 'active' &&
+      this.filterCounts().active === 0 &&
+      !this.demoMode.isActive(),
+  );
+
   protected readonly emptyTitle = computed(() => {
     switch (this.filter()) {
       case 'archived':
@@ -209,7 +279,7 @@ export class HabitsPageComponent {
       case 'today':
         return 'Marque "Exibir na tela Hoje" ao criar ou editar um hábito ativo.';
       default:
-        return 'Crie seu primeiro hábito pelo botão Novo hábito na navbar.';
+        return 'Crie seu primeiro hábito para começar a acompanhar sua consistência.';
     }
   });
 
@@ -218,7 +288,7 @@ export class HabitsPageComponent {
   }
 
   protected editHabit(habitId: string): void {
-    this.habitFormModal.openForEdit(habitId);
+    void this.router.navigate(['/habits', habitId, 'edit']);
   }
 
   protected archiveHabit(habitId: string): void {

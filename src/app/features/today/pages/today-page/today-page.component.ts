@@ -9,10 +9,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
-import { HabitFormModalService } from '../../../../core/services/habit-form-modal.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import { buildHabitNewLink } from '../../../../core/utils/habit-form-return-url.utils';
 import { ViewportService } from '../../../../core/services/viewport.service';
 import {
   captureListItemPositions,
@@ -35,14 +36,16 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
 @Component({
   selector: 'app-today-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent, HabitSortSelectComponent],
+  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent, HabitSortSelectComponent, RouterLink],
   template: `
-    <app-nav activeTab="today" [hideNewHabit]="emptyState() === 'no-habits'" />
+    <app-nav activeTab="today" />
 
     <main
       class="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 pb-28 pt-6 md:px-6 md:pb-10 md:pt-10 lg:px-8"
     >
-      <header class="mb-6 space-y-4 md:mb-8">
+      <header
+        class="sticky top-0 z-10 -mx-4 mb-6 space-y-4 border-b border-brand-light-border/50 bg-brand-light-bg/95 px-4 pb-4 pt-3 backdrop-blur-md backdrop-saturate-150 dark:border-brand-border/50 dark:bg-brand-bg/95 md:top-[4.25rem] md:-mx-6 md:mb-8 md:border-b-0 md:px-6 md:pb-6 md:pt-4 lg:-mx-8 lg:px-8"
+      >
         <h1
           class="font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary"
         >
@@ -88,14 +91,14 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
             {{ emptyTitle() }}
           </h2>
 
-          <button
-            type="button"
+          <a
+            [routerLink]="newHabitLink.route"
+            [queryParams]="newHabitLink.queryParams"
             class="relative mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-            (click)="openHabitForm()"
           >
             <i class="bi bi-plus-lg text-xs" aria-hidden="true"></i>
             {{ emptyCtaLabel() }}
-          </button>
+          </a>
         </section>
       } @else {
         @if (demoMode.isActive()) {
@@ -115,12 +118,25 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
           </div>
         }
 
-        <div class="mb-3 flex min-h-9 items-center justify-end">
+        <div class="mb-3 flex min-h-9 items-center justify-between gap-3">
           <app-habit-sort-select
             controlId="today-sort"
+            labelText="Ordenar"
             [value]="sort()"
             (valueChange)="sort.set($event)"
           />
+
+          @if (!demoMode.isActive()) {
+            <a
+              [routerLink]="newHabitLink.route"
+              [queryParams]="newHabitLink.queryParams"
+              class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg md:px-4"
+              aria-label="Novo hábito"
+            >
+              <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
+              <span class="hidden md:inline">Novo hábito</span>
+            </a>
+          }
         </div>
 
         <div
@@ -160,9 +176,9 @@ export class TodayPageComponent {
   private readonly storage = inject(HabitStorageService);
   private readonly currentDay = inject(CurrentDayService);
   private readonly viewport = inject(ViewportService);
-  private readonly habitFormModal = inject(HabitFormModalService);
   private readonly injector = inject(Injector);
   protected readonly demoMode = inject(DemoModeService);
+  protected readonly newHabitLink = buildHabitNewLink('/today');
 
   private readonly habitListRef = viewChild<ElementRef<HTMLUListElement>>('habitList');
   private pendingFlipPositions: Map<string, DOMRect> | null = null;
@@ -222,10 +238,6 @@ export class TodayPageComponent {
       ? this.demoMode.cards().length
       : this.storage.todayHabitCards().length,
   );
-
-  protected openHabitForm(): void {
-    this.habitFormModal.open();
-  }
 
   protected exitDemoMode(): void {
     this.demoMode.deactivate();

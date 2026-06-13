@@ -1,3 +1,41 @@
+.habit-form-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--brand-light-input-border);
+  background-color: var(--brand-light-surface);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--brand-light-text-primary);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.habit-form-field::placeholder {
+  color: var(--brand-light-text-secondary);
+}
+
+.habit-form-field:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent-light);
+}
+
+:host-context(.dark) .habit-form-field {
+  border-color: var(--brand-border);
+  background-color: var(--brand-surface);
+  color: var(--brand-text-primary);
+}
+
+:host-context(.dark) .habit-form-field::placeholder {
+  color: var(--brand-text-secondary);
+}
+
+:host-context(.dark) .habit-form-field:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 1px var(--accent-dark);
+}
+
 .habit-form-checkbox {
   appearance: none;
   width: 1.25rem;
@@ -5,7 +43,7 @@
   flex-shrink: 0;
   cursor: pointer;
   border-radius: 0.375rem;
-  border: 2px solid var(--brand-light-border);
+  border: 2px solid var(--brand-light-input-border);
   background-color: transparent;
   transition:
     background-color 150ms ease,
@@ -44,9 +82,9 @@
   display: flex;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--brand-light-border);
+  border: 1px solid var(--brand-light-input-border);
   border-radius: 0.5rem;
-  background-color: var(--brand-light-bg);
+  background-color: var(--brand-light-surface);
   transition:
     border-color 150ms ease,
     box-shadow 150ms ease;
@@ -63,7 +101,7 @@
   align-items: center;
   gap: 0.25rem;
   align-self: stretch;
-  border-right: 1px solid var(--brand-light-border);
+  border-right: 1px solid var(--brand-light-input-border);
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 500;
@@ -105,7 +143,7 @@
 
 :host-context(.dark) .weekday-input-group {
   border-color: var(--brand-border);
-  background-color: var(--brand-bg);
+  background-color: var(--brand-surface);
 }
 
 :host-context(.dark) .weekday-input-group:focus-within {

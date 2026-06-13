@@ -29,7 +29,7 @@ import {
         [id]="labelId()"
         class="flex shrink-0 items-center self-stretch border-r border-brand-light-border px-2.5 text-xs font-medium text-brand-light-text-secondary dark:border-brand-border dark:text-brand-text-secondary"
       >
-        Ordenado por
+        {{ labelText() }}
       </span>
 
       <button
@@ -83,6 +83,7 @@ export class HabitSortSelectComponent {
 
   readonly value = input.required<HabitSort>();
   readonly controlId = input('habit-sort');
+  readonly labelText = input('Ordenado por');
   readonly valueChange = output<HabitSort>();
 
   protected readonly open = signal(false);

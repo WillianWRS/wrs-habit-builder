@@ -8,23 +8,22 @@ import {
 } from '@angular/core';
 import type { HabitCardAccent } from '../../../../core/models/today-habit-card.model';
 import type { MarqueeItem } from '../../../../core/utils/habit-trigger-motivation.utils';
-import type { Weekday } from '../../../../core/models/weekday.model';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
 import { previewTimeOrPlaceholder } from '../../../../shared/components/habit-card-preview/habit-card-preview.utils';
 import { ActionIconTooltipComponent } from '../../../../shared/components/action-icon-tooltip/action-icon-tooltip.component';
-import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
 
 @Component({
   selector: 'app-habit-list-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ActionIconTooltipComponent, WeekdayScheduleComponent],
+  imports: [ActionIconTooltipComponent],
+  styleUrl: './habit-list-card.component.scss',
   template: `
     <article
       class="rounded-xl border p-4 transition-colors"
       [class]="
         archived()
           ? 'border-dashed border-brand-light-border/70 bg-brand-light-bg/60 opacity-75 dark:border-brand-border/70 dark:bg-brand-bg/50'
-          : 'border-brand-light-border bg-brand-light-surface shadow-sm dark:border-brand-border dark:bg-brand-surface'
+          : 'border-brand-light-card-border bg-brand-light-surface shadow-sm dark:border-brand-border dark:bg-brand-surface'
       "
       [class.border-l-4]="!archived() && accent() === 'physical'"
       [class.border-l-brand-accent-orange]="!archived() && accent() === 'physical'"
@@ -39,113 +38,93 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
         </p>
       }
 
-      <div class="flex items-start gap-3">
-        <div class="flex shrink-0 flex-col items-center gap-1.5">
-          <div
-            class="flex flex-col items-center leading-none"
-            [attr.aria-label]="dayCount() + ' dias de sequência'"
-          >
-            <span
-              class="text-[10px] font-medium text-brand-light-text-secondary dark:text-brand-text-secondary"
-              >dia</span
-            >
-            <span
-              class="text-2xl font-bold tabular-nums"
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+            <h2
+              class="font-medium"
               [class]="
                 archived()
-                  ? 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-                  : 'text-brand-light-primary dark:text-brand-primary'
+                  ? 'text-brand-light-text-secondary line-through decoration-brand-light-border dark:text-brand-text-secondary dark:decoration-brand-border'
+                  : 'text-brand-light-text-primary dark:text-brand-text-primary'
               "
-              >{{ dayCount() }}</span
+            >
+              {{ displayTitle() }}
+            </h2>
+            <span
+              class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
+              >{{ displayTime() }} · {{ category() }}</span
             >
           </div>
+
+          @if (marqueeItems().length > 0) {
+            <button
+              type="button"
+              class="group mt-2 inline-flex items-center gap-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-surface dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-surface"
+              [attr.aria-expanded]="triggersExpanded()"
+              [attr.aria-controls]="triggersPanelId()"
+              (click)="toggleTriggers()"
+            >
+              <span
+                class="inline-flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors"
+                [class]="
+                  archived()
+                    ? 'border-brand-light-border/80 text-brand-light-text-secondary dark:border-brand-border/80 dark:text-brand-text-secondary'
+                    : 'border-brand-light-primary text-brand-light-primary dark:border-brand-primary dark:text-brand-primary'
+                "
+                aria-hidden="true"
+              >
+                <i
+                  class="bi bi-chevron-down habit-triggers-toggle-icon text-xs leading-none"
+                  [class.habit-triggers-toggle-icon--expanded]="triggersExpanded()"
+                ></i>
+              </span>
+              <span
+                class="text-brand-light-text-secondary transition-colors group-hover:text-brand-light-text-primary dark:text-brand-text-secondary dark:group-hover:text-brand-text-primary"
+                >Gatilhos e motivações</span
+              >
+            </button>
+
+            <div
+              class="habit-triggers-panel"
+              [class.habit-triggers-panel--expanded]="triggersExpanded()"
+              [attr.aria-hidden]="!triggersExpanded()"
+            >
+              <div class="habit-triggers-panel__inner">
+                <ul
+                  [id]="triggersPanelId()"
+                  class="habit-triggers-panel__content mt-2 space-y-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+                  role="list"
+                >
+                  @for (item of marqueeItems(); track item.text + item.type) {
+                    <li class="flex items-start gap-1.5">
+                      <i
+                        class="bi mt-0.5 shrink-0 text-xs"
+                        [class.bi-lightning-charge]="item.type === 'trigger'"
+                        [class.bi-trophy]="item.type === 'motivation'"
+                        [class]="
+                          archived()
+                            ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
+                            : 'text-brand-light-primary dark:text-brand-primary'
+                        "
+                        aria-hidden="true"
+                      ></i>
+                      <span>{{ item.text }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+
+          <p
+            class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
+          >
+            Mínimo: {{ minimumAction() }}
+          </p>
         </div>
 
-        <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                <h2
-                  class="font-medium"
-                  [class]="
-                    archived()
-                      ? 'text-brand-light-text-secondary line-through decoration-brand-light-border dark:text-brand-text-secondary dark:decoration-brand-border'
-                      : 'text-brand-light-text-primary dark:text-brand-text-primary'
-                  "
-                >
-                  {{ displayTitle() }}
-                </h2>
-                <span
-                  class="shrink-0 text-xs italic text-brand-light-text-secondary dark:text-brand-text-secondary"
-                  >{{ displayTime() }} · {{ category() }}</span
-                >
-              </div>
-
-              <app-weekday-schedule
-                class="mt-2"
-                [selectedDays]="scheduleDays()"
-                [readonly]="true"
-              />
-
-              @if (marqueeItems().length > 0) {
-                <button
-                  type="button"
-                  class="group mt-2 inline-flex items-center gap-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-surface dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-surface"
-                  [attr.aria-expanded]="triggersExpanded()"
-                  [attr.aria-controls]="triggersPanelId()"
-                  (click)="toggleTriggers()"
-                >
-                  <i
-                    class="bi inline-flex size-3.5 shrink-0 items-center justify-center text-xs leading-none"
-                    [class.bi-dash-lg]="triggersExpanded()"
-                    [class.bi-plus-lg]="!triggersExpanded()"
-                    [class]="
-                      archived()
-                        ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                        : 'text-brand-light-primary dark:text-brand-primary'
-                    "
-                    aria-hidden="true"
-                  ></i>
-                  <span
-                    class="text-brand-light-text-secondary transition-colors group-hover:text-brand-light-text-primary dark:text-brand-text-secondary dark:group-hover:text-brand-text-primary"
-                    >Gatilhos e motivações</span
-                  >
-                </button>
-
-                @if (triggersExpanded()) {
-                  <ul
-                    [id]="triggersPanelId()"
-                    class="mt-2 space-y-1 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-                    role="list"
-                  >
-                    @for (item of marqueeItems(); track item.text + item.type) {
-                      <li class="flex items-start gap-1.5">
-                        <i
-                          class="bi mt-0.5 shrink-0 text-xs"
-                          [class.bi-lightning-charge]="item.type === 'trigger'"
-                          [class.bi-trophy]="item.type === 'motivation'"
-                          [class]="
-                            archived()
-                              ? 'text-brand-light-text-secondary/70 dark:text-brand-text-secondary/70'
-                              : 'text-brand-light-primary dark:text-brand-primary'
-                          "
-                          aria-hidden="true"
-                        ></i>
-                        <span>{{ item.text }}</span>
-                      </li>
-                    }
-                  </ul>
-                }
-              }
-
-              <p
-                class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
-              >
-                Mínimo: {{ minimumAction() }}
-              </p>
-            </div>
-
-            <div class="flex shrink-0 flex-col gap-2">
+        <div class="flex shrink-0 flex-col gap-2">
               <app-action-icon-tooltip
                 label="Editar"
                 variant="primary"
@@ -209,8 +188,6 @@ import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-
               }
             </div>
           </div>
-        </div>
-      </div>
     </article>
   `,
 })
@@ -219,12 +196,10 @@ export class HabitListCardComponent {
 
   readonly name = input.required<string>();
   readonly displayMeta = input('');
-  readonly scheduleDays = input.required<Weekday[]>();
   readonly time = input.required<string>();
   readonly category = input.required<string>();
   readonly marqueeItems = input.required<MarqueeItem[]>();
   readonly minimumAction = input.required<string>();
-  readonly dayCount = input<number>(0);
   readonly accent = input<HabitCardAccent>('default');
   readonly archived = input(false);
 

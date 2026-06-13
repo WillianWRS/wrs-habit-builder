@@ -14,6 +14,8 @@ export default {
         'brand-light-bg': 'var(--brand-light-bg)',
         'brand-light-surface': 'var(--brand-light-surface)',
         'brand-light-border': 'var(--brand-light-border)',
+        'brand-light-input-border': 'var(--brand-light-input-border)',
+        'brand-light-card-border': 'var(--brand-light-card-border)',
         'brand-light-text-primary': 'var(--brand-light-text-primary)',
         'brand-light-text-secondary': 'var(--brand-light-text-secondary)',
         'brand-light-primary': 'var(--accent-light)',
