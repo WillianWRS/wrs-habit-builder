@@ -1,9 +1,11 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
   inject,
   input,
+  isDevMode,
   signal,
   viewChild,
 } from '@angular/core';
@@ -19,7 +21,7 @@ export type AppNavTab = 'today' | 'habits';
 @Component({
   selector: 'app-nav',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SettingsMenuComponent],
+  imports: [NgTemplateOutlet, RouterLink, SettingsMenuComponent],
   host: {
     '(document:click)': 'onDocumentClick($event)',
   },
@@ -75,6 +77,10 @@ export class AppNavComponent {
   }
 
   protected revealPreviewActions(event: Event): void {
+    if (!isDevMode()) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     this.showPreviewActions.set(true);

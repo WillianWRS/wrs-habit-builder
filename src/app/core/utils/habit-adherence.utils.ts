@@ -17,20 +17,7 @@ export interface HabitAdherenceSnapshot {
   thirtyDays: HabitAdherenceWindow;
 }
 
-export function resolveAdherenceWindowLabel(
-  requestedWindowDays: number,
-  trackedDays: number,
-): string {
-  const safeTrackedDays = Math.max(0, trackedDays);
-
-  if (safeTrackedDays === 0) {
-    return '0d';
-  }
-
-  if (safeTrackedDays < requestedWindowDays) {
-    return `${safeTrackedDays}d`;
-  }
-
+export function resolveAdherenceWindowLabel(requestedWindowDays: 7 | 30): string {
   return `${requestedWindowDays}d`;
 }
 
@@ -49,7 +36,7 @@ export function computeHabitAdherence(
   if (effectiveStartKey > endKey) {
     return {
       windowDays,
-      windowLabel: resolveAdherenceWindowLabel(windowDays, 0),
+      windowLabel: resolveAdherenceWindowLabel(windowDays),
       trackedDays: 0,
       expectedDays: 0,
       completedDays: 0,
@@ -86,7 +73,7 @@ export function computeHabitAdherence(
 
   return {
     windowDays,
-    windowLabel: resolveAdherenceWindowLabel(windowDays, trackedDays),
+    windowLabel: resolveAdherenceWindowLabel(windowDays),
     trackedDays,
     expectedDays,
     completedDays,

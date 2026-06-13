@@ -38,10 +38,12 @@
             },
             "ssr": {
               "entry": "src/server.ts"
-            }
+            },
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
+              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",

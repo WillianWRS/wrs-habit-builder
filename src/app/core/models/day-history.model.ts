@@ -1,4 +1,4 @@
-export type DayHistoryEntryStatus = 'done' | 'not_done';
+export type DayHistoryEntryStatus = 'done' | 'not_done' | 'protected';
 
 export interface DayHistoryEntry {
   habitId: string;

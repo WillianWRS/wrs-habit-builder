@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import type { HabitCardAccent } from '../../../../core/models/today-habit-card.model';
 import type { MarqueeItem } from '../../../../core/utils/habit-trigger-motivation.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';

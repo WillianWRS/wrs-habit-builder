@@ -28,6 +28,7 @@ import {
 import { formatHabitCompletionAnnouncement } from '../../utils/today-completion-announcement.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
+import { HabitTemplatePickerComponent } from '../../../../shared/components/habit-template-picker/habit-template-picker.component';
 import { DayProgressComponent } from '../../components/day-progress/day-progress.component';
 import { HabitCardComponent } from '../../components/habit-card/habit-card.component';
 
@@ -36,7 +37,7 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
 @Component({
   selector: 'app-today-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent, HabitSortSelectComponent, RouterLink],
+  imports: [AppNavComponent, DayProgressComponent, HabitCardComponent, HabitSortSelectComponent, HabitTemplatePickerComponent, RouterLink],
   template: `
     <app-nav activeTab="today" />
 
@@ -99,6 +100,17 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
             <i class="bi bi-plus-lg text-xs" aria-hidden="true"></i>
             {{ emptyCtaLabel() }}
           </a>
+
+          @if (showTemplateOnboarding()) {
+            <p
+              class="relative mt-5 text-xs font-semibold uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary"
+            >
+              OU
+            </p>
+            <div class="relative mt-4 w-full max-w-3xl">
+              <app-habit-template-picker returnPath="/today" />
+            </div>
+          }
         </section>
       } @else {
         @if (demoMode.isActive()) {
@@ -220,6 +232,10 @@ export class TodayPageComponent {
     this.emptyState() === 'rest-day'
       ? 'Criar hábito pra hoje'
       : 'Criar primeiro hábito',
+  );
+
+  protected readonly showTemplateOnboarding = computed(
+    () => this.showEmpty() && !this.demoMode.isActive(),
   );
 
   protected readonly todayLabel = computed(() => {

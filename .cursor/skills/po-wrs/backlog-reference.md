@@ -9,8 +9,8 @@
 | Marco | Sprints | Objetivo de saída |
 |-------|---------|-------------------|
 | Fundação | 1 `[S1]` | Dados íntegros, CI verde, streak/freeze corretos |
-| Alfa | 2, 3, 4 | App utilizável pelo fundador + testers próximos; core H1 entregue |
-| Beta | 5 | ~20 testers, feedback estruturado, polish e landing |
+| Alfa | 2, 3, 4, 5 | Core H1 + PWA + onboarding + beta prep entregues |
+| Beta | 5 `[S5]` | ~20 testers, feedback estruturado, polish e landing |
 | Lançamento | 6 | Soft launch web estável, 100% free, pronto para divulgação |
 
 ---
@@ -106,36 +106,50 @@
 
 ---
 
-## Sprint 4 — Plataforma + onboarding alfa (sugestão)
+## Sprint 4 — Detalhe + adesão — CONCLUÍDA `[S4]`
 
-**Tema:** instalável + primeira impressão.
+**Tema (doc sprint):** métricas por hábito na UI.
 
-| ID | Tarefa | Prioridade | Esforço | Depende de |
-|----|--------|------------|---------|------------|
-| S4-01 | PWA: `ng add @angular/pwa`, manifest, service worker, ícones | P0 | M | — |
-| S4-02 | Decisão D2: avaliar SSR → prerender estático (SSG) | P1 | M | — |
-| S4-03 | Formulário em camadas (nome + dias obrigatórios; resto colapsado) | P0 | M | — |
-| S4-04 | Templates de hábito no empty state (3 sugestões) | P1 | M | S4-03 |
-| S4-05 | Nav mobile: Histórico na bottom nav (doc 02 item 7) | P1 | S | — |
-| S4-06 | Gatilhos estáticos no card (truncar + expandir; reduzir marquee) | P2 | M | — |
-
-**Escopo OUT Sprint 4:** IndexedDB (pode ser pós-alfa se PWA suficiente), monetização, Capacitor.
+| ID | Entrega | Status |
+|----|---------|--------|
+| S4-01 | Utils adesão 7d/30d | DONE |
+| S4-02 | Rota `/habits/:id` | DONE |
+| S4-03 | Heatmap individual | DONE |
+| S4-04 | Métricas no detalhe | DONE |
+| S4-05 | Navegação lista → detalhe | DONE (S5-06: card clicável) |
+| S4-06 | Chips adesão detalhe + progresso | DONE (S5-06: labels progressivos) |
+| S4-07 | Testes fluxo detalhe | DONE (S5-06: specs componente) |
 
 ---
 
-## Sprint 5 — Beta (sugestão)
+## Sprint 5 — Beta + fechamento Alfa — CONCLUÍDA `[S5]`
 
-**Tema:** pronto para 20 testers.
+**Tema:** pronto para ~20 testers.
 
-| ID | Tarefa | Prioridade | Esforço |
-|----|--------|------------|---------|
-| S5-01 | A11y: focus trap modais, `aria-live` ao marcar hábito, progressbar semântica | P0 | M |
-| S5-02 | Interceptar fechamento modal com form dirty ("Descartar alterações?") | P1 | S |
-| S5-03 | Landing page mínima (proposta de valor, screenshots, link app) | P0 | M |
-| S5-04 | Política de privacidade + página ou seção em `/data` | P0 | S |
-| S5-05 | Checklist beta + formulário feedback (Google Form ou similar) | P0 | S |
-| S5-06 | Copy polish: empty states, registro formal (pra→para) | P1 | S |
-| S5-07 | Decidir modo demo: remover ou documentar como dev-only | P1 | S |
+| ID | Entrega | Status |
+|----|---------|--------|
+| S5-00 | Tema claro/escuro | DONE |
+| S5-01 | PWA instalável | DONE |
+| S5-02 | Form camadas + 3 templates | DONE |
+| S5-03 | Landing `/` | DONE |
+| S5-04 | Política `/privacy` | DONE |
+| S5-05 | BETA-CHECKLIST + feedback in-app | DONE |
+| S5-06 | Lacunas S4 + polish | DONE |
+| S5-07 | Demo dev-only | DONE |
+
+**Pendência operacional:** atualizar `BETA_FEEDBACK_FORM_URL` com Google Form real antes dos convites.
+
+---
+
+## Sprint 4 (backlog legado — plataforma) — realocado para S5
+
+Itens PWA/onboarding do backlog original foram entregues na Sprint 5 (numeração de produto divergiu do doc original S4 detalhe).
+
+---
+
+## Sprint 5 (backlog legado) — absorvido em S5 real
+
+A11y parcial já existia (S2); landing/privacidade/beta kit entregues.
 
 ---
 
@@ -180,8 +194,8 @@ Não entrar em Sprints 2–6 sem aprovação explícita do PO/usuário:
 | RF-04 | Marcar em 1 ação | `[S1]` |
 | RF-05 | Desmarcar | `[S1]` |
 | RF-06 | Editar e arquivar | `[S1]` |
-| RF-07 | Detalhe heatmap 30–66d | Sprint 3 |
-| RF-08 | Adesão 7d/30d | Sprint 2 (utils) + Sprint 3 (UI) |
+| RF-07 | Detalhe heatmap 30–66d | `[S4]` |
+| RF-08 | Adesão 7d/30d | `[S2]` utils + `[S4]`/`[S5]` UI |
 | RF-09 | Streak + recorde + total + freeze | `[S1]` |
 
 ---
@@ -194,7 +208,7 @@ Não entrar em Sprints 2–6 sem aprovação explícita do PO/usuário:
 | Adesão mal comunicada no início | Sprint 2 (regra progressiva) |
 | Formulário longo mata ativação | Sprint 4 (camadas + templates) |
 | Docs desatualizados vs código | Toda sprint (protocolo descoberta) |
-| Modo demo vs product skill | Sprint 5 (decisão explícita) |
+| Modo demo vs product skill | `[S5]` resolvido — ver `docs/DEMO-MODE.md` |
 
 ---
 

@@ -66,11 +66,17 @@ import { MonthHeatmapComponent } from '../../../progress/components/month-heatma
           </p>
 
           <div class="mt-4 flex flex-wrap gap-2">
-            <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
-              {{ adherence().sevenDays.percentage }}% · 7d
+            <span
+              class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
+              [attr.aria-label]="'Adesão ' + adherence().sevenDays.windowLabel"
+            >
+              {{ adherence().sevenDays.percentage }}% · {{ adherence().sevenDays.windowLabel }}
             </span>
-            <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
-              {{ adherence().thirtyDays.percentage }}% · 30d
+            <span
+              class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
+              [attr.aria-label]="'Adesão ' + adherence().thirtyDays.windowLabel"
+            >
+              {{ adherence().thirtyDays.percentage }}% · {{ adherence().thirtyDays.windowLabel }}
             </span>
           </div>
         </section>

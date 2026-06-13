@@ -37,15 +37,39 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
         </p>
 
         <div class="mt-3 flex flex-wrap gap-2">
-          <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
-            Adesão média: {{ adherenceSummary().sevenDays.percentage }}% ·
-            7d · {{ adherenceSummary().sevenDays.completed }} de
-            {{ adherenceSummary().sevenDays.expected }} hábitos feitos
+          <span
+            class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
+            [attr.aria-label]="
+              'Adesão média nos últimos 7 dias: ' +
+              adherenceSummary().sevenDays.percentage +
+              ' por cento. ' +
+              adherenceSummary().sevenDays.completed +
+              ' de ' +
+              adherenceSummary().sevenDays.expected +
+              ' feitos'
+            "
+          >
+            Adesão média nos últimos 7 dias:
+            {{ adherenceSummary().sevenDays.percentage }}% ·
+            {{ adherenceSummary().sevenDays.completed }} de
+            {{ adherenceSummary().sevenDays.expected }} feitos
           </span>
-          <span class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary">
-            Adesão média: {{ adherenceSummary().thirtyDays.percentage }}% ·
-            30d · {{ adherenceSummary().thirtyDays.completed }} de
-            {{ adherenceSummary().thirtyDays.expected }} hábitos feitos
+          <span
+            class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
+            [attr.aria-label]="
+              'Adesão média nos últimos 30 dias: ' +
+              adherenceSummary().thirtyDays.percentage +
+              ' por cento. ' +
+              adherenceSummary().thirtyDays.completed +
+              ' de ' +
+              adherenceSummary().thirtyDays.expected +
+              ' feitos'
+            "
+          >
+            Adesão média nos últimos 30 dias:
+            {{ adherenceSummary().thirtyDays.percentage }}% ·
+            {{ adherenceSummary().thirtyDays.completed }} de
+            {{ adherenceSummary().thirtyDays.expected }} feitos
           </span>
         </div>
       </header>
@@ -89,9 +113,7 @@ export class ProgressPageComponent {
       computeHabitAdherence(habit, completions, 30, referenceDate),
     );
 
-    const summarize = (
-      windows: ReturnType<typeof computeHabitAdherence>[],
-    ) => {
+    const summarize = (windows: ReturnType<typeof computeHabitAdherence>[]) => {
       const expected = windows.reduce((sum, item) => sum + item.expectedDays, 0);
       const completed = windows.reduce((sum, item) => sum + item.completedDays, 0);
 
@@ -119,6 +141,7 @@ export class ProgressPageComponent {
       dateKey,
       this.storage.habitsReadonly(),
       this.storage.completionsReadonly(),
+      this.storage.freezeUsedReadonly(),
     );
   });
 

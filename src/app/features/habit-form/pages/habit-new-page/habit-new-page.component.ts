@@ -4,7 +4,10 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
+import { resolveHabitTemplateId } from '../../../../core/constants/habit-templates.constants';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { HabitFormComponent } from '../../../../shared/components/habit-form/habit-form.component';
 import { sanitizeHabitFormReturnUrl } from '../../../../core/utils/habit-form-return-url.utils';
@@ -35,6 +38,7 @@ import type { HabitFormPageHost } from '../habit-form-page-host';
 
       <app-habit-form
         [habitId]="null"
+        [templateId]="templateId()"
         (saved)="onSaved()"
         (cancelled)="navigateBack()"
       />
@@ -53,6 +57,13 @@ export class HabitNewPageComponent implements HabitFormPageHost {
 
   protected readonly navTab: AppNavTab =
     this.returnUrl === '/habits' ? 'habits' : 'today';
+
+  protected readonly templateId = toSignal(
+    this.route.queryParamMap.pipe(
+      map((params) => resolveHabitTemplateId(params.get('template'))),
+    ),
+    { initialValue: resolveHabitTemplateId(this.route.snapshot.queryParamMap.get('template')) },
+  );
 
   confirmLeave(): Promise<boolean> {
     return this.formRef()?.confirmLeave() ?? Promise.resolve(true);

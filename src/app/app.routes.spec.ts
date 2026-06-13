@@ -12,6 +12,7 @@ describe('app.routes', () => {
     const paths = routePaths(routes);
 
     expect(paths).toContain('today');
+    expect(paths).toContain('privacy');
     expect(paths).toContain('habits');
     expect(paths).toContain('habits/new');
     expect(paths).toContain('habits/:id/edit');
@@ -50,6 +51,6 @@ describe('app.routes', () => {
 
     expect(historico?.redirectTo).toBe('progress');
     expect(data?.redirectTo).toBe('settings');
-    expect(root?.redirectTo).toBe('today');
+    expect(root?.loadComponent ?? root?.redirectTo).toBeTruthy();
   });
 });

@@ -18,7 +18,15 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender,
   },
   {
+    path: 'privacy',
+    renderMode: RenderMode.Prerender,
+  },
+  {
     path: 'habits/:id/edit',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'habits/:id',
     renderMode: RenderMode.Client,
   },
   {
@@ -39,6 +47,6 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: '**',
-    renderMode: RenderMode.Prerender,
+    renderMode: RenderMode.Client,
   },
 ];

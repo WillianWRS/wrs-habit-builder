@@ -84,6 +84,16 @@ import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-foc
                           />
                         </svg>
                       </span>
+                    } @else if (entry.status === 'protected') {
+                      <span
+                        class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-sky-500 dark:border-sky-400"
+                        [attr.aria-label]="entryLabel(entry) + ', protegido'"
+                      >
+                        <i
+                          class="bi bi-shield-fill text-[10px] leading-none text-sky-500 dark:text-sky-400"
+                          aria-hidden="true"
+                        ></i>
+                      </span>
                     } @else {
                       <span
                         class="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-brand-light-text-secondary/45 dark:border-white/85"

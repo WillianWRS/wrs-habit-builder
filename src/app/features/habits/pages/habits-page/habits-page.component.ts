@@ -20,6 +20,7 @@ import {
 import { HabitListCardComponent } from '../../components/habit-list-card/habit-list-card.component';
 import { HabitDeleteConfirmModalComponent } from '../../../../shared/components/habit-delete-confirm-modal/habit-delete-confirm-modal.component';
 import { HabitSortSelectComponent } from '../../../../shared/components/habit-sort-select/habit-sort-select.component';
+import { HabitTemplatePickerComponent } from '../../../../shared/components/habit-template-picker/habit-template-picker.component';
 
 interface PendingDelete { id: string; name: string }
 
@@ -40,6 +41,7 @@ const LIST_ITEM_ANIMATION_MS = 320;
     HabitListCardComponent,
     HabitDeleteConfirmModalComponent,
     HabitSortSelectComponent,
+    HabitTemplatePickerComponent,
     RouterLink,
   ],
   styles: `
@@ -202,31 +204,67 @@ const LIST_ITEM_ANIMATION_MS = 320;
 
       @if (showEmpty()) {
         <section
-          class="flex flex-col items-center rounded-2xl border border-dashed border-brand-light-border bg-brand-light-surface px-8 py-12 text-center dark:border-brand-border dark:bg-brand-surface"
+          class="flex flex-col items-center rounded-2xl border px-8 py-8 text-center md:px-10 md:py-10"
+          [class]="
+            showCreateEmptyCta()
+              ? 'relative w-full overflow-hidden border-brand-light-border bg-brand-light-surface shadow-sm dark:border-brand-border dark:bg-brand-surface'
+              : 'border-dashed border-brand-light-border bg-brand-light-surface dark:border-brand-border dark:bg-brand-surface'
+          "
           aria-labelledby="habits-empty-title"
         >
-          <i
-            class="bi bi-funnel text-3xl text-brand-light-text-secondary dark:text-brand-text-secondary"
-            aria-hidden="true"
-          ></i>
-          <h2
-            id="habits-empty-title"
-            class="mt-4 font-display text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-          >
-            {{ emptyTitle() }}
-          </h2>
-          <p class="mt-2 max-w-sm text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
-            {{ emptyMessage() }}
-          </p>
           @if (showCreateEmptyCta()) {
+            <div
+              class="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-brand-light-primary/10 blur-2xl dark:bg-brand-primary/10"
+              aria-hidden="true"
+            ></div>
+            <div
+              class="pointer-events-none absolute -bottom-10 -left-10 size-40 rounded-full bg-brand-light-primary/5 blur-3xl dark:bg-brand-primary/5"
+              aria-hidden="true"
+            ></div>
+
+            <h2
+              id="habits-empty-title"
+              class="relative max-w-md font-display text-2xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+            >
+              {{ emptyTitle() }}
+            </h2>
+
             <a
               [routerLink]="newHabitLink.route"
               [queryParams]="newHabitLink.queryParams"
-              class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+              class="relative mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
             >
               <i class="bi bi-plus-lg text-xs" aria-hidden="true"></i>
-              Criar hábito
+              Criar primeiro hábito
             </a>
+
+            <p
+              class="relative mt-5 text-xs font-semibold uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary"
+            >
+              OU
+            </p>
+            <div class="relative mt-4 w-full max-w-3xl">
+              <app-habit-template-picker returnPath="/habits" />
+            </div>
+          } @else {
+            <i
+              class="bi bi-funnel text-3xl text-brand-light-text-secondary dark:text-brand-text-secondary"
+              aria-hidden="true"
+            ></i>
+            <h2
+              id="habits-empty-title"
+              class="mt-4 font-display text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+            >
+              @if (filter() === 'today') {
+                Nenhum hábito na tela
+                <span class="text-brand-light-primary dark:text-brand-primary">Hoje</span>
+              } @else {
+                {{ emptyTitle() }}
+              }
+            </h2>
+            <p class="mt-2 max-w-sm text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
+              {{ emptyMessage() }}
+            </p>
           }
         </section>
       } @else {

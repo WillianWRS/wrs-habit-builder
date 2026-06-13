@@ -4,11 +4,6 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "redirects": [
       {
-        "source": "/",
-        "destination": "/today",
-        "type": 301
-      },
-      {
         "source": "/historico",
         "destination": "/progress",
         "type": 301

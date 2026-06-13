@@ -1,8 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
+  inject,
   input,
+  signal,
 } from '@angular/core';
 
 export type ActionIconTooltipVariant = 'primary' | 'danger' | 'success';
@@ -13,33 +16,48 @@ export type ActionIconTooltipDirection = 'top' | 'bottom';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'group relative inline-flex',
+    '(mouseenter)': 'updatePosition()',
+    '(focusin)': 'updatePosition()',
   },
   template: `
     <ng-content />
 
     <span
       role="tooltip"
-      class="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md border px-2 py-1 text-xs font-medium opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none"
+      class="pointer-events-none fixed z-[100] -translate-x-1/2 whitespace-nowrap rounded-md border px-2 py-1 text-xs font-medium opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none"
       [class]="tooltipClass()"
+      [style.left.px]="position().x"
+      [style.top.px]="position().y"
     >
       {{ label() }}
     </span>
   `,
 })
 export class ActionIconTooltipComponent {
+  private readonly host = inject(ElementRef<HTMLElement>);
+
   readonly label = input.required<string>();
   readonly variant = input<ActionIconTooltipVariant>('primary');
   readonly direction = input<ActionIconTooltipDirection>('top');
 
-  protected readonly positionClass = computed(() =>
-    this.direction() === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
-  );
+  protected readonly position = signal({ x: 0, y: 0 });
 
   protected readonly tooltipClass = computed(
-    () => `${this.positionClass()} ${this.variantClass()}`,
+    () =>
+      `${this.direction() === 'top' ? '-translate-y-full' : ''} ${this.variantClass()}`.trim(),
   );
 
-  protected readonly variantClass = computed(() => {
+  protected updatePosition(): void {
+    const rect = this.host.nativeElement.getBoundingClientRect();
+    const gap = 8;
+
+    this.position.set({
+      x: rect.left + rect.width / 2,
+      y: this.direction() === 'top' ? rect.top - gap : rect.bottom + gap,
+    });
+  }
+
+  private readonly variantClass = computed(() => {
     switch (this.variant()) {
       case 'danger':
         return 'border-red-500/45 bg-brand-light-surface text-red-600 dark:border-red-400/45 dark:bg-brand-surface dark:text-red-400';

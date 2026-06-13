@@ -3,17 +3,16 @@
 > Projeto: **WRS Habit Builder** (nome oficial pendente pré-alfa)  
 > Marco: **Alfa (3/3)** · Sprint anterior: **Sprint 3 (concluída)** · Capacidade: ~1 semana dev solo  
 > Objetivo: entregar a camada de **métricas por hábito** na UI com rota de detalhe (`/habits/:id`), adesão 7d/30d, heatmap individual e navegação da lista para o detalhe.  
-> **Status: PLANEJADA** (início após fechamento da Sprint 3)
+> **Status: CONCLUÍDA (parcial S4-05/06/07)** (13/06/2026) · commit `1935ab1` · ~99 testes verdes
 
 ---
 
-## Contexto do estado atual (baseado no código)
+## Resumo executivo pós-entrega
 
-- Fluxo criar/editar por páginas dedicadas já está estável (`/habits/new`, `/habits/:id/edit`).
-- Regras de streak/freeze já existem em utilitários (`habit-streak.utils.ts`) e já alimentam cards.
-- Não existe rota de detalhe do hábito (`/habits/:id`) nem navegação card-lista → detalhe.
-- A tela `/progress` já mostra heatmap mensal global, mas não resolve análise individual por hábito.
-- Adesão 7d/30d ainda não está exposta nos cards/lista nem em uma página de detalhe.
+- Rota `/habits/:id` funcional com heatmap individual, métricas (adesão, streak, freeze) e fallback para `/habits`.
+- Utils de adesão em `habit-adherence.utils.ts` com specs de retroatividade (`scheduleDaySince`).
+- Chips de adesão no detalhe e em `/progress` (não em Hoje/Hábitos — decisão de produto).
+- **Débitos transferidos para Sprint 5 (S5-06):** card clicável (hoje botão “Visualizar”), rótulos progressivos `7d`/`30d` na UI, specs de componente do detalhe e teste lista→detalhe.
 
 ---
 
@@ -21,13 +20,13 @@
 
 | # | ID | Tarefa | Prioridade | Esforço | Status |
 |---|-----|--------|------------|---------|--------|
-| 1 | S4-01 | Utils de adesão (7d/30d) e formatação progressiva | P0 | M | ⏳ |
-| 2 | S4-02 | Rota e página de detalhe `/habits/:id` | P0 | M | ⏳ |
-| 3 | S4-03 | Heatmap individual 30–66 dias no detalhe | P0 | M | ⏳ |
-| 4 | S4-04 | Bloco de métricas no detalhe (adesão, streak, total, freeze) | P0 | M | ⏳ |
-| 5 | S4-05 | Navegação lista → detalhe + link editar no detalhe | P0 | S | ⏳ |
-| 6 | S4-06 | Chips de adesão no detalhe e no progresso agregado | P1 | S | ⏳ |
-| 7 | S4-07 | Testes unitários e smoke dos fluxos de detalhe | P0 | M | ⏳ |
+| 1 | S4-01 | Utils de adesão (7d/30d) e formatação progressiva | P0 | M | ✅ |
+| 2 | S4-02 | Rota e página de detalhe `/habits/:id` | P0 | M | ✅ |
+| 3 | S4-03 | Heatmap individual 30–66 dias no detalhe | P0 | M | ✅ |
+| 4 | S4-04 | Bloco de métricas no detalhe (adesão, streak, total, freeze) | P0 | M | ✅ |
+| 5 | S4-05 | Navegação lista → detalhe + link editar no detalhe | P0 | S | ⚠️ |
+| 6 | S4-06 | Chips de adesão no detalhe e no progresso agregado | P1 | S | ⚠️ |
+| 7 | S4-07 | Testes unitários e smoke dos fluxos de detalhe | P0 | M | ⚠️ |
 
 **Ordem sugerida:** 1 → 2 → 3 → 4 → 5 → 6 → 7.
 

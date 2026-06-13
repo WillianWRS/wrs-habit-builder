@@ -1,5 +1,6 @@
 import type { DayHistorySnapshot, DayHistoryEntry } from '../models/day-history.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { Habit } from '../models/habit.model';
 import { parseDateKey } from './date.utils';
 import {
@@ -32,16 +33,25 @@ function buildDayHistoryEntry(
   habit: Habit,
   date: Date,
   completedHabitIds: Set<string>,
+  protectedHabitIds: Set<string>,
 ): DayHistoryEntry & { sortKey: string } {
   const reminder = resolveHabitDisplayReminder(habit, date).trim();
   const meta = resolveHabitDisplayMeta(habit, date).trim();
+
+  let status: DayHistoryEntry['status'] = 'not_done';
+
+  if (completedHabitIds.has(habit.id)) {
+    status = 'done';
+  } else if (protectedHabitIds.has(habit.id)) {
+    status = 'protected';
+  }
 
   return {
     habitId: habit.id,
     reminderDisplay: reminder || '--:--',
     name: habit.name,
     meta,
-    status: completedHabitIds.has(habit.id) ? 'done' : 'not_done',
+    status,
     sortKey: reminder || NO_REMINDER_SORT_KEY,
   };
 }
@@ -50,6 +60,7 @@ export function buildDayHistory(
   dateKey: string,
   habits: Habit[],
   completions: HabitCompletion[],
+  freezeUsed: HabitFreezeUsed[] = [],
 ): DayHistorySnapshot {
   const date = parseDateKey(dateKey);
   const expectedHabits = getExpectedHabitsForDate(habits, dateKey);
@@ -58,9 +69,16 @@ export function buildDayHistory(
       .filter((completion) => completion.completedOn === dateKey)
       .map((completion) => completion.habitId),
   );
+  const protectedHabitIds = new Set(
+    freezeUsed
+      .filter((event) => event.dateKey === dateKey)
+      .map((event) => event.habitId),
+  );
 
   const entries = expectedHabits
-    .map((habit) => buildDayHistoryEntry(habit, date, completedHabitIds))
+    .map((habit) =>
+      buildDayHistoryEntry(habit, date, completedHabitIds, protectedHabitIds),
+    )
     .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
     .map(({ sortKey, ...entry }) => {
       void sortKey;

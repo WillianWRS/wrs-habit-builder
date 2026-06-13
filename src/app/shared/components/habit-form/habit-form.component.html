@@ -41,251 +41,288 @@
       <app-weekday-schedule [(selectedDays)]="scheduleDays" />
     </div>
 
-    <label class="flex cursor-pointer items-center gap-3">
-      <input
-        type="checkbox"
-        formControlName="dynamicGoals"
-        class="habit-form-checkbox"
-      />
-      <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
-        Metas dinâmicas por dia
-      </span>
-    </label>
-
-    @if (!dynamicGoalsActive()) {
-      <div
-        class="space-y-5"
-        animate.enter="habit-form-reveal-enter"
-        animate.leave="habit-form-reveal-leave"
+    @if (!isEditing()) {
+      <button
+        type="button"
+        class="flex w-full items-center justify-between rounded-xl border border-brand-light-border bg-brand-light-surface px-4 py-3 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:border-brand-light-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:bg-brand-surface dark:text-brand-text-primary dark:hover:border-brand-primary/40 dark:focus-visible:ring-brand-primary"
+        [attr.aria-expanded]="showRefineSection()"
+        aria-controls="habit-refine-section"
+        (click)="toggleRefineSection()"
       >
-        <div>
-          <label
-            for="habit-meta-geral"
-            class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-          >
-            Meta
-          </label>
+        <span class="inline-flex items-center gap-2">
+          <i class="bi bi-sliders text-brand-light-primary dark:text-brand-primary" aria-hidden="true"></i>
+          Personalizar
+          <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
+            (opcional)
+          </span>
+        </span>
+        <i
+          class="bi bi-chevron-down text-xs transition-transform"
+          [class.rotate-180]="showRefineSection()"
+          aria-hidden="true"
+        ></i>
+      </button>
+    }
+
+    @if (showRefineSection()) {
+      <div id="habit-refine-section" class="space-y-5">
+        <label class="flex cursor-pointer items-center gap-3">
           <input
-            id="habit-meta-geral"
-            type="text"
-            formControlName="generalGoal"
-            autocomplete="off"
-            class="habit-form-field"
-            placeholder="Exemplo: Ler 10 páginas"
+            type="checkbox"
+            formControlName="dynamicGoals"
+            class="habit-form-checkbox"
           />
-        </div>
+          <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
+            Metas dinâmicas por dia
+          </span>
+        </label>
 
-        <div class="flex items-start gap-3">
-          <div class="min-w-0 flex-[8]">
-            <label
-              for="habit-minimum-action"
-              class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-            >
-              Ação mínima
-            </label>
-            <input
-              id="habit-minimum-action"
-              type="text"
-              formControlName="minimumAction"
-              maxlength="140"
-              class="habit-form-field"
-              placeholder="Exemplo: Ler 3 páginas"
-            />
-            @if (showError('minimumAction', 'required')) {
-              <p class="mt-1 text-xs text-red-500">Informe a ação mínima.</p>
-            }
-            @if (showError('minimumAction', 'maxlength')) {
-              <p class="mt-1 text-xs text-red-500">
-                Máximo de {{ minimumActionMax }} caracteres.
-              </p>
-            }
-          </div>
-
-          <div class="min-w-0 flex-[2]">
-            <label
-              for="habit-time"
-              class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-            >
-              Horário
-              <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
-                (Opcional)
-              </span>
-            </label>
-            <input
-              id="habit-time"
-              type="time"
-              formControlName="time"
-              class="habit-form-field habit-form-time-control"
-            />
-          </div>
-        </div>
-      </div>
-    } @else {
-      <div
-        class="space-y-4"
-        animate.enter="habit-form-reveal-enter"
-        animate.leave="habit-form-reveal-leave"
-      >
-        <p
-          class="text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-        >
-          Configuração por dia
-        </p>
-        @for (day of visibleWeekdayItems(); track day.weekday) {
+        @if (!dynamicGoalsActive()) {
           <div
-            class="overflow-hidden rounded-lg border border-brand-light-card-border dark:border-brand-border"
+            class="space-y-5"
             animate.enter="habit-form-reveal-enter"
             animate.leave="habit-form-reveal-leave"
           >
-            <div
-              class="border-b border-brand-light-card-border bg-brand-light-surface px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-surface"
-            >
-              <p
-                class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+            <div>
+              <label
+                for="habit-meta-geral"
+                class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
               >
-                {{ day.fullLabel }}
-              </p>
+                Meta
+              </label>
+              <input
+                id="habit-meta-geral"
+                type="text"
+                formControlName="generalGoal"
+                autocomplete="off"
+                class="habit-form-field"
+                placeholder="Exemplo: Ler 10 páginas"
+              />
             </div>
 
-            <div class="space-y-2 p-3">
-              <div class="weekday-input-group">
+            <div class="flex items-start gap-3">
+              <div class="min-w-0 flex-[8]">
                 <label
-                  [for]="'habit-meta-day-' + day.weekday"
-                  class="weekday-input-group__label"
+                  for="habit-minimum-action"
+                  class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                 >
-                  <i class="bi bi-bullseye weekday-input-group__label-icon" aria-hidden="true"></i>
-                  Meta
+                  Ação mínima
+                  @if (!isEditing()) {
+                    <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
+                      (Opcional)
+                    </span>
+                  }
                 </label>
                 <input
-                  [id]="'habit-meta-day-' + day.weekday"
+                  id="habit-minimum-action"
                   type="text"
-                  autocomplete="off"
-                  class="weekday-input-group__control"
-                  [formControl]="weekdayGoalMetaControl(weekdayGoalIndex(day.weekday))"
-                  [placeholder]="'Meta de ' + day.fullLabel.toLowerCase()"
+                  formControlName="minimumAction"
+                  maxlength="140"
+                  class="habit-form-field"
+                  placeholder="Exemplo: Ler 3 páginas"
+                />
+                @if (showError('minimumAction', 'required')) {
+                  <p class="mt-1 text-xs text-red-500">Informe a ação mínima.</p>
+                }
+                @if (showError('minimumAction', 'maxlength')) {
+                  <p class="mt-1 text-xs text-red-500">
+                    Máximo de {{ minimumActionMax }} caracteres.
+                  </p>
+                }
+              </div>
+
+              <div class="min-w-0 flex-[2]">
+                <label
+                  for="habit-time"
+                  class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
+                >
+                  Horário
+                  <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
+                    (Opcional)
+                  </span>
+                </label>
+                <input
+                  id="habit-time"
+                  type="time"
+                  formControlName="time"
+                  class="habit-form-field habit-form-time-control"
                 />
               </div>
-
-              <div class="flex items-start gap-2">
-                <div class="weekday-input-group min-w-0 flex-[8]">
-                  <label
-                    [for]="'habit-minimum-day-' + day.weekday"
-                    class="weekday-input-group__label"
-                  >
-                    <i class="bi bi-arrow-down-circle weekday-input-group__label-icon" aria-hidden="true"></i>
-                    Mín.
-                  </label>
-                  <input
-                    [id]="'habit-minimum-day-' + day.weekday"
-                    type="text"
-                    maxlength="140"
-                    autocomplete="off"
-                    class="weekday-input-group__control"
-                    [formControl]="weekdayGoalMinimumControl(weekdayGoalIndex(day.weekday))"
-                    [placeholder]="'Mínimo de ' + day.fullLabel.toLowerCase()"
-                  />
-                </div>
-
-                <div class="weekday-input-group min-w-0 flex-[2]">
-                  <label
-                    [for]="'habit-time-day-' + day.weekday"
-                    class="weekday-input-group__label"
-                  >
-                    <i class="bi bi-clock weekday-input-group__label-icon" aria-hidden="true"></i>
-                    Hora
-                    <span class="font-normal opacity-70">(Opcional)</span>
-                  </label>
-                  <input
-                    [id]="'habit-time-day-' + day.weekday"
-                    type="time"
-                    class="weekday-input-group__control"
-                    [formControl]="weekdayGoalTimeControl(weekdayGoalIndex(day.weekday))"
-                  />
-                </div>
-              </div>
-
-              @if (
-                showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required') ||
-                showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')
-              ) {
-                <div class="space-y-0.5">
-                  @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required')) {
-                    <p class="text-xs text-red-500">Informe a ação mínima.</p>
-                  }
-                  @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')) {
-                    <p class="text-xs text-red-500">
-                      Máximo de {{ minimumActionMax }} caracteres.
-                    </p>
-                  }
-                </div>
-              }
             </div>
           </div>
+        } @else {
+          <div
+            class="space-y-4"
+            animate.enter="habit-form-reveal-enter"
+            animate.leave="habit-form-reveal-leave"
+          >
+            <p
+              class="text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
+            >
+              Configuração por dia
+            </p>
+            @for (day of visibleWeekdayItems(); track day.weekday) {
+              <div
+                class="overflow-hidden rounded-lg border border-brand-light-card-border dark:border-brand-border"
+                animate.enter="habit-form-reveal-enter"
+                animate.leave="habit-form-reveal-leave"
+              >
+                <div
+                  class="border-b border-brand-light-card-border bg-brand-light-surface px-4 py-2.5 text-center dark:border-brand-border dark:bg-brand-surface"
+                >
+                  <p
+                    class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+                  >
+                    {{ day.fullLabel }}
+                  </p>
+                </div>
+
+                <div class="space-y-2 p-3">
+                  <div class="weekday-input-group">
+                    <label
+                      [for]="'habit-meta-day-' + day.weekday"
+                      class="weekday-input-group__label"
+                    >
+                      <i class="bi bi-bullseye weekday-input-group__label-icon" aria-hidden="true"></i>
+                      Meta
+                    </label>
+                    <input
+                      [id]="'habit-meta-day-' + day.weekday"
+                      type="text"
+                      autocomplete="off"
+                      class="weekday-input-group__control"
+                      [formControl]="weekdayGoalMetaControl(weekdayGoalIndex(day.weekday))"
+                      [placeholder]="'Meta de ' + day.fullLabel.toLowerCase()"
+                    />
+                  </div>
+
+                  <div class="flex items-start gap-2">
+                    <div class="weekday-input-group min-w-0 flex-[8]">
+                      <label
+                        [for]="'habit-minimum-day-' + day.weekday"
+                        class="weekday-input-group__label"
+                      >
+                        <i class="bi bi-arrow-down-circle weekday-input-group__label-icon" aria-hidden="true"></i>
+                        Mín.
+                      </label>
+                      <input
+                        [id]="'habit-minimum-day-' + day.weekday"
+                        type="text"
+                        maxlength="140"
+                        autocomplete="off"
+                        class="weekday-input-group__control"
+                        [formControl]="weekdayGoalMinimumControl(weekdayGoalIndex(day.weekday))"
+                        [placeholder]="'Mínimo de ' + day.fullLabel.toLowerCase()"
+                      />
+                    </div>
+
+                    <div class="weekday-input-group min-w-0 flex-[2]">
+                      <label
+                        [for]="'habit-time-day-' + day.weekday"
+                        class="weekday-input-group__label"
+                      >
+                        <i class="bi bi-clock weekday-input-group__label-icon" aria-hidden="true"></i>
+                        Hora
+                        <span class="font-normal opacity-70">(Opcional)</span>
+                      </label>
+                      <input
+                        [id]="'habit-time-day-' + day.weekday"
+                        type="time"
+                        class="weekday-input-group__control"
+                        [formControl]="weekdayGoalTimeControl(weekdayGoalIndex(day.weekday))"
+                      />
+                    </div>
+                  </div>
+
+                  @if (
+                    showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required') ||
+                    showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')
+                  ) {
+                    <div class="space-y-0.5">
+                      @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'required')) {
+                        <p class="text-xs text-red-500">Informe a ação mínima.</p>
+                      }
+                      @if (showWeekdayGoalError(weekdayGoalIndex(day.weekday), 'minimumAction', 'maxlength')) {
+                        <p class="mt-1 text-xs text-red-500">
+                          Máximo de {{ minimumActionMax }} caracteres.
+                        </p>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
         }
+
+        <div>
+          <label
+            for="habit-category"
+            class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
+          >
+            <i class="bi bi-bookmark habit-form-label-icon" aria-hidden="true"></i>
+            Categoria
+            @if (!isEditing()) {
+              <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
+                (Opcional)
+              </span>
+            }
+          </label>
+          <input
+            id="habit-category"
+            type="text"
+            formControlName="category"
+            autocomplete="off"
+            class="habit-form-field"
+            placeholder="Exemplo: Conhecimento"
+          />
+          @if (showError('category', 'required')) {
+            <p class="mt-1 text-xs text-red-500">Informe a categoria.</p>
+          }
+        </div>
+
+        <div formArrayName="triggers">
+          <app-trigger-slots-fieldset
+            title="Tarefas gatilho"
+            iconClass="bi-lightning-charge"
+            placeholder="Exemplo: Alongue-se"
+            requiredErrorMessage="Informe o gatilho."
+            addAriaLabel="Adicionar gatilho"
+            removeAriaLabel="Ocultar gatilho"
+            [canAdd]="canAddTrigger()"
+            [canRemove]="canRemoveTrigger()"
+            (addSlot)="addTriggerSlot()"
+            (removeSlot)="removeTriggerSlot()"
+          />
+        </div>
+
+        <div formArrayName="motivations">
+          <app-trigger-slots-fieldset
+            title="Recompensas deste hábito"
+            iconClass="bi-trophy"
+            placeholder="Exemplo: Corpo em forma"
+            requiredErrorMessage="Informe a recompensa."
+            addAriaLabel="Adicionar recompensa"
+            removeAriaLabel="Ocultar recompensa"
+            [canAdd]="canAddMotivation()"
+            [canRemove]="canRemoveMotivation()"
+            (addSlot)="addMotivationSlot()"
+            (removeSlot)="removeMotivationSlot()"
+          />
+        </div>
+
+        <label class="flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            formControlName="showOnToday"
+            class="habit-form-checkbox"
+          />
+          <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
+            Exibir na tela Hoje
+          </span>
+        </label>
       </div>
     }
-
-    <div>
-      <label
-        for="habit-category"
-        class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
-      >
-        <i class="bi bi-bookmark habit-form-label-icon" aria-hidden="true"></i>
-        Categoria
-      </label>
-      <input
-        id="habit-category"
-        type="text"
-        formControlName="category"
-        autocomplete="off"
-        class="habit-form-field"
-        placeholder="Exemplo: Conhecimento"
-      />
-      @if (showError('category', 'required')) {
-        <p class="mt-1 text-xs text-red-500">Informe a categoria.</p>
-      }
-    </div>
-
-    <div formArrayName="triggers">
-      <app-trigger-slots-fieldset
-        title="Tarefas gatilho"
-        iconClass="bi-lightning-charge"
-        placeholder="Exemplo: Alongue-se"
-        requiredErrorMessage="Informe o gatilho."
-        addAriaLabel="Adicionar gatilho"
-        removeAriaLabel="Ocultar gatilho"
-        [canAdd]="canAddTrigger()"
-        [canRemove]="canRemoveTrigger()"
-        (addSlot)="addTriggerSlot()"
-        (removeSlot)="removeTriggerSlot()"
-      />
-    </div>
-
-    <div formArrayName="motivations">
-      <app-trigger-slots-fieldset
-        title="Recompensas deste hábito"
-        iconClass="bi-trophy"
-        placeholder="Exemplo: Corpo em forma"
-        requiredErrorMessage="Informe a recompensa."
-        addAriaLabel="Adicionar recompensa"
-        removeAriaLabel="Ocultar recompensa"
-        [canAdd]="canAddMotivation()"
-        [canRemove]="canRemoveMotivation()"
-        (addSlot)="addMotivationSlot()"
-        (removeSlot)="removeMotivationSlot()"
-      />
-    </div>
-
-    <label class="flex cursor-pointer items-center gap-3">
-      <input
-        type="checkbox"
-        formControlName="showOnToday"
-        class="habit-form-checkbox"
-      />
-      <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
-        Exibir na tela Hoje
-      </span>
-    </label>
 
     <div class="space-y-3 pt-1">
       <p

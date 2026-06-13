@@ -21,6 +21,10 @@ import {
 } from '@angular/forms';
 import { map } from 'rxjs';
 import { WEEKDAY_SCHEDULE_ITEMS } from '../../../core/constants/weekday-schedule.constants';
+import {
+  getHabitTemplate,
+  type HabitTemplateId,
+} from '../../../core/constants/habit-templates.constants';
 import { ALL_WEEKDAYS, type Habit } from '../../../core/models/habit.model';
 import { MAX_HABIT_SLOTS } from '../../../core/models/habit-slot.model';
 import { createDefaultWeekdayGoals } from '../../../core/models/habit-weekday-goal.model';
@@ -69,6 +73,7 @@ export class HabitFormComponent {
     viewChild<ElementRef<HTMLInputElement>>('nameInput');
 
   readonly habitId = input<string | null>(null);
+  readonly templateId = input<HabitTemplateId | null>(null);
 
   readonly saved = output<void>();
   readonly cancelled = output<void>();
@@ -76,6 +81,7 @@ export class HabitFormComponent {
   protected readonly minimumActionMax = MINIMUM_ACTION_MAX;
   protected readonly scheduleDays = signal<Weekday[]>([...ALL_WEEKDAYS]);
   protected readonly dynamicGoalsActive = signal(false);
+  protected readonly refineExpanded = signal(false);
   private readonly formSessionKey = signal<string | null>(null);
   private readonly baselineSnapshot = signal<HabitFormSnapshot | null>(null);
   protected readonly showDiscardConfirm = signal(false);
@@ -96,13 +102,12 @@ export class HabitFormComponent {
         }),
       ),
     ),
-    category: ['', [Validators.required, Validators.minLength(1)]],
-    triggers: this.fb.array([this.createSlotGroup(DEFAULT_NEW_HABIT_TRIGGER)]),
-    motivations: this.fb.array([this.createSlotGroup(DEFAULT_NEW_HABIT_MOTIVATION)]),
-    minimumAction: [
-      '',
-      [Validators.required, Validators.maxLength(MINIMUM_ACTION_MAX)],
-    ],
+    category: ['', [Validators.minLength(1)]],
+    triggers: this.fb.array([this.createSlotGroup(DEFAULT_NEW_HABIT_TRIGGER, false)]),
+    motivations: this.fb.array([
+      this.createSlotGroup(DEFAULT_NEW_HABIT_MOTIVATION, false),
+    ]),
+    minimumAction: ['', [Validators.maxLength(MINIMUM_ACTION_MAX)]],
     time: [''],
     showOnToday: [true],
   });
@@ -150,6 +155,10 @@ export class HabitFormComponent {
 
   protected readonly isEditing = computed(() => this.habitId() !== null);
 
+  protected readonly showRefineSection = computed(
+    () => this.isEditing() || this.refineExpanded(),
+  );
+
   protected readonly formTitle = computed(() =>
     this.isEditing() ? 'Editar hábito' : 'Novo hábito',
   );
@@ -166,7 +175,8 @@ export class HabitFormComponent {
 
     effect(() => {
       const editId = this.habitId();
-      const sessionKey = editId ?? '__create__';
+      const template = this.templateId();
+      const sessionKey = editId ?? `__create__:${template ?? 'blank'}`;
 
       if (this.formSessionKey() === sessionKey) {
         return;
@@ -184,7 +194,7 @@ export class HabitFormComponent {
         return;
       }
 
-      this.resetForm();
+      this.resetForm(template);
     });
 
     effect(() => {
@@ -210,6 +220,10 @@ export class HabitFormComponent {
     return new Promise((resolve) => {
       this.leaveResolver = resolve;
     });
+  }
+
+  protected toggleRefineSection(): void {
+    this.refineExpanded.update((expanded) => !expanded);
   }
 
   protected weekdayGoalMetaControl(index: number) {
@@ -258,7 +272,7 @@ export class HabitFormComponent {
       return;
     }
 
-    this.form.controls.triggers.push(this.createSlotGroup(''));
+    this.form.controls.triggers.push(this.createSlotGroup('', this.isEditing()));
   }
 
   protected removeTriggerSlot(): void {
@@ -274,7 +288,7 @@ export class HabitFormComponent {
       return;
     }
 
-    this.form.controls.motivations.push(this.createSlotGroup(''));
+    this.form.controls.motivations.push(this.createSlotGroup('', this.isEditing()));
   }
 
   protected removeMotivationSlot(): void {
@@ -326,28 +340,30 @@ export class HabitFormComponent {
     }
 
     const value = this.form.getRawValue();
-    const payload = {
-      name: value.name,
-      generalGoal: value.generalGoal,
-      dynamicGoals: value.dynamicGoals,
-      weekdayGoals: value.weekdayGoals.map((entry) => ({
-        weekday: entry.weekday,
-        meta: entry.meta,
-        minimumAction: entry.minimumAction,
-        time: entry.time,
-      })),
-      category: value.category,
-      triggers: mapVisibleFormSlotsToStorage(
-        value.triggers.map((slot) => ({ text: slot.text, visible: true })),
-      ),
-      motivations: mapVisibleFormSlotsToStorage(
-        value.motivations.map((slot) => ({ text: slot.text, visible: true })),
-      ),
-      minimumAction: value.minimumAction,
-      scheduleDays: this.scheduleDays(),
-      time: value.time,
-      showOnToday: value.showOnToday,
-    };
+    const payload = this.isEditing()
+      ? {
+          name: value.name,
+          generalGoal: value.generalGoal,
+          dynamicGoals: value.dynamicGoals,
+          weekdayGoals: value.weekdayGoals.map((entry) => ({
+            weekday: entry.weekday,
+            meta: entry.meta,
+            minimumAction: entry.minimumAction,
+            time: entry.time,
+          })),
+          category: value.category,
+          triggers: mapVisibleFormSlotsToStorage(
+            value.triggers.map((slot) => ({ text: slot.text, visible: true })),
+          ),
+          motivations: mapVisibleFormSlotsToStorage(
+            value.motivations.map((slot) => ({ text: slot.text, visible: true })),
+          ),
+          minimumAction: value.minimumAction,
+          scheduleDays: this.scheduleDays(),
+          time: value.time,
+          showOnToday: value.showOnToday,
+        }
+      : this.buildCreatePayload(value);
 
     const editId = this.habitId();
 
@@ -385,9 +401,10 @@ export class HabitFormComponent {
     this.form.markAsPristine();
   }
 
-  private resetForm(): void {
+  private resetForm(templateId: HabitTemplateId | null = null): void {
     this.scheduleDays.set([...ALL_WEEKDAYS]);
     this.dynamicGoalsActive.set(false);
+    this.refineExpanded.set(false);
 
     this.form.reset({
       name: '',
@@ -415,9 +432,79 @@ export class HabitFormComponent {
       });
     });
 
+    if (templateId) {
+      this.applyTemplate(templateId);
+    }
+
     this.syncDynamicValidators(false);
+    this.syncValidatorsMode();
     this.updateBaseline();
     this.focusPrimaryField();
+  }
+
+  private applyTemplate(templateId: HabitTemplateId): void {
+    const template = getHabitTemplate(templateId);
+
+    this.scheduleDays.set([...template.scheduleDays]);
+    this.refineExpanded.set(true);
+
+    this.form.patchValue({
+      name: template.name,
+      generalGoal: template.generalGoal,
+      category: template.category,
+      minimumAction: template.minimumAction,
+      showOnToday: true,
+    });
+
+    this.setSlotFormArray(this.form.controls.triggers, [
+      { text: template.trigger, visible: true },
+    ]);
+    this.setSlotFormArray(this.form.controls.motivations, [
+      { text: template.motivation, visible: true },
+    ]);
+  }
+
+  private buildCreatePayload(
+    value: ReturnType<typeof this.form.getRawValue>,
+  ) {
+    const name = value.name.trim();
+    const category = value.category.trim() || 'Geral';
+    const minimumAction =
+      value.minimumAction.trim() || name || 'Fazer o hábito';
+    const triggerTexts = value.triggers
+      .map((slot) => slot.text.trim())
+      .filter(Boolean);
+    const motivationTexts = value.motivations
+      .map((slot) => slot.text.trim())
+      .filter(Boolean);
+
+    return {
+      name,
+      generalGoal: value.generalGoal,
+      dynamicGoals: value.dynamicGoals,
+      weekdayGoals: value.weekdayGoals.map((entry) => ({
+        weekday: entry.weekday,
+        meta: entry.meta,
+        minimumAction: entry.minimumAction,
+        time: entry.time,
+      })),
+      category,
+      triggers: mapVisibleFormSlotsToStorage(
+        (triggerTexts.length > 0 ? triggerTexts : [DEFAULT_NEW_HABIT_TRIGGER]).map(
+          (text) => ({ text, visible: true }),
+        ),
+      ),
+      motivations: mapVisibleFormSlotsToStorage(
+        (motivationTexts.length > 0
+          ? motivationTexts
+          : [DEFAULT_NEW_HABIT_MOTIVATION]
+        ).map((text) => ({ text, visible: true })),
+      ),
+      minimumAction,
+      scheduleDays: this.scheduleDays(),
+      time: value.time,
+      showOnToday: value.showOnToday,
+    };
   }
 
   private patchFormFromHabit(habit: Habit): void {
@@ -457,6 +544,7 @@ export class HabitFormComponent {
     });
 
     this.syncDynamicValidators(habit.dynamicGoals);
+    this.syncValidatorsMode();
     this.updateBaseline();
     this.focusPrimaryField();
   }
@@ -474,9 +562,11 @@ export class HabitFormComponent {
     );
   }
 
-  private createSlotGroup(text: string) {
+  private createSlotGroup(text: string, required = true) {
     return this.fb.group({
-      text: [text, [Validators.required, Validators.minLength(1)]],
+      text: required
+        ? [text, [Validators.required, Validators.minLength(1)]]
+        : [text, [Validators.maxLength(140)]],
     });
   }
 
@@ -489,12 +579,49 @@ export class HabitFormComponent {
     }
 
     for (const slot of slots) {
-      array.push(this.createSlotGroup(slot.text));
+      array.push(this.createSlotGroup(slot.text, this.isEditing()));
     }
+  }
+
+  private syncValidatorsMode(): void {
+    const editing = this.isEditing();
+
+    if (editing) {
+      this.form.controls.category.setValidators([
+        Validators.required,
+        Validators.minLength(1),
+      ]);
+    } else {
+      this.form.controls.category.clearValidators();
+    }
+
+    this.form.controls.category.updateValueAndValidity({ emitEvent: false });
+    this.syncDynamicValidators(this.dynamicGoalsActive());
+
+    const applySlotValidators = (
+      array: typeof this.form.controls.triggers,
+    ) => {
+      array.controls.forEach((group) => {
+        if (editing) {
+          group.controls.text.setValidators([
+            Validators.required,
+            Validators.minLength(1),
+          ]);
+        } else {
+          group.controls.text.setValidators([Validators.maxLength(140)]);
+        }
+
+        group.controls.text.updateValueAndValidity({ emitEvent: false });
+      });
+    };
+
+    applySlotValidators(this.form.controls.triggers);
+    applySlotValidators(this.form.controls.motivations);
   }
 
   private syncDynamicValidators(enabled: boolean): void {
     const generalMinimum = this.form.controls.minimumAction;
+    const editing = this.isEditing();
 
     if (enabled) {
       generalMinimum.clearValidators();
@@ -514,11 +641,17 @@ export class HabitFormComponent {
           group.controls.minimumAction.clearValidators();
         }
       });
-    } else {
+    } else if (editing) {
       generalMinimum.setValidators([
         Validators.required,
         Validators.maxLength(MINIMUM_ACTION_MAX),
       ]);
+
+      this.form.controls.weekdayGoals.controls.forEach((group) => {
+        group.controls.minimumAction.clearValidators();
+      });
+    } else {
+      generalMinimum.setValidators([Validators.maxLength(MINIMUM_ACTION_MAX)]);
 
       this.form.controls.weekdayGoals.controls.forEach((group) => {
         group.controls.minimumAction.clearValidators();

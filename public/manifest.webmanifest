@@ -1,0 +1,26 @@
+{
+  "name": "Habit Builder",
+  "short_name": "Habitua",
+  "description": "Construa hábitos com consistência gentil — local-first, sem conta.",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/today",
+  "lang": "pt-BR",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/habit-builder-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/habit-builder-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

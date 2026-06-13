@@ -5,7 +5,17 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'today',
+    loadComponent: () =>
+      import('./features/landing/pages/landing-page/landing-page.component').then(
+        (m) => m.LandingPageComponent,
+      ),
+  },
+  {
+    path: 'privacy',
+    loadComponent: () =>
+      import('./features/privacy/pages/privacy-page/privacy-page.component').then(
+        (m) => m.PrivacyPageComponent,
+      ),
   },
   {
     path: 'today',

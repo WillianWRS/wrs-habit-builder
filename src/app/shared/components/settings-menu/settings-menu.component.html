@@ -54,19 +54,32 @@
   </button>
 
   @if (!demoMode.isActive()) {
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-      role="menuitem"
-      (click)="onOpenProgress()"
-    >
-      <i
-        class="bi bi-bar-chart-line shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-        aria-hidden="true"
-      ></i>
-      Progresso
-    </button>
+  <button
+    type="button"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    role="menuitem"
+    (click)="onOpenProgress()"
+  >
+    <i
+      class="bi bi-bar-chart-line shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      aria-hidden="true"
+    ></i>
+    Progresso
+  </button>
   }
+
+  <a
+    routerLink="/privacy"
+    class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
+    role="menuitem"
+    (click)="closed.emit()"
+  >
+    <i
+      class="bi bi-shield-lock shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
+      aria-hidden="true"
+    ></i>
+    Privacidade
+  </a>
 
   <button
     type="button"

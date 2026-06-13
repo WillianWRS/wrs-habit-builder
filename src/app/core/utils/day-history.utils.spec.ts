@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import { createTestHabit } from '../testing/test-habit.factory';
 import { buildDayHistory } from './day-history.utils';
 
@@ -90,5 +91,43 @@ describe('buildDayHistory', () => {
 
     expect(snapshot.entries).toHaveLength(1);
     expect(snapshot.entries[0]?.habitId).toBe('active');
+  });
+
+  it('marca hábito esperado não concluído com freeze como protegido', () => {
+    const habits = [createHabit({ id: 'walk' })];
+    const freezeUsed: HabitFreezeUsed[] = [
+      {
+        id: 'f1',
+        habitId: 'walk',
+        dateKey: '2026-06-10',
+        usedAt: '2026-06-11T08:00:00.000Z',
+      },
+    ];
+
+    const snapshot = buildDayHistory('2026-06-10', habits, [], freezeUsed);
+
+    expect(snapshot.entries[0]).toMatchObject({
+      habitId: 'walk',
+      status: 'protected',
+    });
+  });
+
+  it('prioriza feito sobre protegido quando há conclusão no mesmo dia', () => {
+    const habits = [createHabit({ id: 'walk' })];
+    const completions: HabitCompletion[] = [
+      { id: 'c1', habitId: 'walk', completedOn: '2026-06-10' },
+    ];
+    const freezeUsed: HabitFreezeUsed[] = [
+      {
+        id: 'f1',
+        habitId: 'walk',
+        dateKey: '2026-06-10',
+        usedAt: '2026-06-11T08:00:00.000Z',
+      },
+    ];
+
+    const snapshot = buildDayHistory('2026-06-10', habits, completions, freezeUsed);
+
+    expect(snapshot.entries[0]?.status).toBe('done');
   });
 });

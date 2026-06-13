@@ -6,7 +6,7 @@ import {
   output,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../core/services/demo-mode.service';
 
 export type SettingsMenuPlacement = 'dropdown' | 'dropup';
@@ -14,7 +14,7 @@ export type SettingsMenuPlacement = 'dropdown' | 'dropup';
 @Component({
   selector: 'app-settings-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, RouterLink],
   templateUrl: './settings-menu.component.html',
   styleUrl: './settings-menu.component.scss',
 })

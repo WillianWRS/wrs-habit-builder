@@ -4,7 +4,7 @@ export const HABIT_NEW_ROUTE = ['/habits', 'new'] as const;
 
 export interface HabitNewLink {
   route: typeof HABIT_NEW_ROUTE;
-  queryParams: { returnUrl: HabitFormReturnUrl };
+  queryParams: { returnUrl: HabitFormReturnUrl; template?: string };
 }
 
 export function sanitizeHabitFormReturnUrl(value: string | null | undefined): HabitFormReturnUrl {
@@ -16,10 +16,16 @@ export function sanitizeHabitFormReturnUrl(value: string | null | undefined): Ha
 }
 
 /** Para `routerLink` — não embutir query na string (Angular não resolve corretamente). */
-export function buildHabitNewLink(returnUrl: HabitFormReturnUrl): HabitNewLink {
+export function buildHabitNewLink(
+  returnUrl: HabitFormReturnUrl,
+  options?: { template?: string },
+): HabitNewLink {
   return {
     route: HABIT_NEW_ROUTE,
-    queryParams: { returnUrl },
+    queryParams: {
+      returnUrl,
+      ...(options?.template ? { template: options.template } : {}),
+    },
   };
 }
 

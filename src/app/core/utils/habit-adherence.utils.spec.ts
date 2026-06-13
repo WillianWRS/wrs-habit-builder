@@ -75,7 +75,7 @@ describe('habit-adherence.utils', () => {
     expect(adherence.percentage).toBe(0);
   });
 
-  it('usa rótulo progressivo para hábito recente', () => {
+  it('mantém rótulo 7d/30d mesmo para hábito recente', () => {
     const habit = createTestHabit({
       createdAt: '2026-06-08T12:00:00.000Z',
       scheduleDaySince: {
@@ -95,8 +95,9 @@ describe('habit-adherence.utils', () => {
       new Date(2026, 5, 10),
     );
 
+    expect(snapshot.sevenDays.windowLabel).toBe('7d');
     expect(snapshot.thirtyDays.trackedDays).toBe(3);
-    expect(snapshot.thirtyDays.windowLabel).toBe('3d');
-    expect(resolveAdherenceWindowLabel(30, 3)).toBe('3d');
+    expect(snapshot.thirtyDays.windowLabel).toBe('30d');
+    expect(resolveAdherenceWindowLabel(30)).toBe('30d');
   });
 });

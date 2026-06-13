@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { AppearanceSettingsPanelComponent } from '../../../../shared/components/appearance-settings-panel/appearance-settings-panel.component';
+import { BetaFeedbackPanelComponent } from '../../../../shared/components/beta-feedback-panel/beta-feedback-panel.component';
 import { DataManagementPanelComponent } from '../../../../shared/components/data-management-panel/data-management-panel.component';
 
 @Component({
@@ -9,6 +10,7 @@ import { DataManagementPanelComponent } from '../../../../shared/components/data
   imports: [
     AppNavComponent,
     AppearanceSettingsPanelComponent,
+    BetaFeedbackPanelComponent,
     DataManagementPanelComponent,
   ],
   template: `
@@ -30,7 +32,18 @@ import { DataManagementPanelComponent } from '../../../../shared/components/data
       >
         <app-appearance-settings-panel />
 
-        <div class="relative mt-4 py-1" aria-hidden="true">
+        <div class="relative mt-8 py-1" aria-hidden="true">
+          <div
+            class="h-px w-full bg-gradient-to-r from-transparent via-brand-light-border to-transparent dark:via-brand-border"
+          ></div>
+          <div
+            class="absolute left-1/2 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-light-primary/60 dark:bg-brand-primary/60"
+          ></div>
+        </div>
+
+        <app-beta-feedback-panel />
+
+        <div class="relative mt-8 py-1" aria-hidden="true">
           <div
             class="h-px w-full bg-gradient-to-r from-transparent via-brand-light-border to-transparent dark:via-brand-border"
           ></div>
