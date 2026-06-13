@@ -1,78 +1,79 @@
 # Sprint 5 — Beta fechado + fechamento do Alfa
 
 > Projeto: **WRS Habit Builder**  
-> Marco: **Beta (5/6)** · Sprint anterior: **Sprint 4 (concluída parcial)** · Capacidade: ~1–2 semanas dev solo  
-> Objetivo: fechar lacunas do Alfa (PWA + onboarding), preparar beta fechado (~20 testers) com landing, privacidade e canal de feedback.  
-> **Status: CONCLUÍDA** (13/06/2026) · 98 testes verdes · lint + build ok
+> Marco: **Beta (5/6)** · Sprint anterior: **Sprint 4 (concluída)** · Capacidade real: ~1–2 semanas dev solo  
+> Objetivo: fechar o alfa técnico/produto e preparar beta fechado com landing, privacidade, feedback estruturado e base de lançamento.  
+> **Status: CONCLUÍDA COM PENDÊNCIAS OPERACIONAIS** (13/06/2026) · `npm run lint` ✅ · `npm test` ✅ (`101` testes)
 
 ---
 
-## Visão geral
+## Verificação executada (protocolo PO)
 
-| # | ID | Tarefa | Prioridade | Esforço | Status |
-|---|-----|--------|------------|---------|--------|
-| 0 | S5-00 | Tema claro/escuro (pré-requisito polish) | P0 | S | ✅ |
-| 1 | S5-01 | PWA instalável completo | P0 | M | ✅ |
-| 2 | S5-02 | Onboarding: form em camadas + 3 templates | P0 | M | ✅ |
-| 3 | S5-03 | Landing page mínima + rota pública | P0 | M | ✅ |
-| 4 | S5-04 | Política de privacidade (local-first) | P0 | S | ✅ |
-| 5 | S5-05 | Kit beta: checklist + formulário feedback | P0 | S | ✅ |
-| 6 | S5-06 | Fechar lacunas S4 + polish copy/a11y | P1 | M | ✅ |
-| 7 | S5-07 | Decisão modo demo (dev-only) | P1 | S | ✅ |
-
-**Ordem sugerida:** 0 → 1 → 2 → 3 → 4 → 5 → (6 e 7).
-
-**Fora de escopo:** monetização, sync, notificações, Capacitor/loja, layer de foto compartilhável.
+| Checagem | Evidência |
+|----------|-----------|
+| Rotas reais x prometidas | `app.routes.ts` com `/`, `/today`, `/habits/new`, `/habits/:id/edit`, `/habits/:id`, `/habits`, `/progress`, `/settings` |
+| Qualidade técnica | `npm run lint` verde; `npm test` verde com 23 arquivos e 101 testes |
+| Histórico de entrega | `git log --oneline -15` confirma sequência S2 → S5 (`ae08758` "feat: sprint 4 polish") |
+| Estado de branch | `git status` limpo (master sincronizada com origin) |
+| Backlog de referência | S5 marcada como concluída no backlog; pendências migradas para lançamento |
 
 ---
 
-## Definition of Done da Sprint 5
+## Fechamento da Sprint 5
 
-| Critério | Tarefa |
-|----------|--------|
-| App instalável (PWA manifest + service worker) | S5-01 |
-| Criar hábito rápido (nome + dias; opcionais colapsados) | S5-02 |
-| 3 templates no empty state de `/habits` | S5-02 |
-| Landing pública `/` com CTA e meta OG | S5-03 |
-| Política de privacidade em `/privacy` linkada | S5-04 |
-| Checklist beta + link feedback in-app | S5-05 |
-| Card lista clicável → detalhe; labels adesão progressivos; specs | S5-06 |
-| Demo oculto em produção (`isDevMode`) | S5-07 |
-| Tema claro/escuro integrado | S5-00 |
-| `npm test` + lint + build verdes | todas |
+| ID | Entrega | Status | Evidência |
+|----|---------|--------|-----------|
+| S5-00 | Tema claro/escuro | DONE | Fluxo em Configurações + componentes já ajustados |
+| S5-01 | PWA instalável | DONE | `@angular/service-worker`, `ngsw-config.json`, `manifest.webmanifest`, `provideServiceWorker` |
+| S5-02 | Form em camadas + templates | DONE | `habit-template-picker`, templates e fluxo `/habits/new` |
+| S5-03 | Landing pública | DONE | `/` aponta para `LandingPageComponent` |
+| S5-04 | Política de privacidade | DONE | `/privacy` + links de navegação |
+| S5-05 | Kit de beta fechado | PARTIAL | Checklist e painel entregues; URL do form ainda placeholder |
+| S5-06 | Lacunas S4 + polish | DONE | navegação lista→detalhe, labels progressivos, specs da trilha |
+| S5-07 | Modo demo dev-only | DONE | comportamento protegido por `isDevMode()` e doc formal |
 
 ---
 
-## Entregas principais
+## Definition of Beta — status final
 
-### S5-01 — PWA
-- `@angular/service-worker` + `ngsw-config.json` + `manifest.webmanifest`
-- `provideServiceWorker` em `app.config.ts` (somente produção)
+| Critério de saída Beta | Situação |
+|------------------------|----------|
+| Alfa completo (core + estabilidade) | ✅ |
+| Landing publicada | ✅ |
+| Política de privacidade publicada | ✅ |
+| Canal de feedback estruturado | ⚠️ Parcial (falta URL final do Google Form) |
+| Smoke manual para 20 testers | ⚠️ Parcial (checklist existe, execução completa entra em S6) |
+| Base técnica confiável (lint + testes) | ✅ |
 
-### S5-02 — Onboarding
-- Form em camadas: obrigatórios nome + dias; seção "Refinar (opcional)" colapsada
-- Templates: Leitura, Caminhada, Meditação (`habit-templates.constants.ts`)
-- Query `?template=reading` em `/habits/new`
+---
 
-### S5-03 — Landing
-- Rota `/` → `LandingPageComponent` (proposta de valor, CTA `/today`, screenshots)
+## Pendências reais que sobram para o lançamento
 
-### S5-04 — Privacidade
-- Rota `/privacy` + links em landing, settings, menu
+1. **Formulário beta ainda com URL de exemplo**  
+   `src/app/core/constants/beta-feedback.constants.ts` mantém `...1FAIpQLSexample...` e precisa do link real antes da rodada com testers.
 
-### S5-05 — Kit beta
-- `docs/BETA-CHECKLIST.md`
-- `BetaFeedbackPanelComponent` em Configurações
-- URL do form em `beta-feedback.constants.ts` (atualizar antes dos convites)
+2. **Documentação pública desatualizada para o estado atual do produto**  
+   `README.md` ainda descreve localStorage, modal create/edit e reset de streak legado; hoje o app usa IndexedDB, páginas dedicadas e regras novas.
 
-### S5-06 — Lacunas S4
-- Card da lista clicável (Enter/Space)
-- `windowLabel` progressivo em detalhe e progresso
-- Specs: `habit-list-card`, `habit-detail-page`, `habit-form-return-url`
+3. **Checklist beta ainda não executado como gate formal de release**  
+   `docs/BETA-CHECKLIST.md` está pronto, mas a evidência operacional (rodada completa mobile/desktop + registro de bugs) fica para a Sprint 6.
 
-### S5-07 — Demo
-- `revealPreviewActions` bloqueado fora de `isDevMode()`
-- Decisão documentada em `docs/DEMO-MODE.md`
+---
+
+## Riscos ativos herdados para S6
+
+| Risco | Impacto | Mitigação na próxima sprint |
+|-------|---------|-----------------------------|
+| Entrar em beta sem link real de feedback | Perda de insumo de produto | S6-01 (ativar form real + QA do funil de feedback) |
+| Lançar com docs divergentes do app | Suporte/confiança comprometidos | S6-02 (README + release notes + política de dados) |
+| "Soft launch" sem regressão guiada | Regressões visíveis em produção | S6-03/S6-04 (smoke P0 + regressão pré e pós deploy) |
+
+---
+
+## Saída PO da Sprint 5
+
+Sprint 5 fecha o **beta de produto** e deixa o projeto pronto para a fase de **lançamento operacional**.  
+O próximo passo recomendado é executar a Sprint 6 focada em qualidade de release, documentação pública e distribuição controlada.
 
 ---
 
@@ -81,4 +82,5 @@
 - `docs/BETA-CHECKLIST.md`
 - `docs/DEMO-MODE.md`
 - `docs/sprints/SPRINT-4.md`
-- Skills: `habit-builder-product`, `habit-builder-screens`, `habit-builder-ui`
+- `src/app/app.routes.ts`
+- `src/app/core/constants/beta-feedback.constants.ts`
