@@ -2,10 +2,27 @@
   "hosting": {
     "public": "dist/wrs-habit-builder/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/today",
+        "type": 301
+      },
+      {
+        "source": "/historico",
+        "destination": "/progress",
+        "type": 301
+      },
+      {
+        "source": "/data",
+        "destination": "/settings",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/index.csr.html"
       }
     ]
   }
