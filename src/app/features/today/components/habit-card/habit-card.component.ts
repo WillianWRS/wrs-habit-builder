@@ -18,7 +18,7 @@ import type { Weekday } from '../../../../core/models/weekday.model';
 import { WeekdayScheduleComponent } from '../../../../shared/components/weekday-schedule/weekday-schedule.component';
 import { HabitMarqueeComponent } from '../habit-marquee/habit-marquee.component';
 import { HabitCardStreakStatusComponent } from '../habit-card-streak-status/habit-card-streak-status.component';
-import { getStreakTier } from './habit-card-streak.utils';
+import { didAdvanceStreakTier, getStreakTier, MILESTONE_CELEBRATION_MS } from './habit-card-streak.utils';
 
 export type { StreakTier } from './habit-card-streak.utils';
 export { getStreakTier } from './habit-card-streak.utils';
@@ -28,8 +28,6 @@ export type HabitCardAccent = 'default' | 'physical' | 'wellness';
 const COMPLETE_SWEEP_MS = 400;
 const MOBILE_SWIPE_THRESHOLD_RATIO = 0.3;
 const SWIPE_CLICK_SUPPRESS_MS = 450;
-
-const COMPLETE_SWEEP_BANDS = [1, 2, 3, 4] as const;
 
 type CompleteSweepPhase = 'idle' | 'in' | 'out';
 type SwipeDirection = 'left' | 'right' | null;
@@ -51,11 +49,14 @@ export class HabitCardComponent {
 
   private initialized = false;
   private previousCompleted = false;
+  private previousDayCount = 0;
   /** Swipe já mostrou a animação — não repetir sweep ao confirmar. */
   private skipNextSweepAnimation = false;
+  private milestoneCelebrationTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly completeSweepPhase = signal<CompleteSweepPhase>('idle');
-  protected readonly completeSweepBands = COMPLETE_SWEEP_BANDS;
+  protected readonly milestoneCelebrating = signal(false);
+  protected readonly milestonePreviousDayCount = signal<number | null>(null);
   protected readonly swipePreviewActive = signal(false);
   protected readonly swipeReleasing = signal(false);
   protected readonly swipeDirection = signal<SwipeDirection>(null);
@@ -70,9 +71,6 @@ export class HabitCardComponent {
     () => this.noteDraft().trim() !== this.dailyNote().trim(),
   );
   protected readonly hasSavedNote = computed(() => this.dailyNote().trim().length > 0);
-  protected readonly noteIconClass = computed(() =>
-    this.hasSavedNote() ? 'bi-sticky-fill' : 'bi-sticky',
-  );
   protected readonly swipeUnlocked = computed(
     () => this.swipePreviewProgress() >= 1,
   );
@@ -105,14 +103,20 @@ export class HabitCardComponent {
   constructor() {
     effect((onCleanup) => {
       const isCompleted = this.completed();
+      const dayCount = this.dayCount();
 
       if (!this.initialized) {
         this.initialized = true;
         this.previousCompleted = isCompleted;
+        this.previousDayCount = dayCount;
         return;
       }
 
       if (isCompleted && !this.previousCompleted) {
+        if (didAdvanceStreakTier(this.previousDayCount, dayCount)) {
+          this.triggerMilestoneCelebration(onCleanup);
+        }
+
         if (this.skipNextSweepAnimation) {
           this.skipNextSweepAnimation = false;
           this.completeSweepPhase.set('idle');
@@ -127,6 +131,8 @@ export class HabitCardComponent {
           onCleanup(() => clearTimeout(timer));
         }
       } else if (!isCompleted && this.previousCompleted) {
+        this.clearMilestoneCelebration();
+
         if (this.skipNextSweepAnimation) {
           this.skipNextSweepAnimation = false;
           this.completeSweepPhase.set('idle');
@@ -143,6 +149,7 @@ export class HabitCardComponent {
       }
 
       this.previousCompleted = isCompleted;
+      this.previousDayCount = dayCount;
     });
 
     effect(() => {
@@ -175,6 +182,30 @@ export class HabitCardComponent {
   );
 
   protected readonly streakTier = computed(() => getStreakTier(this.dayCount()));
+
+  private triggerMilestoneCelebration(onCleanup: (fn: () => void) => void): void {
+    this.clearMilestoneCelebration();
+    this.milestonePreviousDayCount.set(this.previousDayCount);
+    this.milestoneCelebrating.set(true);
+
+    this.milestoneCelebrationTimer = setTimeout(() => {
+      this.milestoneCelebrating.set(false);
+      this.milestonePreviousDayCount.set(null);
+      this.milestoneCelebrationTimer = null;
+    }, MILESTONE_CELEBRATION_MS);
+
+    onCleanup(() => this.clearMilestoneCelebration());
+  }
+
+  private clearMilestoneCelebration(): void {
+    if (this.milestoneCelebrationTimer) {
+      clearTimeout(this.milestoneCelebrationTimer);
+      this.milestoneCelebrationTimer = null;
+    }
+
+    this.milestoneCelebrating.set(false);
+    this.milestonePreviousDayCount.set(null);
+  }
 
   protected readonly dayCountStyleClass = computed(() => {
     const tier = this.streakTier();
@@ -350,23 +381,19 @@ export class HabitCardComponent {
       this.swipeDirection() === 'right',
   );
 
-  protected swipeBandScale(band: number): number {
+  protected swipeFillScale(): number {
     if (!this.swipePreviewActive() && !this.swipeReleasing()) {
       return 1;
     }
 
     const progress = this.swipePreviewProgress();
-    const lagStep = 0.18;
-    const lag = (band - 1) * lagStep;
-    const effectiveRange = Math.max(0.05, 1 - lag);
-    const fillAmount = Math.max(0, Math.min((progress - lag) / effectiveRange, 1));
 
     if (this.isUnmarkSwipePreview()) {
-      return 1 - fillAmount;
+      return 1 - progress;
     }
 
     if (!this.completed() && this.swipeDirection() === 'left') {
-      return fillAmount;
+      return progress;
     }
 
     if (this.completed()) {

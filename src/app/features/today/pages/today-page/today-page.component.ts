@@ -10,7 +10,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -61,6 +60,7 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
         <section
           class="relative flex w-full flex-col items-center overflow-hidden rounded-2xl border border-brand-light-border bg-brand-light-surface px-8 py-8 text-center shadow-sm dark:border-brand-border dark:bg-brand-surface md:px-10 md:py-10"
           aria-labelledby="empty-title"
+          [attr.aria-describedby]="emptySubtitle() ? 'empty-subtitle' : null"
         >
           <div
             class="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-brand-light-primary/10 blur-2xl dark:bg-brand-primary/10"
@@ -93,6 +93,15 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
             {{ emptyTitle() }}
           </h2>
 
+          @if (emptySubtitle()) {
+            <p
+              id="empty-subtitle"
+              class="relative mt-2 max-w-md text-sm leading-relaxed text-brand-light-text-secondary dark:text-brand-text-secondary"
+            >
+              {{ emptySubtitle() }}
+            </p>
+          }
+
           <a
             [routerLink]="newHabitLink.route"
             [queryParams]="newHabitLink.queryParams"
@@ -114,23 +123,6 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
           }
         </section>
       } @else {
-        @if (demoMode.isActive()) {
-          <div class="mb-4 flex flex-col items-center gap-3">
-            <p
-              class="w-full rounded-lg border border-brand-light-primary/25 bg-brand-light-primary/5 px-4 py-2 text-center text-xs text-brand-light-text-secondary dark:border-brand-primary/25 dark:bg-brand-primary/5 dark:text-brand-text-secondary"
-            >
-              Modo demonstrativo — alterações não são salvas no navegador.
-            </p>
-            <button
-              type="button"
-              class="inline-flex items-center justify-center rounded-lg border border-brand-light-primary px-5 py-2.5 text-sm font-semibold text-brand-light-primary transition-colors hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:border-brand-primary dark:text-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-              (click)="exitDemoMode()"
-            >
-              Sair do modo demonstrativo
-            </button>
-          </div>
-        }
-
         <div class="mb-3 flex min-h-9 items-center justify-between gap-3">
           <app-habit-sort-select
             controlId="today-sort"
@@ -139,17 +131,15 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
             (valueChange)="sort.set($event)"
           />
 
-          @if (!demoMode.isActive()) {
-            <a
-              [routerLink]="newHabitLink.route"
-              [queryParams]="newHabitLink.queryParams"
-              class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg md:px-4"
-              aria-label="Novo hábito"
-            >
-              <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
-              <span class="hidden md:inline">Novo hábito</span>
-            </a>
-          }
+          <a
+            [routerLink]="newHabitLink.route"
+            [queryParams]="newHabitLink.queryParams"
+            class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg md:px-4"
+            aria-label="Novo hábito"
+          >
+            <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
+            <span class="hidden md:inline">Novo hábito</span>
+          </a>
         </div>
 
         <div
@@ -194,7 +184,6 @@ export class TodayPageComponent {
   private readonly viewport = inject(ViewportService);
   private readonly injector = inject(Injector);
   private readonly toast = inject(ToastService);
-  protected readonly demoMode = inject(DemoModeService);
   protected readonly newHabitLink = buildHabitNewLink('/today');
 
   private readonly habitListRef = viewChild<ElementRef<HTMLUListElement>>('habitList');
@@ -203,16 +192,12 @@ export class TodayPageComponent {
   protected readonly sort = signal<HabitSort>('time-asc');
   protected readonly completionAnnouncement = signal('');
 
-  protected readonly habits = computed(() => {
-    const source = this.demoMode.isActive()
-      ? this.demoMode.cards()
-      : this.storage.todayHabitCards();
-
-    return sortHabitsByPreference(source, this.sort());
-  });
+  protected readonly habits = computed(() =>
+    sortHabitsByPreference(this.storage.todayHabitCards(), this.sort()),
+  );
 
   protected readonly emptyState = computed<TodayEmptyState>(() => {
-    if (this.demoMode.isActive() || this.unsortedCount() > 0) {
+    if (this.storage.todayHabitCards().length > 0) {
       return 'none';
     }
 
@@ -223,14 +208,21 @@ export class TodayPageComponent {
 
   protected readonly emptyTitle = computed(() => {
     if (this.emptyState() === 'rest-day') {
-      const count = this.storage.getActiveHabits().length;
-      const habitsLabel = count === 1 ? '1 hábito ativo' : `${count} hábitos ativos`;
-      const verb = count === 1 ? 'não é' : 'não são';
-
-      return `Você tem ${habitsLabel} mas ${verb} para hoje, aproveite o dia ou crie um hábito pra hoje agora`;
+      return 'Dia livre 🎉';
     }
 
     return 'Construa hábitos agora';
+  });
+
+  protected readonly emptySubtitle = computed(() => {
+    if (this.emptyState() !== 'rest-day') {
+      return null;
+    }
+
+    const count = this.storage.getActiveHabits().length;
+    const habitsLabel = count === 1 ? '1 hábito ativo' : `${count} hábitos ativos`;
+
+    return `Você tem ${habitsLabel}, mas nenhum para hoje.`;
   });
 
   protected readonly emptyCtaLabel = computed(() =>
@@ -239,9 +231,7 @@ export class TodayPageComponent {
       : 'Criar primeiro hábito',
   );
 
-  protected readonly showTemplateOnboarding = computed(
-    () => this.showEmpty() && !this.demoMode.isActive(),
-  );
+  protected readonly showTemplateOnboarding = computed(() => this.showEmpty());
 
   protected readonly todayLabel = computed(() => {
     const date = this.currentDay.today();
@@ -253,16 +243,6 @@ export class TodayPageComponent {
   );
 
   protected readonly totalCount = computed(() => this.habits().length);
-
-  private readonly unsortedCount = computed(() =>
-    this.demoMode.isActive()
-      ? this.demoMode.cards().length
-      : this.storage.todayHabitCards().length,
-  );
-
-  protected exitDemoMode(): void {
-    this.demoMode.deactivate();
-  }
 
   protected toggleHabit(id: string): void {
     const habit = this.habits().find((entry) => entry.id === id);
@@ -283,11 +263,7 @@ export class TodayPageComponent {
       }
     }
 
-    if (this.demoMode.isActive()) {
-      this.demoMode.toggleHabit(id);
-    } else {
-      this.storage.toggleCompletion(id);
-    }
+    this.storage.toggleCompletion(id);
 
     const doneAfter = wasCompleted ? doneBefore - 1 : doneBefore + 1;
     const isNowCompleted = !wasCompleted;
@@ -305,10 +281,6 @@ export class TodayPageComponent {
   }
 
   protected saveDailyNote(habitId: string, note: string): void {
-    if (this.demoMode.isActive()) {
-      return;
-    }
-
     this.storage.upsertDailyNote(habitId, this.currentDay.todayKey(), note);
     this.toast.showSuccess('Nota salva');
   }

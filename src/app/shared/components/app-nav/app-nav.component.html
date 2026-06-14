@@ -9,7 +9,6 @@
       <a
         routerLink="/today"
         class="group shrink-0 rounded-[18%] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-        (dblclick)="revealPreviewActions($event)"
       >
         <img
           src="/habit-builder.png"
@@ -20,20 +19,18 @@
         />
       </a>
 
-      @if (!demoMode.isActive()) {
-        <a
-          routerLink="/habits"
-          class="inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-          [class]="
-            isHabitsRouteActive()
-              ? 'border-brand-light-primary bg-brand-light-bg/80 text-brand-light-primary dark:border-brand-primary dark:bg-brand-bg/60 dark:text-brand-primary'
-              : 'border-brand-light-border text-brand-light-text-secondary hover:bg-brand-light-bg hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary'
-          "
-        >
-          <i class="bi bi-list-ul text-base" aria-hidden="true"></i>
-          Hábitos
-        </a>
-      }
+      <a
+        routerLink="/habits"
+        class="inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+        [class]="
+          isHabitsRouteActive()
+            ? 'border-brand-light-primary bg-brand-light-bg/80 text-brand-light-primary dark:border-brand-primary dark:bg-brand-bg/60 dark:text-brand-primary'
+            : 'border-brand-light-border text-brand-light-text-secondary hover:bg-brand-light-bg hover:text-brand-light-text-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary'
+        "
+      >
+        <i class="bi bi-list-ul text-base" aria-hidden="true"></i>
+        Hábitos
+      </a>
     </div>
 
     <nav class="justify-self-center" aria-label="Navegação principal">
@@ -74,7 +71,6 @@
         @if (showMenu()) {
           <app-settings-menu
             placement="dropdown"
-            [showPreviewActions]="showPreviewActions()"
             (closed)="closeMenu()"
             (openSettings)="navigateFromMenu('/settings')"
             (openProgress)="navigateFromMenu('/progress')"
@@ -94,28 +90,18 @@
   <div
     class="mx-auto flex max-w-lg items-center justify-around px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
   >
-    @if (demoMode.isActive()) {
-      <span
-        class="flex cursor-not-allowed flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-brand-light-text-secondary/40 dark:text-brand-text-secondary/40"
-        aria-disabled="true"
-      >
-        <i class="bi bi-list-ul text-xl" aria-hidden="true"></i>
-        Hábitos
-      </span>
-    } @else {
-      <a
-        routerLink="/habits"
-        class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-        [class]="
-          isHabitsRouteActive()
-            ? 'text-brand-light-primary dark:text-brand-primary'
-            : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
-        "
-      >
-        <i class="bi bi-list-ul text-xl" aria-hidden="true"></i>
-        Hábitos
-      </a>
-    }
+    <a
+      routerLink="/habits"
+      class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+      [class]="
+        isHabitsRouteActive()
+          ? 'text-brand-light-primary dark:text-brand-primary'
+          : 'text-brand-light-text-secondary dark:text-brand-text-secondary'
+      "
+    >
+      <i class="bi bi-list-ul text-xl" aria-hidden="true"></i>
+      Hábitos
+    </a>
 
     <a
       routerLink="/today"
@@ -154,7 +140,6 @@
       @if (showMenu()) {
         <app-settings-menu
           placement="dropup"
-          [showPreviewActions]="showPreviewActions()"
           (closed)="closeMenu()"
           (openSettings)="navigateFromMenu('/settings')"
           (openProgress)="navigateFromMenu('/progress')"

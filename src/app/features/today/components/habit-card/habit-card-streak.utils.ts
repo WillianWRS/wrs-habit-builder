@@ -1,7 +1,7 @@
-/** Níveis 0–4 conforme dias de sequência: 0 · 15 · 35 · 50 · 66+ */
+/** Níveis 0–4 conforme dias de sequência: 0 · 7 · 21 · 30 · 66+ */
 export type StreakTier = 0 | 1 | 2 | 3 | 4;
 
-const STREAK_TIER_THRESHOLDS = [0, 15, 35, 50, 66] as const;
+export const STREAK_TIER_THRESHOLDS = [0, 7, 21, 30, 66] as const;
 
 export function getStreakTier(dayCount: number): StreakTier {
   if (dayCount >= STREAK_TIER_THRESHOLDS[4]) return 4;
@@ -11,18 +11,29 @@ export function getStreakTier(dayCount: number): StreakTier {
   return 0;
 }
 
-export const STREAK_TIER_MESSAGES: Record<
-  StreakTier,
-  { title: string; subtitle: string }
-> = {
-  0: { title: 'Sequência iniciada', subtitle: 'É só o começo' },
-  1: { title: 'Sequência boa', subtitle: 'Podemos mais' },
-  2: { title: 'Sequência ótima', subtitle: 'Vamos pra cima' },
-  3: { title: 'Sequência excelente', subtitle: 'Não desista agora' },
-  4: { title: 'Sequência perfeita', subtitle: 'Manteremos o topo' },
+export const STREAK_TIER_TITLES: Record<StreakTier, string> = {
+  0: 'Começando',
+  1: 'Bom',
+  2: 'Ótimo',
+  3: 'Excelente',
+  4: 'Perfeito',
 };
 
-export const DAY_ONE_MESSAGE = {
-  title: 'Dia um',
-  subtitle: 'Marque hoje para começar a sequência',
-} as const;
+export const DAY_ONE_TITLE = 'Dia um';
+
+/** Duração do fade ao trocar o título de sequência no marco (ms). */
+export const STREAK_TITLE_SWAP_FADE_MS = 1000;
+
+/** Duração da celebração ao cruzar um marco de sequência (ms). */
+export const MILESTONE_CELEBRATION_MS = 2000;
+
+export function didAdvanceStreakTier(
+  previousDayCount: number,
+  nextDayCount: number,
+): boolean {
+  return getStreakTier(nextDayCount) > getStreakTier(previousDayCount);
+}
+
+export function getStreakTierTitle(tier: StreakTier): string {
+  return STREAK_TIER_TITLES[tier];
+}

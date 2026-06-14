@@ -12,7 +12,7 @@ import { BETA_FEEDBACK_CONTACT_LABEL, BETA_FEEDBACK_WHATSAPP_URL } from '../../.
     >
       <header class="mx-auto max-w-3xl px-4 py-6 md:px-8">
         <a
-          routerLink="/"
+          routerLink="/today"
           class="inline-flex items-center gap-2 text-sm font-medium text-brand-light-text-secondary transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
         >
           <i class="bi bi-arrow-left" aria-hidden="true"></i>

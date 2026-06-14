@@ -54,6 +54,7 @@ export class HabitMarqueeComponent {
   protected cycleMarqueeSpeed(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+
     const next = MARQUEE_SPEED_CYCLE[this.marqueeSpeed()];
     this.marqueeSpeed.set(next);
     this.applyMarqueeSpeed(next);
@@ -61,7 +62,7 @@ export class HabitMarqueeComponent {
 
   private applyMarqueeSpeed(speed: MarqueeSpeed): void {
     const track = this.marqueeTrack()?.nativeElement;
-    if (!track) {
+    if (!track || typeof track.getAnimations !== 'function') {
       return;
     }
 
@@ -76,6 +77,7 @@ export class HabitMarqueeComponent {
         animation.play();
         break;
       case 'paused':
+        animation.playbackRate = 1;
         animation.pause();
         break;
       default:

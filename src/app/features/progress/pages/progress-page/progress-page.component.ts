@@ -5,11 +5,14 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import type {
+  HabitAdherenceHighlightItem,
+  HabitAdherenceTiedHabit,
+} from '../../../../core/utils/habit-adherence.utils';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { buildDayHistory } from '../../../../core/utils/day-history.utils';
-import { computeHabitAdherence } from '../../../../core/utils/habit-adherence.utils';
-import { computeWeeklySummary } from '../../../../core/utils/weekly-summary.utils';
+import { computeHabitAdherence, computeHabitAdherenceHighlights } from '../../../../core/utils/habit-adherence.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { DayHistoryModalComponent } from '../../components/day-history-modal/day-history-modal.component';
 import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heatmap.component';
@@ -33,8 +36,9 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
         <p
           class="mt-2 max-w-2xl text-sm text-brand-light-text-secondary dark:text-brand-text-secondary"
         >
-          Calendário mensal com a intensidade de hábitos concluídos por dia.
-          Toque em um dia para ver o resumo.
+          Acompanhe sua adesão recente, veja quais hábitos se destacam em todo o
+          período e explore o calendário mensal. Toque em um dia para abrir o
+          histórico e as notas salvas.
         </p>
 
         <div class="mt-3 flex flex-wrap gap-2">
@@ -74,82 +78,125 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
           </span>
         </div>
 
-        <section
-          class="mt-4 rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface"
-          aria-labelledby="weekly-summary-title"
+        <div
+          class="mt-4 grid gap-3 md:grid-cols-2"
+          aria-labelledby="habit-adherence-highlights-title"
         >
-          <h2
-            id="weekly-summary-title"
-            class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
-          >
-            Resumo semanal (7 dias)
+          <h2 id="habit-adherence-highlights-title" class="sr-only">
+            Destaques de adesão por hábito em todo o período
           </h2>
 
-          @if (!weeklySummary().hasEnoughData) {
-            <p class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
-              Ainda sem dados suficientes desta semana.
+          <article
+            class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface"
+          >
+            <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+              Hábito de maior adesão · todo o período
             </p>
-            <p class="text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
-              Conclua alguns hábitos e volte para ver seu resumo.
-            </p>
-          } @else {
-            <div class="mt-3 grid gap-2 text-sm md:grid-cols-2">
-              <article
-                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
+            <div class="mt-1 flex min-w-0 items-center gap-2">
+              <p
+                class="min-w-0 truncate font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
               >
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Melhor dia
-                </p>
-                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                  {{ weeklySummary().bestDay.label }}
-                </p>
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  {{ weeklySummary().bestDay.value }}
-                </p>
-              </article>
-              <article
-                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
-              >
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Pior dia
-                </p>
-                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                  {{ weeklySummary().worstDay.label }}
-                </p>
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  {{ weeklySummary().worstDay.value }}
-                </p>
-              </article>
-              <article
-                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
-              >
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Hábito de maior adesão
-                </p>
-                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                  {{ weeklySummary().topHabit.label }}
-                </p>
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  {{ weeklySummary().topHabit.value }}
-                </p>
-              </article>
-              <article
-                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
-              >
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Hábito de menor adesão
-                </p>
-                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                  {{ weeklySummary().lowHabit.label }}
-                </p>
-                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  {{ weeklySummary().lowHabit.value }}
-                </p>
-              </article>
+                {{ habitAdherenceHighlights().topHabit.label }}
+              </p>
+              @if (habitAdherenceHighlights().topHabit.tiedHabits.length > 0) {
+                <button
+                  type="button"
+                  class="inline-flex shrink-0 rounded-full bg-brand-light-primary/10 px-1.5 py-0.5 text-[11px] font-bold leading-none text-brand-light-primary transition-colors hover:bg-brand-light-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary dark:hover:bg-brand-primary/25 dark:focus-visible:ring-brand-primary"
+                  [attr.aria-expanded]="
+                    openTieTooltip()?.kind === 'top'
+                  "
+                  [attr.aria-label]="
+                    'Mais ' +
+                    habitAdherenceHighlights().topHabit.tiedHabits.length +
+                    ' hábitos empatados em maior adesão'
+                  "
+                  (click)="
+                    toggleTieTooltip(
+                      'top',
+                      habitAdherenceHighlights().topHabit,
+                      $event
+                    )
+                  "
+                >
+                  +{{ habitAdherenceHighlights().topHabit.tiedHabits.length }}
+                </button>
+              }
             </div>
-          }
-        </section>
+            <p class="mt-1 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+              @if (habitAdherenceHighlights().hasEnoughData) {
+                {{ habitAdherenceHighlights().topHabit.value }}
+              } @else {
+                Conclua alguns hábitos para ver este destaque.
+              }
+            </p>
+          </article>
+
+          <article
+            class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface"
+          >
+            <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+              Hábito de menor adesão · todo o período
+            </p>
+            <div class="mt-1 flex min-w-0 items-center gap-2">
+              <p
+                class="min-w-0 truncate font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+              >
+                {{ habitAdherenceHighlights().lowHabit.label }}
+              </p>
+              @if (habitAdherenceHighlights().lowHabit.tiedHabits.length > 0) {
+                <button
+                  type="button"
+                  class="inline-flex shrink-0 rounded-full bg-brand-light-primary/10 px-1.5 py-0.5 text-[11px] font-bold leading-none text-brand-light-primary transition-colors hover:bg-brand-light-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary dark:hover:bg-brand-primary/25 dark:focus-visible:ring-brand-primary"
+                  [attr.aria-expanded]="
+                    openTieTooltip()?.kind === 'low'
+                  "
+                  [attr.aria-label]="
+                    'Mais ' +
+                    habitAdherenceHighlights().lowHabit.tiedHabits.length +
+                    ' hábitos empatados em menor adesão'
+                  "
+                  (click)="
+                    toggleTieTooltip(
+                      'low',
+                      habitAdherenceHighlights().lowHabit,
+                      $event
+                    )
+                  "
+                >
+                  +{{ habitAdherenceHighlights().lowHabit.tiedHabits.length }}
+                </button>
+              }
+            </div>
+            <p class="mt-1 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+              @if (habitAdherenceHighlights().hasEnoughData) {
+                {{ habitAdherenceHighlights().lowHabit.value }}
+              } @else {
+                Conclua alguns hábitos para ver este destaque.
+              }
+            </p>
+          </article>
+        </div>
       </header>
+
+      @if (openTieTooltip(); as tooltip) {
+        <div
+          role="tooltip"
+          class="pointer-events-none fixed z-50 max-w-[min(18rem,calc(100vw-3rem))] -translate-x-1/2 -translate-y-full rounded-md border border-brand-light-primary/45 bg-brand-light-surface px-3 py-2 text-xs font-medium leading-relaxed text-brand-light-primary shadow-lg dark:border-brand-primary/45 dark:bg-brand-surface dark:text-brand-primary"
+          [style.left.px]="tooltip.x"
+          [style.top.px]="tooltip.y"
+        >
+          <ul class="space-y-1">
+            @for (habit of tooltip.habits; track habit.name) {
+              <li>
+                <span class="font-semibold">{{ habit.name }}</span>
+                <span class="text-brand-light-primary/85 dark:text-brand-primary/85">
+                  · {{ habit.value }}
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
 
       <app-month-heatmap
         [year]="visibleYear()"
@@ -223,13 +270,47 @@ export class ProgressPageComponent {
     );
   });
 
-  protected readonly weeklySummary = computed(() =>
-    computeWeeklySummary(
+  protected readonly habitAdherenceHighlights = computed(() =>
+    computeHabitAdherenceHighlights(
       this.storage.habitsReadonly(),
       this.storage.completionsReadonly(),
       this.currentDay.today(),
+      this.storage.freezeUsedReadonly(),
     ),
   );
+
+  protected readonly openTieTooltip = signal<{
+    kind: 'top' | 'low';
+    habits: HabitAdherenceTiedHabit[];
+    x: number;
+    y: number;
+  } | null>(null);
+
+  protected toggleTieTooltip(
+    kind: 'top' | 'low',
+    item: HabitAdherenceHighlightItem,
+    event: MouseEvent,
+  ): void {
+    event.stopPropagation();
+
+    if (item.tiedHabits.length === 0) {
+      return;
+    }
+
+    if (this.openTieTooltip()?.kind === kind) {
+      this.openTieTooltip.set(null);
+      return;
+    }
+
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+
+    this.openTieTooltip.set({
+      kind,
+      habits: item.tiedHabits,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 8,
+    });
+  }
 
   protected onMonthChange(next: { year: number; month: number }): void {
     this.visibleYear.set(next.year);
@@ -237,6 +318,7 @@ export class ProgressPageComponent {
   }
 
   protected openDay(dateKey: string): void {
+    this.openTieTooltip.set(null);
     this.selectedDateKey.set(dateKey);
   }
 

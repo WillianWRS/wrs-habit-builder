@@ -6,6 +6,28 @@
     box-shadow 150ms ease;
 }
 
+.habit-list-card__complete-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: rgb(var(--accent-rgb-light) / 0.1);
+}
+
+:host-context(.dark) .habit-list-card__complete-fill {
+  background-color: rgb(var(--accent-rgb-dark) / 0.1);
+}
+
+.habit-list-card--completed {
+  border-color: rgb(var(--accent-rgb-light) / 0.3);
+  background-color: rgb(var(--accent-rgb-light) / 0.1);
+}
+
+:host-context(.dark) .habit-list-card--completed {
+  border-color: rgb(var(--accent-rgb-dark) / 0.3);
+  background-color: rgb(var(--accent-rgb-dark) / 0.1);
+}
+
 $habit-triggers-panel-open-duration: 0.22s;
 $habit-triggers-panel-open-ease: ease-out;
 $habit-triggers-panel-close-duration: 0.18s;

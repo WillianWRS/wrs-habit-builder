@@ -1,6 +1,7 @@
 <article
-  class="habit-card relative rounded-xl p-4 motion-reduce:transition-none"
+  class="habit-card relative rounded-xl px-4 pt-4 pb-1 motion-reduce:transition-none"
   [class.habit-card--completed]="completed()"
+  [class.habit-card--milestone-celebrating]="milestoneCelebrating()"
   [class.habit-card--swipe-unlocked]="swipePreviewActive() && swipeUnlocked()"
   [attr.data-streak-tier]="streakTier()"
   [class.border-l-4]="!completed() && streakTier() === 0"
@@ -13,19 +14,22 @@
 >
   @if (showCompleteOverlay()) {
     <div class="habit-card-complete-bg" aria-hidden="true">
-      @for (band of completeSweepBands; track band) {
-        <div
-          class="habit-card-complete-band"
-          [class.habit-card-complete-band--sweep-in]="completeSweepPhase() === 'in' && !swipePreviewActive() && !swipeReleasing()"
-          [class.habit-card-complete-band--sweep-out]="completeSweepPhase() === 'out' && !swipePreviewActive() && !swipeReleasing()"
-          [class.habit-card-complete-band--preview]="swipePreviewActive() || swipeReleasing()"
-          [class.habit-card-complete-band--preview-release]="swipeReleasing()"
-          [class.habit-card-complete-band--preview-unmark]="isUnmarkSwipePreview()"
-          [class.habit-card-complete-band--preview-unlocked]="swipePreviewActive() && swipeUnlocked()"
-          [style.transform]="swipePreviewActive() || swipeReleasing() ? 'scaleX(' + swipeBandScale(band) + ')' : null"
-          [attr.data-band]="band"
-        ></div>
-      }
+      <div
+        class="habit-card-complete-fill"
+        [class.habit-card-complete-fill--sweep-in]="completeSweepPhase() === 'in' && !swipePreviewActive() && !swipeReleasing()"
+        [class.habit-card-complete-fill--sweep-out]="completeSweepPhase() === 'out' && !swipePreviewActive() && !swipeReleasing()"
+        [class.habit-card-complete-fill--preview]="swipePreviewActive() || swipeReleasing()"
+        [class.habit-card-complete-fill--preview-release]="swipeReleasing()"
+        [class.habit-card-complete-fill--preview-unmark]="isUnmarkSwipePreview()"
+        [style.transform]="swipePreviewActive() || swipeReleasing() ? 'scaleX(' + swipeFillScale() + ')' : null"
+      ></div>
+    </div>
+  }
+  @if (milestoneCelebrating()) {
+    <div class="habit-card-milestone-burst" aria-hidden="true">
+      <span class="habit-card-milestone-burst__core"></span>
+      <span class="habit-card-milestone-burst__wave"></span>
+      <span class="habit-card-milestone-burst__wave habit-card-milestone-burst__wave--delayed"></span>
     </div>
   }
   <div class="relative z-[1]">
@@ -115,6 +119,8 @@
               [completed]="completed()"
               [isDayOne]="isDayOne()"
               [freezeReassurance]="freezeReassurance()"
+              [milestoneCelebrating]="milestoneCelebrating()"
+              [milestonePreviousDayCount]="milestonePreviousDayCount()"
             />
 
             <p
@@ -202,12 +208,21 @@
     >
       <button
         type="button"
-        class="inline-flex min-w-0 items-center gap-1.5 py-0.5 text-xs font-semibold text-brand-light-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-primary dark:focus-visible:ring-brand-primary"
+        class="habit-card__note-footer inline-flex min-w-0 items-center gap-1.5 py-0.5 text-xs font-semibold text-brand-light-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-primary dark:focus-visible:ring-brand-primary"
         [attr.aria-expanded]="noteEditorOpen()"
         [attr.aria-label]="hasSavedNote() ? 'Editar nota do dia' : 'Adicionar nota do dia'"
         (click)="toggleNoteEditor()"
       >
-        <i [class]="'bi ' + noteIconClass() + ' shrink-0 text-sm'" aria-hidden="true"></i>
+        <span class="habit-note-icon shrink-0" aria-hidden="true">
+          <i
+            class="bi bi-journal habit-note-icon__layer"
+            [class.habit-note-icon__layer--visible]="!noteEditorOpen()"
+          ></i>
+          <i
+            class="bi bi-journal-text habit-note-icon__layer"
+            [class.habit-note-icon__layer--visible]="noteEditorOpen()"
+          ></i>
+        </span>
         <span class="truncate">Nota do dia</span>
       </button>
 

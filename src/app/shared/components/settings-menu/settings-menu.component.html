@@ -21,25 +21,6 @@
 }
 
 <ng-template #menuItems>
-  @if (demoMode.isActive()) {
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-      role="menuitem"
-      (click)="exitDemoMode()"
-    >
-      <i
-        class="bi bi-arrow-counterclockwise shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-        aria-hidden="true"
-      ></i>
-      Sair do modo demonstrativo
-    </button>
-    <div
-      class="my-1 border-t border-brand-light-border dark:border-brand-border"
-      role="separator"
-    ></div>
-  }
-
   <button
     type="button"
     class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
@@ -53,7 +34,6 @@
     Configurações
   </button>
 
-  @if (!demoMode.isActive()) {
   <button
     type="button"
     class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
@@ -66,7 +46,6 @@
     ></i>
     Progresso
   </button>
-  }
 
   <a
     routerLink="/privacy"
@@ -93,37 +72,4 @@
     ></i>
     Assinatura
   </button>
-
-  @if (showPreviewActions()) {
-    <div
-      class="my-1 border-t border-brand-light-border dark:border-brand-border"
-      role="separator"
-    ></div>
-
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-      role="menuitem"
-      (click)="activatePredefinedDemo()"
-    >
-      <i
-        class="bi bi-layers shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-        aria-hidden="true"
-      ></i>
-      Preview levels
-    </button>
-
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-brand-light-text-primary transition-colors hover:bg-brand-light-bg dark:text-brand-text-primary dark:hover:bg-brand-bg"
-      role="menuitem"
-      (click)="activateRandomDemo()"
-    >
-      <i
-        class="bi bi-shuffle shrink-0 text-base text-brand-light-primary dark:text-brand-primary"
-        aria-hidden="true"
-      ></i>
-      Preview random
-    </button>
-  }
 </ng-template>

@@ -20,11 +20,16 @@ import {
 } from '../../../../core/utils/habit-streak.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { MonthHeatmapComponent } from '../../../progress/components/month-heatmap/month-heatmap.component';
+import { StreakLevelsModalComponent } from '../../components/streak-levels-modal/streak-levels-modal.component';
+import {
+  getStreakTier,
+  getStreakTierTitle,
+} from '../../../today/components/habit-card/habit-card-streak.utils';
 
 @Component({
   selector: 'app-habit-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, RouterLink, MonthHeatmapComponent],
+  imports: [AppNavComponent, RouterLink, MonthHeatmapComponent, StreakLevelsModalComponent],
   template: `
     <app-nav activeTab="habits" />
 
@@ -131,6 +136,25 @@ import { MonthHeatmapComponent } from '../../../progress/components/month-heatma
             </article>
 
             <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  Nível atual
+                </p>
+                <button
+                  type="button"
+                  class="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-brand-light-primary/60 text-[11px] font-semibold text-brand-light-primary transition-colors hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/60 dark:text-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
+                  aria-label="Entender níveis de sequência"
+                  (click)="openStreakLevelsModal()"
+                >
+                  ?
+                </button>
+              </div>
+              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+                {{ streakLevelTitle() }}
+              </p>
+            </article>
+
+            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
               <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Adesão 30d</p>
               <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
                 {{ adherence().thirtyDays.percentage }}%
@@ -179,6 +203,10 @@ import { MonthHeatmapComponent } from '../../../progress/components/month-heatma
           </div>
         </section>
 
+        @if (showStreakLevelsModal()) {
+          <app-streak-levels-modal (dismissed)="closeStreakLevelsModal()" />
+        }
+
         <section class="rounded-2xl border border-brand-light-border bg-brand-light-surface p-5 dark:border-brand-border dark:bg-brand-surface">
           <h2 class="font-display text-lg font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
             Contexto do hábito
@@ -211,6 +239,7 @@ export class HabitDetailPageComponent {
   protected readonly visibleYear = signal(this.currentDay.today().getFullYear());
   protected readonly visibleMonth = signal(this.currentDay.today().getMonth());
   protected readonly showProtectionTooltip = signal(false);
+  protected readonly showStreakLevelsModal = signal(false);
 
   private readonly routeHabitId = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('id'))),
@@ -287,6 +316,10 @@ export class HabitDetailPageComponent {
       this.currentDay.today(),
     );
   });
+
+  protected readonly streakLevelTitle = computed(() =>
+    getStreakTierTitle(getStreakTier(this.streak().currentStreak)),
+  );
 
   protected readonly freezeBalance = computed(() => {
     const habit = this.habit();
@@ -380,5 +413,13 @@ export class HabitDetailPageComponent {
 
   protected hideProtectionTooltip(): void {
     this.showProtectionTooltip.set(false);
+  }
+
+  protected openStreakLevelsModal(): void {
+    this.showStreakLevelsModal.set(true);
+  }
+
+  protected closeStreakLevelsModal(): void {
+    this.showStreakLevelsModal.set(false);
   }
 }

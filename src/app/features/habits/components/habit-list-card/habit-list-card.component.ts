@@ -12,16 +12,22 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
   styleUrl: './habit-list-card.component.scss',
   template: `
     <article
-      class="rounded-xl border p-4 transition-colors"
+      class="habit-list-card relative overflow-hidden rounded-xl border p-4 transition-colors"
       [class]="
         archived()
           ? 'border-dashed border-brand-light-border/70 bg-brand-light-bg/60 opacity-75 dark:border-brand-border/70 dark:bg-brand-bg/50'
           : 'border-brand-light-card-border bg-brand-light-surface shadow-sm dark:border-brand-border dark:bg-brand-surface'
       "
-      [class.border-l-4]="!archived() && accent() === 'physical'"
-      [class.border-l-brand-accent-orange]="!archived() && accent() === 'physical'"
-      [class.border-l-brand-accent-purple]="!archived() && accent() === 'wellness'"
+      [class.habit-list-card--completed]="selectedOnToday() && !archived()"
+      [class.border-l-4]="!archived() && !selectedOnToday() && accent() === 'physical'"
+      [class.border-l-brand-accent-orange]="!archived() && !selectedOnToday() && accent() === 'physical'"
+      [class.border-l-brand-accent-purple]="!archived() && !selectedOnToday() && accent() === 'wellness'"
     >
+      @if (selectedOnToday() && !archived()) {
+        <div class="habit-list-card__complete-fill" aria-hidden="true"></div>
+      }
+
+      <div class="relative z-[1]">
       @if (archived()) {
         <p
           class="mb-3 inline-flex items-center gap-1.5 rounded-full border border-brand-light-border/80 bg-brand-light-surface/80 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand-light-text-secondary dark:border-brand-border/80 dark:bg-brand-surface/60 dark:text-brand-text-secondary"
@@ -136,12 +142,12 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
               @if (!archived()) {
                 <app-action-icon-tooltip
                   label="Visualizar"
-                  variant="primary"
+                  variant="info"
                   direction="top"
                 >
                   <button
                     type="button"
-                    class="inline-flex size-8 items-center justify-center rounded-lg border border-brand-light-primary/45 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
+                    class="inline-flex size-8 items-center justify-center rounded-lg border border-sky-500/45 text-sky-600 transition-colors hover:border-sky-500 hover:bg-sky-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-sky-400/45 dark:text-sky-400 dark:hover:border-sky-400 dark:hover:bg-sky-400/10 dark:focus-visible:ring-sky-400"
                     [attr.aria-label]="'Ver detalhes de ' + name()"
                     (click)="openDetail.emit()"
                   >
@@ -196,6 +202,7 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
               }
             </div>
           </div>
+      </div>
     </article>
   `,
 })
@@ -209,6 +216,7 @@ export class HabitListCardComponent {
   readonly marqueeItems = input.required<MarqueeItem[]>();
   readonly minimumAction = input.required<string>();
   readonly accent = input<HabitCardAccent>('default');
+  readonly selectedOnToday = input(false);
   readonly archived = input(false);
 
   readonly edit = output<void>();

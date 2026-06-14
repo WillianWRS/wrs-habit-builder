@@ -5,14 +5,12 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   signal,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, merge, of } from 'rxjs';
-import { DemoModeService } from '../../../core/services/demo-mode.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SettingsMenuComponent } from '../settings-menu/settings-menu.component';
 
@@ -29,15 +27,12 @@ export type AppNavTab = 'today' | 'habits';
   styleUrl: './app-nav.component.scss',
 })
 export class AppNavComponent {
-  private readonly demoModeService = inject(DemoModeService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
   readonly activeTab = input<AppNavTab>('today');
 
-  protected readonly demoMode = this.demoModeService;
   protected readonly showMenu = signal(false);
-  protected readonly showPreviewActions = signal(false);
 
   private readonly currentPath = toSignal(
     merge(
@@ -74,16 +69,6 @@ export class AppNavComponent {
     }
 
     this.closeMenu();
-  }
-
-  protected revealPreviewActions(event: Event): void {
-    if (!isDevMode()) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    this.showPreviewActions.set(true);
   }
 
   protected closeMenu(): void {

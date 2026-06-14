@@ -95,14 +95,20 @@ const LOGO_PATH = '/habit-builder-icon.png';
             Personalizar
           </span>
           <i
-            class="bi bi-chevron-down text-xs transition-transform"
+            class="share-photo-customize-toggle__chevron bi bi-chevron-down text-xs"
             [class.rotate-180]="showCustomizeSection()"
             aria-hidden="true"
           ></i>
         </button>
 
-        @if (showCustomizeSection()) {
-          <div id="share-photo-customize-section" class="space-y-5">
+        <div
+          id="share-photo-customize-section"
+          class="share-photo-customize-panel"
+          [class.share-photo-customize-panel--open]="showCustomizeSection()"
+          [attr.aria-hidden]="!showCustomizeSection()"
+        >
+          <div class="share-photo-customize-panel__inner">
+            <div class="share-photo-customize-panel__content space-y-5">
             <div>
               <p
                 class="mb-1.5 text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
@@ -122,6 +128,7 @@ const LOGO_PATH = '/habit-builder-icon.png';
                     role="option"
                     [class.share-photo-layout-card--selected]="selectedLayout() === option.id"
                     [attr.aria-selected]="selectedLayout() === option.id"
+                    [attr.tabindex]="showCustomizeSection() ? 0 : -1"
                     (click)="selectLayout(option.id)"
                   >
                     <div class="share-photo-layout-card__frame">
@@ -157,6 +164,7 @@ const LOGO_PATH = '/habit-builder-icon.png';
                       selectedLabelLayout() === option.id
                     "
                     [attr.aria-selected]="selectedLabelLayout() === option.id"
+                    [attr.tabindex]="showCustomizeSection() ? 0 : -1"
                     (click)="selectLabelLayout(option.id)"
                   >
                     @if (option.premium) {
@@ -197,6 +205,7 @@ const LOGO_PATH = '/habit-builder-icon.png';
                 type="checkbox"
                 class="share-photo-checkbox"
                 [checked]="gradientShadingEnabled()"
+                [attr.tabindex]="showCustomizeSection() ? 0 : -1"
                 (change)="toggleGradientShading($any($event.target).checked)"
               />
               <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
@@ -209,14 +218,16 @@ const LOGO_PATH = '/habit-builder-icon.png';
                 type="checkbox"
                 class="share-photo-checkbox"
                 [checked]="showMetaEnabled()"
+                [attr.tabindex]="showCustomizeSection() ? 0 : -1"
                 (change)="toggleShowMeta($any($event.target).checked)"
               />
               <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
                 Exibir meta
               </span>
             </label>
+            </div>
           </div>
-        }
+        </div>
 
         <div class="flex flex-wrap gap-3">
           <label class="share-photo-action">

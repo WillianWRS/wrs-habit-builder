@@ -33,6 +33,44 @@
   padding-right: 2.5rem;
 }
 
+.share-photo-customize-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease-out;
+}
+
+.share-photo-customize-panel--open {
+  grid-template-rows: 1fr;
+}
+
+.share-photo-customize-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.share-photo-customize-panel__content {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+}
+
+.share-photo-customize-panel--open .share-photo-customize-panel__content {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 60ms;
+}
+
+.share-photo-customize-panel:not(.share-photo-customize-panel--open)
+  .share-photo-customize-panel__content {
+  pointer-events: none;
+}
+
+.share-photo-customize-toggle__chevron {
+  transition: transform 250ms ease-out;
+}
+
 .share-photo-action {
   display: inline-flex;
   cursor: pointer;
@@ -503,4 +541,19 @@
 
 :host-context(.dark) .share-photo-label-layout-card--selected .share-photo-label-layout-card__label {
   color: var(--accent-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-photo-customize-panel,
+  .share-photo-customize-panel__content {
+    transition: none;
+  }
+
+  .share-photo-customize-panel--open .share-photo-customize-panel__content {
+    transition-delay: 0ms;
+  }
+
+  .share-photo-customize-toggle__chevron {
+    transition: none;
+  }
 }

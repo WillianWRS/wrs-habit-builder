@@ -221,6 +221,45 @@ const MONTH_SLIDE_MS = 280;
             </div>
           }
         </div>
+
+        @if (mode() === 'aggregate') {
+          <div
+            class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-brand-light-border pt-4 text-xs text-brand-light-text-secondary dark:border-brand-border dark:text-brand-text-secondary"
+            aria-label="Legenda de cores do calendário"
+          >
+            <span class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+              Legenda
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span
+                class="size-2.5 rounded-full border border-brand-light-border dark:border-brand-border"
+                aria-hidden="true"
+              ></span>
+              Sem conclusões
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span
+                class="size-2.5 rounded-full bg-brand-light-primary/25 dark:bg-brand-primary/25"
+                aria-hidden="true"
+              ></span>
+              Parcial
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span
+                class="size-2.5 rounded-full bg-brand-light-primary/55 dark:bg-brand-primary/55"
+                aria-hidden="true"
+              ></span>
+              Maioria
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span
+                class="size-2.5 rounded-full bg-brand-light-primary dark:bg-brand-primary"
+                aria-hidden="true"
+              ></span>
+              Completo
+            </span>
+          </div>
+        }
       </div>
     </section>
   `,

@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { buildHabitNewLink } from '../../../../core/utils/habit-form-return-url.utils';
@@ -156,17 +155,15 @@ const LIST_ITEM_ANIMATION_MS = 320;
             />
           </div>
 
-          @if (!demoMode.isActive()) {
-            <a
-              [routerLink]="newHabitLink.route"
-              [queryParams]="newHabitLink.queryParams"
-              class="inline-flex h-9 shrink-0 items-center justify-center gap-2 self-center rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
-              aria-label="Novo hábito"
-            >
-              <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
-              <span class="hidden md:inline">Novo hábito</span>
-            </a>
-          }
+          <a
+            [routerLink]="newHabitLink.route"
+            [queryParams]="newHabitLink.queryParams"
+            class="inline-flex h-9 shrink-0 items-center justify-center gap-2 self-center rounded-lg bg-brand-light-primary px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+            aria-label="Novo hábito"
+          >
+            <i class="bi bi-plus-lg text-sm" aria-hidden="true"></i>
+            <span class="hidden md:inline">Novo hábito</span>
+          </a>
         </div>
       } @else {
         <div class="mb-6 flex flex-col gap-3">
@@ -283,6 +280,7 @@ const LIST_ITEM_ANIMATION_MS = 320;
                 [marqueeItems]="habit.marqueeItems"
                 [minimumAction]="habit.minimumAction"
                 [accent]="habit.accent"
+                [selectedOnToday]="filter() === 'today'"
                 [archived]="habit.archived"
                 (openDetail)="openDetail(habit.id)"
                 (edit)="editHabit(habit.id)"
@@ -309,7 +307,6 @@ export class HabitsPageComponent {
   private readonly storage = inject(HabitStorageService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
-  protected readonly demoMode = inject(DemoModeService);
   protected readonly newHabitLink = buildHabitNewLink('/habits');
 
   protected readonly filterOptions = FILTER_OPTIONS;
@@ -356,8 +353,7 @@ export class HabitsPageComponent {
     () =>
       this.showEmpty() &&
       this.filter() === 'active' &&
-      this.filterCounts().active === 0 &&
-      !this.demoMode.isActive(),
+      this.filterCounts().active === 0,
   );
 
   protected readonly emptyTitle = computed(() => {

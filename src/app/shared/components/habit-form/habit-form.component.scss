@@ -141,6 +141,29 @@
   -webkit-appearance: none;
 }
 
+.habit-form-time-field {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.habit-form-time-field .habit-form-field {
+  width: 4.75rem;
+  min-width: 0;
+  padding-inline: 0.5rem;
+}
+
+.weekday-input-group--time {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.weekday-input-group--time .weekday-input-group__control {
+  flex: none;
+  width: 4.5rem;
+  min-width: 0;
+  padding-inline: 0.375rem;
+}
+
 :host-context(.dark) .weekday-input-group {
   border-color: var(--brand-border);
   background-color: var(--brand-surface);

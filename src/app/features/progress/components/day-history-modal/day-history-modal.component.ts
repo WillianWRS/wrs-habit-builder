@@ -16,6 +16,43 @@ import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-foc
   selector: 'app-day-history-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ModalFocusTrapDirective],
+  styles: `
+    .day-history-note-icon {
+      position: relative;
+      display: inline-flex;
+      width: 0.75rem;
+      height: 0.75rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .day-history-note-icon__layer {
+      position: absolute;
+      inset: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      line-height: 1;
+      opacity: 0;
+      transform: scale(0.82) rotate(-10deg);
+      transition:
+        opacity 220ms ease,
+        transform 220ms ease;
+      pointer-events: none;
+    }
+
+    .day-history-note-icon__layer--visible {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .day-history-note-icon__layer {
+        transition: none;
+      }
+    }
+  `,
   template: `
     <div
       class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-6 pt-16 backdrop-blur-sm sm:items-center sm:p-4"
@@ -67,7 +104,20 @@ import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-foc
                         [attr.aria-expanded]="openNoteTooltip()?.habitId === entry.habitId"
                         (click)="toggleNoteTooltip(entry, $event)"
                       >
-                        <i class="bi bi-sticky text-xs" aria-hidden="true"></i>
+                        <span class="day-history-note-icon" aria-hidden="true">
+                          <i
+                            class="bi bi-journal day-history-note-icon__layer"
+                            [class.day-history-note-icon__layer--visible]="
+                              openNoteTooltip()?.habitId !== entry.habitId
+                            "
+                          ></i>
+                          <i
+                            class="bi bi-journal-text day-history-note-icon__layer"
+                            [class.day-history-note-icon__layer--visible]="
+                              openNoteTooltip()?.habitId === entry.habitId
+                            "
+                          ></i>
+                        </span>
                       </button>
                     }
                   </div>

@@ -69,6 +69,17 @@
         <label class="flex cursor-pointer items-center gap-3">
           <input
             type="checkbox"
+            formControlName="showOnToday"
+            class="habit-form-checkbox"
+          />
+          <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
+            Exibir na tela Hoje
+          </span>
+        </label>
+
+        <label class="flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
             formControlName="dynamicGoals"
             class="habit-form-checkbox"
           />
@@ -100,18 +111,13 @@
               />
             </div>
 
-            <div class="flex items-start gap-3">
-              <div class="min-w-0 flex-[8]">
+            <div class="flex flex-col gap-3 md:flex-row md:items-start">
+              <div class="min-w-0 w-full md:flex-[8]">
                 <label
                   for="habit-minimum-action"
                   class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                 >
                   Ação mínima
-                  @if (!isEditing()) {
-                    <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
-                      (Opcional)
-                    </span>
-                  }
                 </label>
                 <input
                   id="habit-minimum-action"
@@ -131,15 +137,12 @@
                 }
               </div>
 
-              <div class="min-w-0 flex-[2]">
+              <div class="habit-form-time-field">
                 <label
                   for="habit-time"
                   class="mb-1.5 block text-sm font-medium text-brand-light-text-primary dark:text-brand-text-primary"
                 >
                   Horário
-                  <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
-                    (Opcional)
-                  </span>
                 </label>
                 <input
                   id="habit-time"
@@ -196,8 +199,8 @@
                     />
                   </div>
 
-                  <div class="flex items-start gap-2">
-                    <div class="weekday-input-group min-w-0 flex-[8]">
+                  <div class="flex flex-col gap-2 md:flex-row md:items-start">
+                    <div class="weekday-input-group min-w-0 w-full md:flex-[8]">
                       <label
                         [for]="'habit-minimum-day-' + day.weekday"
                         class="weekday-input-group__label"
@@ -216,14 +219,13 @@
                       />
                     </div>
 
-                    <div class="weekday-input-group min-w-0 flex-[2]">
+                    <div class="weekday-input-group weekday-input-group--time">
                       <label
                         [for]="'habit-time-day-' + day.weekday"
                         class="weekday-input-group__label"
                       >
                         <i class="bi bi-clock weekday-input-group__label-icon" aria-hidden="true"></i>
                         Hora
-                        <span class="font-normal opacity-70">(Opcional)</span>
                       </label>
                       <input
                         [id]="'habit-time-day-' + day.weekday"
@@ -262,11 +264,6 @@
           >
             <i class="bi bi-bookmark habit-form-label-icon" aria-hidden="true"></i>
             Categoria
-            @if (!isEditing()) {
-              <span class="font-normal text-brand-light-text-secondary dark:text-brand-text-secondary">
-                (Opcional)
-              </span>
-            }
           </label>
           <input
             id="habit-category"
@@ -311,16 +308,6 @@
           />
         </div>
 
-        <label class="flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            formControlName="showOnToday"
-            class="habit-form-checkbox"
-          />
-          <span class="text-sm text-brand-light-text-primary dark:text-brand-text-primary">
-            Exibir na tela Hoje
-          </span>
-        </label>
       </div>
     }
 
