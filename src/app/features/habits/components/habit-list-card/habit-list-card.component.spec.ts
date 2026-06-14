@@ -29,12 +29,12 @@ describe('HabitListCardComponent', () => {
     expect(openDetail).not.toHaveBeenCalled();
   });
 
-  it('emite openDetail ao clicar no botão Visualizar', () => {
+  it('emite openDetail ao clicar no botão Progresso', () => {
     const openDetail = vi.fn();
     fixture.componentInstance.openDetail.subscribe(openDetail);
 
     const viewButton = fixture.nativeElement.querySelector(
-      'button[aria-label="Ver detalhes de Leitura"]',
+      'button[aria-label="Ver progresso de Leitura"]',
     ) as HTMLButtonElement;
     viewButton.click();
 

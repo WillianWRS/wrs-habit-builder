@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 @config '../tailwind.config.ts';
+
+/* Dark mode só via classe .dark no html — zero influência do tema do SO */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
 :root {
@@ -133,6 +137,11 @@
 @layer base {
   html {
     @apply antialiased;
+    color-scheme: only light;
+  }
+
+  html.dark {
+    color-scheme: only dark;
   }
 
   html,

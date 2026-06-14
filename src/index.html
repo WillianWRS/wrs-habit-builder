@@ -9,7 +9,8 @@
       name="description"
       content="Construa hábitos com consistência gentil — local-first, sem conta."
     />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content="#18181b" />
+    <meta name="color-scheme" content="dark" />
     <meta property="og:title" content="Habit Builder" />
     <meta
       property="og:description"
@@ -18,6 +19,9 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/habit-builder-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="privacy-policy" href="/privacy" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Habit Builder" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="512x512" href="/habit-builder-icon.png" />
     <link rel="apple-touch-icon" href="/habit-builder-icon.png" />
@@ -30,13 +34,29 @@
     <script>
       (function () {
         try {
-          if (localStorage.getItem('wrs-habit-builder-theme') === 'light') {
-            document.documentElement.classList.remove('dark');
+          var isLight = localStorage.getItem('wrs-habit-builder-theme') === 'light';
+          var root = document.documentElement;
+
+          if (isLight) {
+            root.classList.remove('dark');
+            root.style.colorScheme = 'only light';
           } else {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
+            root.style.colorScheme = 'only dark';
+          }
+
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute('content', isLight ? '#eaeaec' : '#18181b');
+          }
+
+          var colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+          if (colorSchemeMeta) {
+            colorSchemeMeta.setAttribute('content', isLight ? 'light' : 'dark');
           }
         } catch (e) {
           document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'only dark';
         }
       })();
     </script>

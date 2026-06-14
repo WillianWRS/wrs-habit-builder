@@ -141,17 +141,17 @@ import { ActionIconTooltipComponent } from '../../../../shared/components/action
 
               @if (!archived()) {
                 <app-action-icon-tooltip
-                  label="Visualizar"
+                  label="Progresso"
                   variant="info"
                   direction="top"
                 >
                   <button
                     type="button"
                     class="inline-flex size-8 items-center justify-center rounded-lg border border-sky-500/45 text-sky-600 transition-colors hover:border-sky-500 hover:bg-sky-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-sky-400/45 dark:text-sky-400 dark:hover:border-sky-400 dark:hover:bg-sky-400/10 dark:focus-visible:ring-sky-400"
-                    [attr.aria-label]="'Ver detalhes de ' + name()"
+                    [attr.aria-label]="'Ver progresso de ' + name()"
                     (click)="openDetail.emit()"
                   >
-                    <i class="bi bi-eye text-sm" aria-hidden="true"></i>
+                    <i class="bi bi-bar-chart-line text-sm" aria-hidden="true"></i>
                   </button>
                 </app-action-icon-tooltip>
 

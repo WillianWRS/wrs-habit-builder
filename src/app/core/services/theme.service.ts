@@ -5,6 +5,12 @@ export type ThemeMode = 'light' | 'dark';
 
 const STORAGE_KEY = 'wrs-habit-builder-theme';
 
+/** Cor da barra de status/PWA alinhada ao canvas do app (não ao tema do SO). */
+const THEME_META_COLORS: Record<ThemeMode, string> = {
+  light: '#eaeaec',
+  dark: '#18181b',
+};
+
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
@@ -46,6 +52,29 @@ export class ThemeService {
       return;
     }
 
-    document.documentElement.classList.toggle('dark', mode === 'dark');
+    syncThemeToDocument(mode);
+  }
+}
+
+/** Sincroniza classe, color-scheme e theme-color com a preferência do app. */
+export function syncThemeToDocument(mode: ThemeMode): void {
+  const root = document.documentElement;
+  root.classList.toggle('dark', mode === 'dark');
+  root.style.colorScheme = mode === 'dark' ? 'only dark' : 'only light';
+
+  let meta = document.querySelector('meta[name="theme-color"]');
+
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+
+  meta.setAttribute('content', THEME_META_COLORS[mode]);
+
+  const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+
+  if (colorSchemeMeta) {
+    colorSchemeMeta.setAttribute('content', mode === 'dark' ? 'dark' : 'light');
   }
 }

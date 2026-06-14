@@ -61,7 +61,7 @@ import {
       @if (habit(); as currentHabit) {
         <section class="mb-6 rounded-2xl border border-brand-light-card-border bg-brand-light-surface p-5 shadow-sm dark:border-brand-border dark:bg-brand-surface">
           <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">
-            Detalhe do hábito
+            Progresso do hábito
           </p>
           <h1 class="mt-2 font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary">
             {{ currentHabit.name }}

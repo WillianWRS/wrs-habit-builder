@@ -1,15 +1,30 @@
 {
+  "id": "https://wrs-habit-builder.web.app/",
   "name": "Habit Builder",
   "short_name": "Habit Builder",
   "description": "Construa hábitos com consistência gentil — local-first, sem conta.",
-  "theme_color": "#0a0a0a",
-  "background_color": "#0a0a0a",
-  "display": "standalone",
-  "scope": "/",
   "start_url": "/today",
-  "lang": "pt-BR",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "productivity"],
+  "theme_color": "#18181b",
+  "background_color": "#18181b",
+  "prefer_related_applications": false,
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
+    {
+      "src": "/habit-builder-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/habit-builder-icon.png",
       "sizes": "512x512",
@@ -21,6 +36,21 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hoje",
+      "short_name": "Hoje",
+      "description": "Ver hábitos de hoje",
+      "url": "/today",
+      "icons": [
+        {
+          "src": "/habit-builder-icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
