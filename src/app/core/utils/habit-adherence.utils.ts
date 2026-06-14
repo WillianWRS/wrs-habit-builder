@@ -180,7 +180,7 @@ export function computeHabitAdherenceHighlights(
   };
 }
 
-type RatedHabitHighlight = {
+interface RatedHabitHighlight {
   name: string;
   createdAtKey: string;
   currentStreak: number;
@@ -188,7 +188,7 @@ type RatedHabitHighlight = {
   expectedDays: number;
   completedDays: number;
   percentage: number;
-};
+}
 
 function pickTopAdherenceHabit(rated: RatedHabitHighlight[]): RatedHabitHighlight {
   const maxPercentage = Math.max(...rated.map((entry) => entry.percentage));
