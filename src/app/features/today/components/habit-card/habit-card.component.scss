@@ -303,7 +303,8 @@
   --accent-tint-current: var(--accent-tint-light);
   --streak-border: rgb(var(--card-border-rgb-light));
   --streak-bg: var(--brand-light-surface);
-  --completed-bg: rgb(var(--accent-rgb-light) / 0.1);
+  --completed-bg: var(--streak-bg);
+  --completed-fill: color-mix(in srgb, var(--streak-bg) 92%, var(--accent-light) 8%);
   border: 1px solid var(--streak-border);
   background-color: var(--streak-bg);
   overflow: hidden;
@@ -395,7 +396,7 @@
 .habit-card-complete-fill {
   position: absolute;
   inset: 0;
-  background-color: var(--completed-bg);
+  background-color: var(--completed-fill);
   transform: scaleX(1);
   transform-origin: right center;
 }
@@ -437,7 +438,8 @@
   --accent-tint-current: var(--accent-tint-dark);
   --streak-border: rgb(var(--card-border-rgb-dark) / 0.85);
   --streak-bg: var(--card-bg-dark);
-  --completed-bg: rgb(var(--accent-rgb-dark) / 0.1);
+  --completed-bg: var(--streak-bg);
+  --completed-fill: color-mix(in srgb, var(--streak-bg) 92%, var(--accent-dark) 8%);
 }
 
 .habit-card::after {
@@ -629,6 +631,28 @@
 .habit-card--completed {
   border: 1px solid rgb(var(--accent-rgb-light) / 0.3);
   background-color: var(--completed-bg);
+}
+
+.habit-card--completed.habit-card--unmark-swipe-preview,
+.habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='1'],
+.habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='2'],
+.habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='3'],
+.habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='4'] {
+  border: 1px solid var(--streak-border);
+  background-color: var(--streak-bg);
+  box-shadow: none;
+  animation: none;
+}
+
+:host-context(.dark) .habit-card--completed.habit-card--unmark-swipe-preview,
+:host-context(.dark) .habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='1'],
+:host-context(.dark) .habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='2'],
+:host-context(.dark) .habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='3'],
+:host-context(.dark) .habit-card--completed.habit-card--unmark-swipe-preview[data-streak-tier='4'] {
+  border-color: var(--streak-border);
+  background-color: var(--streak-bg);
+  box-shadow: none;
+  animation: none;
 }
 
 :host-context(.dark) .habit-card--completed {

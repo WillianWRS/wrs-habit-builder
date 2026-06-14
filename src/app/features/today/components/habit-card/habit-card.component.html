@@ -3,6 +3,7 @@
   [class.habit-card--completed]="completed()"
   [class.habit-card--milestone-celebrating]="milestoneCelebrating()"
   [class.habit-card--swipe-unlocked]="swipePreviewActive() && swipeUnlocked()"
+  [class.habit-card--unmark-swipe-preview]="isUnmarkSwipePreview()"
   [attr.data-streak-tier]="streakTier()"
   [class.border-l-4]="!completed() && streakTier() === 0"
   [class.border-l-brand-accent-orange]="!completed() && streakTier() === 0 && accent() === 'physical'"
