@@ -6,6 +6,8 @@ export interface DayHistoryEntry {
   name: string;
   meta: string;
   status: DayHistoryEntryStatus;
+  /** Nota diária salva para este hábito neste dia; vazio quando não houver. */
+  dailyNote: string;
 }
 
 export interface DayHistorySnapshot {

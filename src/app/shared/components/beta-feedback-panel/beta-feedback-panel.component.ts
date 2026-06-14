@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  BETA_FEEDBACK_EMAIL,
-  BETA_FEEDBACK_FORM_URL,
+  BETA_FEEDBACK_CONTACT_LABEL,
+  BETA_FEEDBACK_WHATSAPP_URL,
 } from '../../../core/constants/beta-feedback.constants';
 
 @Component({
@@ -23,7 +23,7 @@ import {
 
       <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <a
-          [href]="feedbackFormUrl"
+          [href]="feedbackUrl"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-light-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary"
@@ -43,16 +43,19 @@ import {
       <p class="mt-3 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
         Dúvidas:
         <a
-          [href]="'mailto:' + contactEmail"
+          [href]="contactUrl"
+          target="_blank"
+          rel="noopener noreferrer"
           class="text-brand-light-primary underline underline-offset-2 dark:text-brand-primary"
         >
-          {{ contactEmail }}
+          {{ contactLabel }}
         </a>
       </p>
     </section>
   `,
 })
 export class BetaFeedbackPanelComponent {
-  protected readonly feedbackFormUrl = BETA_FEEDBACK_FORM_URL;
-  protected readonly contactEmail = BETA_FEEDBACK_EMAIL;
+  protected readonly feedbackUrl = BETA_FEEDBACK_WHATSAPP_URL;
+  protected readonly contactUrl = BETA_FEEDBACK_WHATSAPP_URL;
+  protected readonly contactLabel = BETA_FEEDBACK_CONTACT_LABEL;
 }

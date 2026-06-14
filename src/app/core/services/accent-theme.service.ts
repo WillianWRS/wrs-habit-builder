@@ -1,9 +1,25 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 
-export type AccentTheme = 'orange' | 'emerald';
+export type AccentTheme =
+  | 'orange'
+  | 'emerald'
+  | 'red'
+  | 'blue'
+  | 'purple'
+  | 'pink'
+  | 'cyan';
 
 const STORAGE_KEY = 'wrs-habit-builder-accent';
+const ACCENT_CLASS_PREFIX = 'accent-';
+const ACCENT_CLASSES = [
+  'accent-emerald',
+  'accent-red',
+  'accent-blue',
+  'accent-purple',
+  'accent-pink',
+  'accent-cyan',
+];
 
 @Injectable({ providedIn: 'root' })
 export class AccentThemeService {
@@ -16,8 +32,8 @@ export class AccentThemeService {
       return;
     }
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const accent: AccentTheme = stored === 'emerald' ? 'emerald' : 'orange';
+    const stored = localStorage.getItem(STORAGE_KEY) as AccentTheme | null;
+    const accent = isAccentTheme(stored) ? stored : 'orange';
     this.apply(accent);
   }
 
@@ -41,6 +57,24 @@ export class AccentThemeService {
       return;
     }
 
-    document.documentElement.classList.toggle('accent-emerald', accent === 'emerald');
+    for (const klass of ACCENT_CLASSES) {
+      document.documentElement.classList.remove(klass);
+    }
+
+    if (accent !== 'orange') {
+      document.documentElement.classList.add(`${ACCENT_CLASS_PREFIX}${accent}`);
+    }
   }
+}
+
+function isAccentTheme(value: string | null): value is AccentTheme {
+  return (
+    value === 'orange' ||
+    value === 'emerald' ||
+    value === 'red' ||
+    value === 'blue' ||
+    value === 'purple' ||
+    value === 'pink' ||
+    value === 'cyan'
+  );
 }

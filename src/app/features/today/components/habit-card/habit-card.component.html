@@ -1,18 +1,28 @@
 <article
   class="habit-card relative rounded-xl p-4 motion-reduce:transition-none"
   [class.habit-card--completed]="completed()"
+  [class.habit-card--swipe-unlocked]="swipePreviewActive() && swipeUnlocked()"
   [attr.data-streak-tier]="streakTier()"
   [class.border-l-4]="!completed() && streakTier() === 0"
   [class.border-l-brand-accent-orange]="!completed() && streakTier() === 0 && accent() === 'physical'"
   [class.border-l-brand-accent-purple]="!completed() && streakTier() === 0 && accent() === 'wellness'"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerEnd($event)"
+  (pointercancel)="onPointerEnd($event)"
 >
   @if (showCompleteOverlay()) {
     <div class="habit-card-complete-bg" aria-hidden="true">
       @for (band of completeSweepBands; track band) {
         <div
           class="habit-card-complete-band"
-          [class.habit-card-complete-band--sweep-in]="completeSweepPhase() === 'in'"
-          [class.habit-card-complete-band--sweep-out]="completeSweepPhase() === 'out'"
+          [class.habit-card-complete-band--sweep-in]="completeSweepPhase() === 'in' && !swipePreviewActive() && !swipeReleasing()"
+          [class.habit-card-complete-band--sweep-out]="completeSweepPhase() === 'out' && !swipePreviewActive() && !swipeReleasing()"
+          [class.habit-card-complete-band--preview]="swipePreviewActive() || swipeReleasing()"
+          [class.habit-card-complete-band--preview-release]="swipeReleasing()"
+          [class.habit-card-complete-band--preview-unmark]="isUnmarkSwipePreview()"
+          [class.habit-card-complete-band--preview-unlocked]="swipePreviewActive() && swipeUnlocked()"
+          [style.transform]="swipePreviewActive() || swipeReleasing() ? 'scaleX(' + swipeBandScale(band) + ')' : null"
           [attr.data-band]="band"
         ></div>
       }
@@ -127,7 +137,8 @@
             type="button"
             class="habit-mark-btn rounded-lg bg-brand-light-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
             [attr.aria-label]="'Marcar ' + name() + ' como feito'"
-            (click)="markToggle.emit()"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="onToggleClick($event)"
           >
             Marcar ✓
           </button>
@@ -142,7 +153,8 @@
             type="button"
             class="habit-unmark-btn habit-card-field habit-card-field--secondary absolute left-0 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
             [attr.aria-label]="'Desmarcar ' + name()"
-            (click)="markToggle.emit()"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="onToggleClick($event)"
           >
             <i
               class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
@@ -160,7 +172,8 @@
             type="button"
             class="habit-mark-btn w-[30%] rounded-lg bg-brand-light-primary px-3 py-1.5 text-center text-sm font-semibold text-white transition-colors hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg dark:bg-brand-primary dark:text-brand-bg dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
             [attr.aria-label]="'Marcar ' + name() + ' como feito'"
-            (click)="markToggle.emit()"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="onToggleClick($event)"
           >
             Marcar ✓
           </button>
@@ -173,7 +186,8 @@
         type="button"
         class="habit-unmark-btn habit-card-field habit-card-field--secondary mt-3 hidden items-center gap-1.5 text-xs underline-offset-2 hover:text-brand-light-text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary md:inline-flex dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
         [attr.aria-label]="'Desmarcar ' + name()"
-        (click)="markToggle.emit()"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="onToggleClick($event)"
       >
         <i
           class="habit-unmark-icon bi bi-arrow-counterclockwise text-[11px]"
@@ -182,5 +196,67 @@
         Desmarcar
       </button>
     }
+
+    <div
+      class="mt-2 flex items-center justify-between gap-2 border-t border-brand-light-border/70 pt-2 dark:border-brand-border/70"
+    >
+      <button
+        type="button"
+        class="inline-flex min-w-0 items-center gap-1.5 py-0.5 text-xs font-semibold text-brand-light-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-primary dark:focus-visible:ring-brand-primary"
+        [attr.aria-expanded]="noteEditorOpen()"
+        [attr.aria-label]="hasSavedNote() ? 'Editar nota do dia' : 'Adicionar nota do dia'"
+        (click)="toggleNoteEditor()"
+      >
+        <i [class]="'bi ' + noteIconClass() + ' shrink-0 text-sm'" aria-hidden="true"></i>
+        <span class="truncate">Nota do dia</span>
+      </button>
+
+      <a
+        routerLink="/share-photo"
+        [queryParams]="{ habitId: habitId() }"
+        class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-brand-light-text-secondary transition-colors hover:bg-brand-light-bg hover:text-brand-light-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-primary dark:focus-visible:ring-brand-primary"
+        [attr.aria-label]="'Adicionar foto para ' + name()"
+      >
+        <i class="bi bi-camera text-base" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div
+      class="habit-card-note-panel"
+      [class.habit-card-note-panel--open]="noteEditorOpen()"
+      [attr.aria-hidden]="!noteEditorOpen()"
+    >
+      <div class="habit-card-note-panel__inner">
+        <div
+          class="habit-card-note-panel__content mt-1.5 space-y-1.5 border-t border-brand-light-border/70 pt-1.5 dark:border-brand-border/70"
+        >
+          <label class="sr-only" [for]="'daily-note-' + name()">Nota diária</label>
+          <textarea
+            [id]="'daily-note-' + name()"
+            class="w-full rounded-lg border border-brand-light-input-border bg-brand-light-bg px-2.5 py-1.5 text-sm text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:bg-brand-bg dark:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+            rows="2"
+            maxlength="140"
+            [value]="noteDraft()"
+            [attr.tabindex]="noteEditorOpen() ? 0 : -1"
+            (input)="onNoteInput($any($event.target).value)"
+          ></textarea>
+          <div class="flex items-center justify-between gap-2">
+            <span
+              class="text-[11px] text-brand-light-text-secondary dark:text-brand-text-secondary"
+              >{{ noteRemaining() }} restantes</span
+            >
+            <button
+              type="button"
+              class="rounded-md bg-brand-light-primary px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50 dark:bg-brand-primary dark:text-brand-bg"
+              [disabled]="!hasNoteChanges()"
+              [attr.tabindex]="noteEditorOpen() ? 0 : -1"
+              (click)="saveNote()"
+            >
+              Salvar nota
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </article>

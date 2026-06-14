@@ -1,5 +1,6 @@
 import type { DayHistorySnapshot, DayHistoryEntry } from '../models/day-history.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitDailyNote } from '../models/habit-daily-note.model';
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { Habit } from '../models/habit.model';
 import { parseDateKey } from './date.utils';
@@ -32,8 +33,10 @@ export function getExpectedHabitsForDate(
 function buildDayHistoryEntry(
   habit: Habit,
   date: Date,
+  dateKey: string,
   completedHabitIds: Set<string>,
   protectedHabitIds: Set<string>,
+  habitNotes: HabitDailyNote[],
 ): DayHistoryEntry & { sortKey: string } {
   const reminder = resolveHabitDisplayReminder(habit, date).trim();
   const meta = resolveHabitDisplayMeta(habit, date).trim();
@@ -46,12 +49,18 @@ function buildDayHistoryEntry(
     status = 'protected';
   }
 
+  const dailyNote =
+    habitNotes.find(
+      (entry) => entry.habitId === habit.id && entry.dateKey === dateKey,
+    )?.note.trim() ?? '';
+
   return {
     habitId: habit.id,
     reminderDisplay: reminder || '--:--',
     name: habit.name,
     meta,
     status,
+    dailyNote,
     sortKey: reminder || NO_REMINDER_SORT_KEY,
   };
 }
@@ -61,6 +70,7 @@ export function buildDayHistory(
   habits: Habit[],
   completions: HabitCompletion[],
   freezeUsed: HabitFreezeUsed[] = [],
+  habitNotes: HabitDailyNote[] = [],
 ): DayHistorySnapshot {
   const date = parseDateKey(dateKey);
   const expectedHabits = getExpectedHabitsForDate(habits, dateKey);
@@ -77,7 +87,14 @@ export function buildDayHistory(
 
   const entries = expectedHabits
     .map((habit) =>
-      buildDayHistoryEntry(habit, date, completedHabitIds, protectedHabitIds),
+      buildDayHistoryEntry(
+        habit,
+        date,
+        dateKey,
+        completedHabitIds,
+        protectedHabitIds,
+        habitNotes,
+      ),
     )
     .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
     .map(({ sortKey, ...entry }) => {

@@ -130,4 +130,20 @@ describe('buildDayHistory', () => {
 
     expect(snapshot.entries[0]?.status).toBe('done');
   });
+
+  it('inclui nota diária do hábito no dia selecionado', () => {
+    const habits = [createHabit({ id: 'walk' })];
+
+    const snapshot = buildDayHistory('2026-06-10', habits, [], [], [
+      {
+        id: 'n1',
+        habitId: 'walk',
+        dateKey: '2026-06-10',
+        note: '  Corri no parque  ',
+        updatedAt: '2026-06-10T12:00:00.000Z',
+      },
+    ]);
+
+    expect(snapshot.entries[0]?.dailyNote).toBe('Corri no parque');
+  });
 });

@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 export type ToastType = 'success' | 'undo';
 
-export type ToastIcon = 'check' | 'archive' | 'trash' | 'refresh';
+export type ToastIcon = 'check' | 'archive' | 'trash' | 'refresh' | 'bell';
 
 export type ToastDismissReason = 'close' | 'undo' | 'expire';
 
@@ -11,6 +11,7 @@ export const TOAST_ICON_CLASS: Record<ToastIcon, string> = {
   archive: 'bi-archive',
   trash: 'bi-trash',
   refresh: 'bi-arrow-counterclockwise',
+  bell: 'bi-bell',
 };
 
 export const TOAST_DEFAULT_DURATION_MS: Record<ToastType, number> = {

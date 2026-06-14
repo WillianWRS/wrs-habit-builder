@@ -62,6 +62,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'share-photo',
+    loadComponent: () =>
+      import(
+        './features/share-photo/pages/share-photo-page/share-photo-page.component'
+      ).then((m) => m.SharePhotoPageComponent),
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./features/settings/pages/settings-page/settings-page.component').then(

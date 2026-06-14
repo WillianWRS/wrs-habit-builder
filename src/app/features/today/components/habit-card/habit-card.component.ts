@@ -8,6 +8,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { getWeekday } from '../../../../core/utils/date.utils';
 import { formatHabitCardTitle } from '../../../../core/utils/habit-meta.utils';
@@ -25,15 +26,19 @@ export { getStreakTier } from './habit-card-streak.utils';
 export type HabitCardAccent = 'default' | 'physical' | 'wellness';
 
 const COMPLETE_SWEEP_MS = 400;
+const MOBILE_SWIPE_THRESHOLD_RATIO = 0.3;
+const SWIPE_CLICK_SUPPRESS_MS = 450;
 
 const COMPLETE_SWEEP_BANDS = [1, 2, 3, 4] as const;
 
 type CompleteSweepPhase = 'idle' | 'in' | 'out';
+type SwipeDirection = 'left' | 'right' | null;
 
 @Component({
   selector: 'app-habit-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RouterLink,
     WeekdayScheduleComponent,
     HabitMarqueeComponent,
     HabitCardStreakStatusComponent,
@@ -46,11 +51,34 @@ export class HabitCardComponent {
 
   private initialized = false;
   private previousCompleted = false;
+  /** Swipe já mostrou a animação — não repetir sweep ao confirmar. */
+  private skipNextSweepAnimation = false;
 
   protected readonly completeSweepPhase = signal<CompleteSweepPhase>('idle');
   protected readonly completeSweepBands = COMPLETE_SWEEP_BANDS;
+  protected readonly swipePreviewActive = signal(false);
+  protected readonly swipeReleasing = signal(false);
+  protected readonly swipeDirection = signal<SwipeDirection>(null);
+  protected readonly swipePreviewProgress = signal(0);
+  protected readonly noteDraft = signal('');
+  protected readonly noteEditorOpen = signal(false);
+  protected readonly noteLimit = 140;
+  protected readonly noteRemaining = computed(
+    () => this.noteLimit - this.noteDraft().length,
+  );
+  protected readonly hasNoteChanges = computed(
+    () => this.noteDraft().trim() !== this.dailyNote().trim(),
+  );
+  protected readonly hasSavedNote = computed(() => this.dailyNote().trim().length > 0);
+  protected readonly noteIconClass = computed(() =>
+    this.hasSavedNote() ? 'bi-sticky-fill' : 'bi-sticky',
+  );
+  protected readonly swipeUnlocked = computed(
+    () => this.swipePreviewProgress() >= 1,
+  );
 
   readonly name = input.required<string>();
+  readonly habitId = input.required<string>();
   readonly displayMeta = input('');
   readonly scheduleDays = input.required<Weekday[]>();
   readonly time = input.required<string>();
@@ -59,11 +87,20 @@ export class HabitCardComponent {
   readonly minimumAction = input.required<string>();
   readonly dayCount = input<number>(0);
   readonly freezeReassurance = input<string | null>(null);
+  readonly dailyNote = input('');
   readonly isDayOne = input(false);
   readonly completed = input.required<boolean>();
   readonly accent = input<HabitCardAccent>('default');
 
   readonly markToggle = output<void>();
+  readonly dailyNoteChange = output<string>();
+
+  private swipeStartX = 0;
+  private swipeCurrentX = 0;
+  private swipeCardWidth = 0;
+  private swipeTracking = false;
+  private swipeReleaseTimer: ReturnType<typeof setTimeout> | null = null;
+  private ignoreToggleClickUntil = 0;
 
   constructor() {
     effect((onCleanup) => {
@@ -76,31 +113,53 @@ export class HabitCardComponent {
       }
 
       if (isCompleted && !this.previousCompleted) {
-        this.completeSweepPhase.set('in');
+        if (this.skipNextSweepAnimation) {
+          this.skipNextSweepAnimation = false;
+          this.completeSweepPhase.set('idle');
+        } else {
+          this.completeSweepPhase.set('in');
 
-        const timer = setTimeout(
-          () => this.completeSweepPhase.set('idle'),
-          COMPLETE_SWEEP_MS,
-        );
+          const timer = setTimeout(
+            () => this.completeSweepPhase.set('idle'),
+            COMPLETE_SWEEP_MS,
+          );
 
-        onCleanup(() => clearTimeout(timer));
+          onCleanup(() => clearTimeout(timer));
+        }
       } else if (!isCompleted && this.previousCompleted) {
-        this.completeSweepPhase.set('out');
+        if (this.skipNextSweepAnimation) {
+          this.skipNextSweepAnimation = false;
+          this.completeSweepPhase.set('idle');
+        } else {
+          this.completeSweepPhase.set('out');
 
-        const timer = setTimeout(
-          () => this.completeSweepPhase.set('idle'),
-          COMPLETE_SWEEP_MS,
-        );
+          const timer = setTimeout(
+            () => this.completeSweepPhase.set('idle'),
+            COMPLETE_SWEEP_MS,
+          );
 
-        onCleanup(() => clearTimeout(timer));
+          onCleanup(() => clearTimeout(timer));
+        }
       }
 
       this.previousCompleted = isCompleted;
     });
+
+    effect(() => {
+      if (this.noteEditorOpen()) {
+        return;
+      }
+
+      this.noteDraft.set(this.dailyNote().slice(0, this.noteLimit));
+    });
   }
 
   protected readonly showCompleteOverlay = computed(
-    () => this.completed() || this.completeSweepPhase() === 'out',
+    () =>
+      this.completed() ||
+      this.completeSweepPhase() === 'out' ||
+      this.swipePreviewActive() ||
+      this.swipeReleasing(),
   );
 
   protected readonly todayWeekday = computed(() =>
@@ -132,4 +191,197 @@ export class HabitCardComponent {
     }
     return base;
   });
+
+  protected onPointerDown(event: PointerEvent): void {
+    if (event.pointerType !== 'touch') {
+      return;
+    }
+
+    if (isInteractiveSwipeTarget(event)) {
+      return;
+    }
+
+    this.clearSwipeReleaseTimer();
+    this.swipeReleasing.set(false);
+    this.swipeTracking = true;
+    this.swipeStartX = event.clientX;
+    this.swipeCurrentX = event.clientX;
+    this.swipeCardWidth = (event.currentTarget as HTMLElement).offsetWidth;
+    this.swipePreviewActive.set(false);
+    this.swipeDirection.set(null);
+    this.swipePreviewProgress.set(0);
+  }
+
+  protected onPointerMove(event: PointerEvent): void {
+    if (!this.swipeTracking || event.pointerType !== 'touch') {
+      return;
+    }
+
+    this.swipeCurrentX = event.clientX;
+    const deltaX = this.swipeCurrentX - this.swipeStartX;
+    const threshold = this.swipeCardWidth * MOBILE_SWIPE_THRESHOLD_RATIO;
+    const allowedDirection: SwipeDirection = this.completed() ? 'right' : 'left';
+
+    if (Math.abs(deltaX) > 4) {
+      const direction: SwipeDirection = deltaX < 0 ? 'left' : 'right';
+
+      if (direction !== allowedDirection) {
+        this.swipeDirection.set(null);
+        this.swipePreviewProgress.set(0);
+        return;
+      }
+
+      this.swipeDirection.set(direction);
+
+      if (!this.swipePreviewActive()) {
+        this.swipePreviewActive.set(true);
+      }
+    }
+
+    const effectiveDelta =
+      allowedDirection === 'left' ? Math.max(0, -deltaX) : Math.max(0, deltaX);
+    const progress = threshold > 0 ? effectiveDelta / threshold : 0;
+    this.swipePreviewProgress.set(Math.min(progress, 1));
+  }
+
+  protected onPointerEnd(event: PointerEvent): void {
+    if (!this.swipeTracking || event.pointerType !== 'touch') {
+      return;
+    }
+
+    const deltaX = this.swipeCurrentX - this.swipeStartX;
+    const threshold = this.swipeCardWidth * MOBILE_SWIPE_THRESHOLD_RATIO;
+
+    this.swipeTracking = false;
+
+    if (!this.swipePreviewActive()) {
+      this.swipeDirection.set(null);
+      this.swipePreviewProgress.set(0);
+      return;
+    }
+
+    const shouldMark = deltaX < 0 && !this.completed() && Math.abs(deltaX) >= threshold;
+    const shouldUnmark = deltaX > 0 && this.completed() && Math.abs(deltaX) >= threshold;
+
+    if (shouldMark || shouldUnmark) {
+      this.skipNextSweepAnimation = true;
+      this.suppressToggleClickAfterSwipe(event);
+      this.resetSwipeState();
+      this.markToggle.emit();
+      return;
+    }
+
+    const progress = this.swipePreviewProgress();
+    const direction = this.swipeDirection();
+    const allowedDirection: SwipeDirection = this.completed() ? 'right' : 'left';
+
+    if (progress <= 0 || direction !== allowedDirection) {
+      this.resetSwipeState();
+      return;
+    }
+
+    this.swipeReleasing.set(true);
+    this.clearSwipeReleaseTimer();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.swipePreviewProgress.set(0);
+        this.swipeReleaseTimer = setTimeout(() => this.resetSwipeState(), COMPLETE_SWEEP_MS);
+      });
+    });
+  }
+
+  private resetSwipeState(): void {
+    this.swipeTracking = false;
+    this.swipeReleasing.set(false);
+    this.swipePreviewActive.set(false);
+    this.swipePreviewProgress.set(0);
+    this.swipeDirection.set(null);
+    this.clearSwipeReleaseTimer();
+  }
+
+  private clearSwipeReleaseTimer(): void {
+    if (this.swipeReleaseTimer) {
+      clearTimeout(this.swipeReleaseTimer);
+      this.swipeReleaseTimer = null;
+    }
+  }
+
+  protected onToggleClick(event: MouseEvent): void {
+    if (Date.now() < this.ignoreToggleClickUntil) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    this.markToggle.emit();
+  }
+
+  private suppressToggleClickAfterSwipe(event: PointerEvent): void {
+    this.ignoreToggleClickUntil = Date.now() + SWIPE_CLICK_SUPPRESS_MS;
+    event.preventDefault();
+  }
+
+  protected toggleNoteEditor(): void {
+    const opening = !this.noteEditorOpen();
+
+    if (opening) {
+      this.noteDraft.set(this.dailyNote().slice(0, this.noteLimit));
+    }
+
+    this.noteEditorOpen.set(opening);
+  }
+
+  protected onNoteInput(value: string): void {
+    this.noteDraft.set(value.slice(0, this.noteLimit));
+  }
+
+  protected saveNote(): void {
+    const normalized = this.noteDraft().trim().slice(0, this.noteLimit);
+    this.noteDraft.set(normalized);
+    this.dailyNoteChange.emit(normalized);
+    this.noteEditorOpen.set(false);
+  }
+
+  protected readonly isUnmarkSwipePreview = computed(
+    () =>
+      (this.swipePreviewActive() || this.swipeReleasing()) &&
+      this.completed() &&
+      this.swipeDirection() === 'right',
+  );
+
+  protected swipeBandScale(band: number): number {
+    if (!this.swipePreviewActive() && !this.swipeReleasing()) {
+      return 1;
+    }
+
+    const progress = this.swipePreviewProgress();
+    const lagStep = 0.18;
+    const lag = (band - 1) * lagStep;
+    const effectiveRange = Math.max(0.05, 1 - lag);
+    const fillAmount = Math.max(0, Math.min((progress - lag) / effectiveRange, 1));
+
+    if (this.isUnmarkSwipePreview()) {
+      return 1 - fillAmount;
+    }
+
+    if (!this.completed() && this.swipeDirection() === 'left') {
+      return fillAmount;
+    }
+
+    if (this.completed()) {
+      return 1;
+    }
+
+    return 0;
+  }
+}
+
+function isInteractiveSwipeTarget(event: PointerEvent): boolean {
+  const interactiveSelector =
+    'button, a, input, textarea, select, label, .habit-mark-btn, .habit-unmark-btn';
+
+  return event.composedPath().some(
+    (node) => node instanceof HTMLElement && Boolean(node.closest(interactiveSelector)),
+  );
 }

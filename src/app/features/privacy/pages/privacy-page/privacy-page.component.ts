@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BETA_FEEDBACK_EMAIL } from '../../../../core/constants/beta-feedback.constants';
+import { BETA_FEEDBACK_CONTACT_LABEL, BETA_FEEDBACK_WHATSAPP_URL } from '../../../../core/constants/beta-feedback.constants';
 
 @Component({
   selector: 'app-privacy-page',
@@ -99,10 +99,12 @@ import { BETA_FEEDBACK_EMAIL } from '../../../../core/constants/beta-feedback.co
             <p class="mt-2">
               Dúvidas sobre privacidade:
               <a
-                [href]="'mailto:' + contactEmail"
+                [href]="contactUrl"
+                target="_blank"
+                rel="noopener noreferrer"
                 class="text-brand-light-primary underline underline-offset-2 dark:text-brand-primary"
               >
-                {{ contactEmail }}
+                {{ contactLabel }}
               </a>
             </p>
           </section>
@@ -112,5 +114,6 @@ import { BETA_FEEDBACK_EMAIL } from '../../../../core/constants/beta-feedback.co
   `,
 })
 export class PrivacyPageComponent {
-  protected readonly contactEmail = BETA_FEEDBACK_EMAIL;
+  protected readonly contactUrl = BETA_FEEDBACK_WHATSAPP_URL;
+  protected readonly contactLabel = BETA_FEEDBACK_CONTACT_LABEL;
 }

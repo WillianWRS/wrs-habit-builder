@@ -10,6 +10,7 @@ describe('MemoryStorageBackend', () => {
       habits: [],
       completions: [],
       freezeUsed: [],
+      habitNotes: [],
     };
 
     await backend.write(payload);

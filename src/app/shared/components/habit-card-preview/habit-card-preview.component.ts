@@ -65,6 +65,7 @@ import {
 
       <div class="habit-card-preview__card">
         <app-habit-card
+          habitId="preview"
           [name]="cardName()"
           [displayMeta]="cardDisplayMeta()"
           [scheduleDays]="formState().scheduleDays"

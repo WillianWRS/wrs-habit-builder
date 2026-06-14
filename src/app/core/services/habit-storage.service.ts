@@ -11,6 +11,7 @@ import {
 import { CURRENT_STORAGE_VERSION, type AppStorage } from '../models/app-storage.model';
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitDailyNote } from '../models/habit-daily-note.model';
 import type { CreateHabitDto } from '../models/create-habit.dto';
 import type { UpdateHabitDto } from '../models/update-habit.dto';
 import type { Habit } from '../models/habit.model';
@@ -36,6 +37,7 @@ interface PendingDeleteSnapshot {
   habit: Habit;
   completions: HabitCompletion[];
   freezeUsed: HabitFreezeUsed[];
+  habitNotes: HabitDailyNote[];
 }
 
 export type ImportStorageResult =
@@ -52,6 +54,7 @@ export class HabitStorageService {
   private readonly habits = signal<Habit[]>([]);
   private readonly completions = signal<HabitCompletion[]>([]);
   private readonly freezeUsed = signal<HabitFreezeUsed[]>([]);
+  private readonly habitNotes = signal<HabitDailyNote[]>([]);
   private readonly pendingDeletes = new Map<string, PendingDeleteSnapshot>();
 
   /** true após initialize() concluir — evita flash de estado vazio no boot. */
@@ -60,9 +63,11 @@ export class HabitStorageService {
   readonly habitsReadonly = this.habits.asReadonly();
   readonly completionsReadonly = this.completions.asReadonly();
   readonly freezeUsedReadonly = this.freezeUsed.asReadonly();
+  readonly habitNotesReadonly = this.habitNotes.asReadonly();
 
   readonly todayHabitCards = computed(() => {
     const date = this.currentDay.today();
+    this.habitNotes();
     return this.buildTodayCards(date);
   });
   readonly habitListCards = computed(() => {
@@ -79,6 +84,7 @@ export class HabitStorageService {
       this.habits();
       this.completions();
       this.freezeUsed();
+      this.habitNotes();
       const referenceDate = this.currentDay.today();
 
       untracked(() => this.applyAutomaticFreezes(referenceDate));
@@ -181,6 +187,9 @@ export class HabitStorageService {
       freezeUsed: structuredClone(
         this.freezeUsed().filter((event) => event.habitId === id),
       ),
+      habitNotes: structuredClone(
+        this.habitNotes().filter((entry) => entry.habitId === id),
+      ),
     });
 
     this.removeHabitData(id);
@@ -199,6 +208,7 @@ export class HabitStorageService {
     this.habits.update((list) => [...list, snapshot.habit]);
     this.completions.update((list) => [...list, ...snapshot.completions]);
     this.freezeUsed.update((list) => [...list, ...snapshot.freezeUsed]);
+    this.habitNotes.update((list) => [...list, ...snapshot.habitNotes]);
     this.pendingDeletes.delete(id);
     this.persist();
 
@@ -231,6 +241,56 @@ export class HabitStorageService {
       (completion) =>
         completion.habitId === habitId && completion.completedOn === targetDate,
     );
+  }
+
+  getDailyNote(habitId: string, dateKey: string): string {
+    return (
+      this.habitNotes().find(
+        (entry) => entry.habitId === habitId && entry.dateKey === dateKey,
+      )?.note ?? ''
+    );
+  }
+
+  upsertDailyNote(habitId: string, dateKey: string, note: string): void {
+    const normalized = note.trim().slice(0, 140);
+    const existing = this.habitNotes().find(
+      (entry) => entry.habitId === habitId && entry.dateKey === dateKey,
+    );
+
+    if (!normalized) {
+      if (!existing) {
+        return;
+      }
+
+      this.habitNotes.update((list) =>
+        list.filter((entry) => entry.id !== existing.id),
+      );
+      this.persist();
+      return;
+    }
+
+    if (existing) {
+      this.habitNotes.update((list) =>
+        list.map((entry) =>
+          entry.id === existing.id
+            ? { ...entry, note: normalized, updatedAt: new Date().toISOString() }
+            : entry,
+        ),
+      );
+    } else {
+      this.habitNotes.update((list) => [
+        ...list,
+        {
+          id: crypto.randomUUID(),
+          habitId,
+          dateKey,
+          note: normalized,
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
+    }
+
+    this.persist();
   }
 
   updateHabit(id: string, dto: UpdateHabitDto): Habit | undefined {
@@ -338,6 +398,7 @@ export class HabitStorageService {
       habits: this.habits(),
       completions: this.completions(),
       freezeUsed: this.freezeUsed(),
+      habitNotes: this.habitNotes(),
     };
   }
 
@@ -352,6 +413,7 @@ export class HabitStorageService {
       habits: migrated.habits,
       completions: migrated.completions,
       freezeUsed: migrated.freezeUsed,
+      habitNotes: migrated.habitNotes,
     };
 
     try {
@@ -359,6 +421,7 @@ export class HabitStorageService {
       this.habits.set(migrated.habits);
       this.completions.set(migrated.completions);
       this.freezeUsed.set(migrated.freezeUsed);
+      this.habitNotes.set(migrated.habitNotes);
       return {
         ok: true,
         habitCount: migrated.habits.length,
@@ -416,6 +479,7 @@ export class HabitStorageService {
     this.habits.set(migrated.habits);
     this.completions.set(migrated.completions);
     this.freezeUsed.set(migrated.freezeUsed);
+    this.habitNotes.set(migrated.habitNotes);
     this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
 
     if (sourceVersion < CURRENT_STORAGE_VERSION) {
@@ -464,18 +528,20 @@ export class HabitStorageService {
   private buildTodayCards(date: Date): TodayHabitCard[] {
     const completions = this.completions();
     const freezeUsed = this.freezeUsed();
+    const notes = this.habitNotes();
 
     return this.getTodayHabits(date).map((habit) =>
-      mapHabitToTodayCard(habit, completions, freezeUsed, date),
+      mapHabitToTodayCard(habit, completions, freezeUsed, notes, date),
     );
   }
 
   private buildAllHabitListCards(date: Date): HabitListCardView[] {
     const completions = this.completions();
     const freezeUsed = this.freezeUsed();
+    const notes = this.habitNotes();
 
     return this.habits().map((habit) =>
-      mapHabitToListCard(habit, completions, freezeUsed, date),
+      mapHabitToListCard(habit, completions, freezeUsed, notes, date),
     );
   }
 
@@ -487,12 +553,14 @@ export class HabitStorageService {
     this.freezeUsed.update((list) =>
       list.filter((event) => event.habitId !== id),
     );
+    this.habitNotes.update((list) => list.filter((entry) => entry.habitId !== id));
   }
 
   private setEmptyState(): void {
     this.habits.set([]);
     this.completions.set([]);
     this.freezeUsed.set([]);
+    this.habitNotes.set([]);
   }
 
   private persist(): void {
@@ -516,6 +584,7 @@ export class HabitStorageService {
       habits: this.habits(),
       completions: this.completions(),
       freezeUsed: this.freezeUsed(),
+      habitNotes: this.habitNotes(),
     };
 
     await this.backend.write(payload);

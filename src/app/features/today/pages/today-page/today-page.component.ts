@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { DemoModeService } from '../../../../core/services/demo-mode.service';
 import { CurrentDayService } from '../../../../core/services/current-day.service';
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { buildHabitNewLink } from '../../../../core/utils/habit-form-return-url.utils';
 import { ViewportService } from '../../../../core/services/viewport.service';
 import {
@@ -163,6 +164,7 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
           @for (habit of habits(); track habit.id) {
             <li [attr.data-habit-id]="habit.id" class="will-change-transform">
               <app-habit-card
+                [habitId]="habit.id"
                 [name]="habit.name"
                 [displayMeta]="habit.displayMeta"
                 [scheduleDays]="habit.scheduleDays"
@@ -172,10 +174,12 @@ type TodayEmptyState = 'none' | 'no-habits' | 'rest-day';
                 [minimumAction]="habit.minimumAction"
                 [dayCount]="habit.dayCount"
                 [freezeReassurance]="habit.freezeReassurance"
+                [dailyNote]="habit.dailyNote"
                 [isDayOne]="habit.isDayOne"
                 [completed]="habit.completed"
                 [accent]="habit.accent"
                 (markToggle)="toggleHabit(habit.id)"
+                (dailyNoteChange)="saveDailyNote(habit.id, $event)"
               />
             </li>
           }
@@ -189,6 +193,7 @@ export class TodayPageComponent {
   private readonly currentDay = inject(CurrentDayService);
   private readonly viewport = inject(ViewportService);
   private readonly injector = inject(Injector);
+  private readonly toast = inject(ToastService);
   protected readonly demoMode = inject(DemoModeService);
   protected readonly newHabitLink = buildHabitNewLink('/today');
 
@@ -297,6 +302,15 @@ export class TodayPageComponent {
     );
 
     this.scheduleListFlip();
+  }
+
+  protected saveDailyNote(habitId: string, note: string): void {
+    if (this.demoMode.isActive()) {
+      return;
+    }
+
+    this.storage.upsertDailyNote(habitId, this.currentDay.todayKey(), note);
+    this.toast.showSuccess('Nota salva');
   }
 
   private announceCompletion(message: string): void {

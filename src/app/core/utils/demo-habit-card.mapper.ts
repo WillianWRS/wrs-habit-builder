@@ -76,6 +76,7 @@ export function mapDemoPoolEntryToCard(
     totalCompletions: dayCount + (streakSeed % 10),
     isDayOne: dayCount === 0,
     freezeReassurance: streakSeed % 11 === 0 ? 'Protegido na terça — sequência intacta' : null,
+    dailyNote: '',
     completed,
     accent: mapAccent(entry.category),
   };

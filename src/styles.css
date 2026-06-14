@@ -85,6 +85,51 @@
   --action-activate-ring: #2dd4bf;
 }
 
+:root.accent-red {
+  --accent-light: #dc2626;
+  --accent-dark: #ef4444;
+  --accent-rgb-light: 220 38 38;
+  --accent-rgb-dark: 239 68 68;
+  --accent-tint-light: 254 202 202;
+  --accent-tint-dark: 254 226 226;
+}
+
+:root.accent-blue {
+  --accent-light: #2563eb;
+  --accent-dark: #3b82f6;
+  --accent-rgb-light: 37 99 235;
+  --accent-rgb-dark: 59 130 246;
+  --accent-tint-light: 191 219 254;
+  --accent-tint-dark: 219 234 254;
+}
+
+:root.accent-purple {
+  --accent-light: #7c3aed;
+  --accent-dark: #8b5cf6;
+  --accent-rgb-light: 124 58 237;
+  --accent-rgb-dark: 139 92 246;
+  --accent-tint-light: 221 214 254;
+  --accent-tint-dark: 233 213 255;
+}
+
+:root.accent-pink {
+  --accent-light: #db2777;
+  --accent-dark: #ec4899;
+  --accent-rgb-light: 219 39 119;
+  --accent-rgb-dark: 236 72 153;
+  --accent-tint-light: 251 207 232;
+  --accent-tint-dark: 252 231 243;
+}
+
+:root.accent-cyan {
+  --accent-light: #0891b2;
+  --accent-dark: #06b6d4;
+  --accent-rgb-light: 8 145 178;
+  --accent-rgb-dark: 6 182 212;
+  --accent-tint-light: 165 243 252;
+  --accent-tint-dark: 207 250 254;
+}
+
 @layer base {
   html {
     @apply antialiased;

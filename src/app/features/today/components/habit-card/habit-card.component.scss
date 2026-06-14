@@ -67,6 +67,61 @@
   }
 }
 
+.habit-mark-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.habit-mark-btn::after {
+  content: '';
+  position: absolute;
+  inset-block: -18%;
+  width: 36%;
+  right: -36%;
+  background: linear-gradient(
+    108deg,
+    transparent 0%,
+    rgb(var(--accent-tint-current) / 0.14) 24%,
+    rgb(var(--accent-tint-current) / 0.58) 50%,
+    rgb(255 255 255 / 0.26) 56%,
+    rgb(var(--accent-tint-current) / 0.58) 76%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transform-origin: center center;
+  animation: mark-btn-light-walk 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes mark-btn-light-walk {
+  0% {
+    transform: skewX(-18deg) translateX(0);
+    opacity: 0;
+  }
+
+  6% {
+    opacity: 1;
+  }
+
+  28% {
+    transform: skewX(-18deg) translateX(calc(-100% - 240%));
+    opacity: 1;
+  }
+
+  34%,
+  100% {
+    transform: skewX(-18deg) translateX(calc(-100% - 240%));
+    opacity: 0;
+  }
+}
+
+.habit-mark-btn:hover::after,
+.habit-card--swipe-unlocked .habit-mark-btn::after {
+  animation-play-state: paused;
+  opacity: 0;
+}
+
 .habit-mark-btn:hover {
   animation: mark-btn-shake 0.45s ease-in-out;
 }
@@ -164,6 +219,40 @@
   border: 1px solid var(--streak-border);
   background-color: var(--streak-bg);
   overflow: hidden;
+  touch-action: pan-y;
+}
+
+.habit-card-note-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease-out;
+}
+
+.habit-card-note-panel--open {
+  grid-template-rows: 1fr;
+}
+
+.habit-card-note-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.habit-card-note-panel__content {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+}
+
+.habit-card-note-panel--open .habit-card-note-panel__content {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 60ms;
+}
+
+.habit-card-note-panel:not(.habit-card-note-panel--open) .habit-card-note-panel__content {
+  pointer-events: none;
 }
 
 .habit-card-complete-bg {
@@ -182,6 +271,42 @@
   height: 25%;
   background-color: var(--completed-bg);
   transform: scaleX(1);
+  transform-origin: right center;
+}
+
+.habit-card-complete-band--preview {
+  animation: none !important;
+  transition: transform 40ms linear;
+  transform-origin: right center;
+}
+
+.habit-card-complete-band--preview-release {
+  transition-timing-function: ease-out;
+}
+
+.habit-card-complete-band--preview-release[data-band='1'] {
+  transition-duration: 0.1s;
+}
+
+.habit-card-complete-band--preview-release[data-band='2'] {
+  transition-duration: 0.2s;
+}
+
+.habit-card-complete-band--preview-release[data-band='3'] {
+  transition-duration: 0.3s;
+}
+
+.habit-card-complete-band--preview-release[data-band='4'] {
+  transition-duration: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-card-complete-band--preview-release {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.habit-card-complete-band--preview-unmark {
   transform-origin: right center;
 }
 
@@ -481,6 +606,12 @@
   animation: streak-glow-pulse 3s ease-in-out infinite;
 }
 
+.habit-card--swipe-unlocked {
+  box-shadow:
+    0 0 0 1px rgb(var(--accent-rgb-current) / 0.24),
+    0 0 20px rgb(var(--accent-rgb-current) / 0.16);
+}
+
 :host-context(.dark) .habit-card--completed[data-streak-tier='3'] {
   border-color: rgb(var(--accent-rgb-dark) / 0.7);
   animation: streak-glow-pulse-dark 3s ease-in-out infinite;
@@ -501,6 +632,11 @@
     animation: none;
   }
 
+  .habit-mark-btn::after {
+    animation: none;
+    opacity: 0;
+  }
+
   .habit-unmark-btn:hover .habit-unmark-icon {
     animation: none;
   }
@@ -516,6 +652,19 @@
 
   .habit-card-complete-band--sweep-out {
     transform: scaleX(0);
+  }
+
+  .habit-card-complete-band--preview {
+    transition: none;
+  }
+
+  .habit-card-note-panel,
+  .habit-card-note-panel__content {
+    transition: none;
+  }
+
+  .habit-card-note-panel--open .habit-card-note-panel__content {
+    transition-delay: 0ms;
   }
 
   .habit-card[data-streak-tier='3']:not(.habit-card--completed) {

@@ -3,6 +3,7 @@ import {
   Component,
   input,
   output,
+  signal,
 } from '@angular/core';
 import type {
   DayHistoryEntry,
@@ -51,11 +52,25 @@ import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-foc
             <ul class="space-y-4" aria-label="Hábitos do dia">
               @for (entry of snapshot().entries; track entry.habitId) {
                 <li class="space-y-1">
-                  <p
-                    class="text-xs italic tabular-nums text-brand-light-text-secondary dark:text-brand-text-secondary"
-                  >
-                    {{ entry.reminderDisplay }}
-                  </p>
+                  <div class="flex items-center gap-1.5">
+                    <p
+                      class="text-xs italic tabular-nums text-brand-light-text-secondary dark:text-brand-text-secondary"
+                    >
+                      {{ entry.reminderDisplay }}
+                    </p>
+
+                    @if (hasNote(entry)) {
+                      <button
+                        type="button"
+                        class="inline-flex size-4 shrink-0 items-center justify-center text-brand-light-primary transition-colors hover:text-brand-light-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-primary dark:hover:text-brand-primary/80 dark:focus-visible:ring-brand-primary"
+                        [attr.aria-label]="'Ver nota do dia para ' + entry.name"
+                        [attr.aria-expanded]="openNoteTooltip()?.habitId === entry.habitId"
+                        (click)="toggleNoteTooltip(entry, $event)"
+                      >
+                        <i class="bi bi-sticky text-xs" aria-hidden="true"></i>
+                      </button>
+                    }
+                  </div>
 
                   <div class="flex items-start gap-2.5">
                     <p
@@ -121,6 +136,17 @@ import { ModalFocusTrapDirective } from '../../../../shared/directives/modal-foc
           }
         </div>
 
+        @if (openNoteTooltip(); as tooltip) {
+          <div
+            role="tooltip"
+            class="pointer-events-none fixed z-[60] max-w-[min(16rem,calc(100vw-3rem))] -translate-x-1/2 -translate-y-full rounded-md border border-brand-light-primary/45 bg-brand-light-surface px-3 py-2 text-xs font-medium leading-relaxed text-brand-light-primary shadow-lg dark:border-brand-primary/45 dark:bg-brand-surface dark:text-brand-primary"
+            [style.left.px]="tooltip.x"
+            [style.top.px]="tooltip.y"
+          >
+            {{ tooltip.note }}
+          </div>
+        }
+
         <div class="border-t border-brand-light-border px-5 py-4 dark:border-brand-border">
           <button
             type="button"
@@ -139,7 +165,36 @@ export class DayHistoryModalComponent {
 
   readonly dismissed = output<void>();
 
+  protected readonly openNoteTooltip = signal<{
+    habitId: string;
+    note: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
   protected entryLabel(entry: DayHistoryEntry): string {
     return formatHabitCardTitle(entry.name, entry.meta);
+  }
+
+  protected hasNote(entry: DayHistoryEntry): boolean {
+    return entry.dailyNote.trim().length > 0;
+  }
+
+  protected toggleNoteTooltip(entry: DayHistoryEntry, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (this.openNoteTooltip()?.habitId === entry.habitId) {
+      this.openNoteTooltip.set(null);
+      return;
+    }
+
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+
+    this.openNoteTooltip.set({
+      habitId: entry.habitId,
+      note: entry.dailyNote,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 8,
+    });
   }
 }

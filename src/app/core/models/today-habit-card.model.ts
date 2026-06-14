@@ -20,6 +20,7 @@ export interface TodayHabitCard {
   isDayOne: boolean;
   /** Copy de reasseguramento quando freeze foi consumido na semana corrente. */
   freezeReassurance: string | null;
+  dailyNote: string;
   completed: boolean;
   accent: HabitCardAccent;
 }

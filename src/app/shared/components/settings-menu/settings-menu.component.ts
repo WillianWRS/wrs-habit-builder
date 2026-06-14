@@ -68,7 +68,8 @@ export class SettingsMenuComponent {
       path === '/habits' ||
       path.startsWith('/habits/') ||
       path === '/settings' ||
-      path === '/progress'
+      path === '/progress' ||
+      path === '/share-photo'
     ) {
       void this.router.navigate(['/today']);
     }

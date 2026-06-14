@@ -35,6 +35,16 @@ import { ThemeService } from '../../../core/services/theme.service';
         animation: none;
       }
     }
+
+    .theme-premium-badge {
+      left: 50%;
+      top: 0;
+      transform: translate(4px, 2px);
+      z-index: 1;
+      border: 1px solid var(--badge-accent);
+      background: transparent;
+      color: var(--badge-accent);
+    }
   `,
   template: `
     <section aria-labelledby="appearance-settings-title">
@@ -91,32 +101,33 @@ import { ThemeService } from '../../../core/services/theme.service';
         Tema
       </h3>
 
-      <div class="mt-3 flex items-center gap-3">
-        <button
-          type="button"
-          class="inline-flex size-12 items-center justify-center rounded-full border-0 transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-          [class.border-4]="accentThemeService.accent() === 'orange'"
-          [class.theme-pulse-ring]="accentThemeService.accent() === 'orange'"
-          [class.opacity-60]="accentThemeService.accent() !== 'orange'"
-          [attr.aria-label]="'Tema laranja'"
-          [attr.aria-pressed]="accentThemeService.accent() === 'orange'"
-          (click)="setAccent('orange')"
-        >
-          <span class="size-7 rounded-full bg-[#FF9100]"></span>
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex size-12 items-center justify-center rounded-full border-0 transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
-          [class.border-4]="accentThemeService.accent() === 'emerald'"
-          [class.theme-pulse-ring]="accentThemeService.accent() === 'emerald'"
-          [class.opacity-60]="accentThemeService.accent() !== 'emerald'"
-          [attr.aria-label]="'Tema esmeralda'"
-          [attr.aria-pressed]="accentThemeService.accent() === 'emerald'"
-          (click)="setAccent('emerald')"
-        >
-          <span class="size-7 rounded-full bg-[#00E676]"></span>
-        </button>
+      <div class="mb-4 mt-3 flex flex-wrap items-center gap-3">
+        @for (accent of accentOptions; track accent.id) {
+          <button
+            type="button"
+            class="relative inline-flex size-12 items-center justify-center rounded-full border-0 transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:focus-visible:ring-brand-primary"
+            [class.border-4]="accentThemeService.accent() === accent.id"
+            [class.theme-pulse-ring]="accentThemeService.accent() === accent.id"
+            [class.opacity-60]="accentThemeService.accent() !== accent.id"
+            [attr.aria-label]="'Tema ' + accent.label"
+            [attr.aria-pressed]="accentThemeService.accent() === accent.id"
+            (click)="setAccent(accent.id)"
+          >
+            <span
+              class="size-7 rounded-full"
+              [style.background]="accent.swatch"
+              aria-hidden="true"
+            ></span>
+            @if (accent.premiumReady) {
+              <span
+                class="theme-premium-badge pointer-events-none absolute rounded-full px-1.5 py-0.5 text-[7px] font-bold uppercase leading-none tracking-wider"
+                [style.--badge-accent]="accent.swatch"
+                aria-hidden="true"
+                >Premium</span
+              >
+            }
+          </button>
+        }
       </div>
     </section>
   `,
@@ -124,6 +135,20 @@ import { ThemeService } from '../../../core/services/theme.service';
 export class AppearanceSettingsPanelComponent {
   protected readonly themeService = inject(ThemeService);
   protected readonly accentThemeService = inject(AccentThemeService);
+  protected readonly accentOptions: readonly {
+    id: AccentTheme;
+    label: string;
+    swatch: string;
+    premiumReady: boolean;
+  }[] = [
+    { id: 'orange', label: 'laranja', swatch: '#FF9100', premiumReady: false },
+    { id: 'emerald', label: 'esmeralda', swatch: '#00E676', premiumReady: false },
+    { id: 'red', label: 'vermelho', swatch: '#EF4444', premiumReady: true },
+    { id: 'blue', label: 'azul', swatch: '#3B82F6', premiumReady: true },
+    { id: 'purple', label: 'roxo', swatch: '#8B5CF6', premiumReady: true },
+    { id: 'pink', label: 'rosa', swatch: '#EC4899', premiumReady: true },
+    { id: 'cyan', label: 'ciano', swatch: '#06B6D4', premiumReady: true },
+  ];
 
   protected setTheme(mode: 'light' | 'dark'): void {
     this.themeService.setTheme(mode);

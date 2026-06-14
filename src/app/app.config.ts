@@ -13,6 +13,7 @@ import { provideAppStorageBackend } from './core/storage/storage-backend.provide
 import { HabitStorageService } from './core/services/habit-storage.service';
 import { ThemeService } from './core/services/theme.service';
 import { AccentThemeService } from './core/services/accent-theme.service';
+import { LocalNotificationService } from './core/services/local-notification.service';
 
 function initializeTheme(theme: ThemeService): () => void {
   return () => theme.init();
@@ -24,6 +25,12 @@ function initializeAccentTheme(accentTheme: AccentThemeService): () => void {
 
 function initializeHabitStorage(storage: HabitStorageService): () => Promise<void> {
   return () => storage.initialize();
+}
+
+function initializeLocalNotifications(service: LocalNotificationService): () => void {
+  return () => {
+    void service;
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -48,6 +55,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: initializeAccentTheme,
       deps: [AccentThemeService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeLocalNotifications,
+      deps: [LocalNotificationService],
       multi: true,
     },
     provideServiceWorker('ngsw-worker.js', {

@@ -9,6 +9,7 @@ import { CurrentDayService } from '../../../../core/services/current-day.service
 import { HabitStorageService } from '../../../../core/services/habit-storage.service';
 import { buildDayHistory } from '../../../../core/utils/day-history.utils';
 import { computeHabitAdherence } from '../../../../core/utils/habit-adherence.utils';
+import { computeWeeklySummary } from '../../../../core/utils/weekly-summary.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { DayHistoryModalComponent } from '../../components/day-history-modal/day-history-modal.component';
 import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heatmap.component';
@@ -72,6 +73,82 @@ import { MonthHeatmapComponent } from '../../components/month-heatmap/month-heat
             {{ adherenceSummary().thirtyDays.expected }} feitos
           </span>
         </div>
+
+        <section
+          class="mt-4 rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface"
+          aria-labelledby="weekly-summary-title"
+        >
+          <h2
+            id="weekly-summary-title"
+            class="text-sm font-semibold text-brand-light-text-primary dark:text-brand-text-primary"
+          >
+            Resumo semanal (7 dias)
+          </h2>
+
+          @if (!weeklySummary().hasEnoughData) {
+            <p class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
+              Ainda sem dados suficientes desta semana.
+            </p>
+            <p class="text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
+              Conclua alguns hábitos e volte para ver seu resumo.
+            </p>
+          } @else {
+            <div class="mt-3 grid gap-2 text-sm md:grid-cols-2">
+              <article
+                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
+              >
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  Melhor dia
+                </p>
+                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+                  {{ weeklySummary().bestDay.label }}
+                </p>
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  {{ weeklySummary().bestDay.value }}
+                </p>
+              </article>
+              <article
+                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
+              >
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  Pior dia
+                </p>
+                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+                  {{ weeklySummary().worstDay.label }}
+                </p>
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  {{ weeklySummary().worstDay.value }}
+                </p>
+              </article>
+              <article
+                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
+              >
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  Hábito de maior adesão
+                </p>
+                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+                  {{ weeklySummary().topHabit.label }}
+                </p>
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  {{ weeklySummary().topHabit.value }}
+                </p>
+              </article>
+              <article
+                class="rounded-lg border border-brand-light-border bg-brand-light-bg p-3 dark:border-brand-border dark:bg-brand-bg"
+              >
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  Hábito de menor adesão
+                </p>
+                <p class="font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
+                  {{ weeklySummary().lowHabit.label }}
+                </p>
+                <p class="text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
+                  {{ weeklySummary().lowHabit.value }}
+                </p>
+              </article>
+            </div>
+          }
+        </section>
       </header>
 
       <app-month-heatmap
@@ -142,8 +219,17 @@ export class ProgressPageComponent {
       this.storage.habitsReadonly(),
       this.storage.completionsReadonly(),
       this.storage.freezeUsedReadonly(),
+      this.storage.habitNotesReadonly(),
     );
   });
+
+  protected readonly weeklySummary = computed(() =>
+    computeWeeklySummary(
+      this.storage.habitsReadonly(),
+      this.storage.completionsReadonly(),
+      this.currentDay.today(),
+    ),
+  );
 
   protected onMonthChange(next: { year: number; month: number }): void {
     this.visibleYear.set(next.year);

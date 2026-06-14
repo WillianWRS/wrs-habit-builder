@@ -1,5 +1,6 @@
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
+import type { HabitDailyNote } from '../models/habit-daily-note.model';
 import type { Habit } from '../models/habit.model';
 import type {
   HabitCardAccent,
@@ -37,6 +38,7 @@ export function mapHabitToTodayCard(
   habit: Habit,
   completions: HabitCompletion[],
   freezeUsed: HabitFreezeUsed[] = [],
+  habitNotes: HabitDailyNote[] = [],
   date: Date = new Date(),
 ): TodayHabitCard {
   const dateKey = toDateKey(date);
@@ -59,6 +61,10 @@ export function mapHabitToTodayCard(
     freezeReassurance: recentFreeze
       ? formatFreezeReassurance(recentFreeze.dateKey)
       : null,
+    dailyNote:
+      habitNotes.find(
+        (entry) => entry.habitId === habit.id && entry.dateKey === dateKey,
+      )?.note ?? '',
     completed: completions.some(
       (completion) =>
         completion.habitId === habit.id && completion.completedOn === dateKey,
@@ -71,10 +77,11 @@ export function mapHabitToListCard(
   habit: Habit,
   completions: HabitCompletion[],
   freezeUsed: HabitFreezeUsed[] = [],
+  habitNotes: HabitDailyNote[] = [],
   date: Date = new Date(),
 ): HabitListCardView {
   return {
-    ...mapHabitToTodayCard(habit, completions, freezeUsed, date),
+    ...mapHabitToTodayCard(habit, completions, freezeUsed, habitNotes, date),
     archived: habit.archived,
     showOnToday: habit.showOnToday,
   };
