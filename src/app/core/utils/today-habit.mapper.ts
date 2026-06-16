@@ -16,7 +16,7 @@ import {
 import {
   computeHabitStreakSnapshot,
   formatFreezeReassurance,
-  getFreezeUsedInCurrentWeek,
+  getFreezeForReassuranceDay,
 } from './habit-streak.utils';
 import { buildMarqueeItems } from './habit-trigger-motivation.utils';
 
@@ -43,7 +43,7 @@ export function mapHabitToTodayCard(
 ): TodayHabitCard {
   const dateKey = toDateKey(date);
   const streak = computeHabitStreakSnapshot(habit, completions, freezeUsed, date);
-  const recentFreeze = getFreezeUsedInCurrentWeek(habit.id, freezeUsed, date);
+  const recentFreeze = getFreezeForReassuranceDay(habit.id, freezeUsed, date);
 
   return {
     id: habit.id,

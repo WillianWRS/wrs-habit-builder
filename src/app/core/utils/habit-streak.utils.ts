@@ -361,18 +361,17 @@ export function detectAutomaticFreezesNeeded(
   return newEvents;
 }
 
-export function getFreezeUsedInCurrentWeek(
+/** Freeze do dia civil anterior — copy de reasseguramento só nesse dia. */
+export function getFreezeForReassuranceDay(
   habitId: string,
   freezeEvents: HabitFreezeUsed[],
   referenceDate: Date = new Date(),
 ): HabitFreezeUsed | undefined {
-  const todayKey = toDateKey(referenceDate);
-  const weekStart = getWeekStartKey(todayKey);
-  const weekEnd = toDateKey(addDays(parseDateKey(weekStart), 6));
+  const previousDayKey = toDateKey(addDays(referenceDate, -1));
 
-  return getHabitFreezeEvents(habitId, freezeEvents)
-    .filter((event) => event.dateKey >= weekStart && event.dateKey <= weekEnd)
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey))[0];
+  return getHabitFreezeEvents(habitId, freezeEvents).find(
+    (event) => event.dateKey === previousDayKey,
+  );
 }
 
 export function formatFreezeReassurance(dateKey: string): string {

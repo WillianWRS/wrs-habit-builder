@@ -10,6 +10,7 @@ import {
   computeFreezeBalance,
   computeTotalCompletions,
   detectAutomaticFreezesNeeded,
+  getFreezeForReassuranceDay,
   getScheduledDaysWalk,
   mergeScheduleDaySince,
   isExpectedScheduleDay,
@@ -298,5 +299,48 @@ describe('habit-streak.utils — utilitários de agenda', () => {
     expect(
       detectAutomaticFreezesNeeded(habit, completions, existing, referenceDate),
     ).toEqual([]);
+  });
+});
+
+describe('getFreezeForReassuranceDay', () => {
+  it('retorna freeze quando ontem foi o dia protegido', () => {
+    const freezeEvent = freeze('habit-1', '2026-06-09');
+    const referenceDate = new Date(2026, 5, 10);
+
+    expect(
+      getFreezeForReassuranceDay('habit-1', [freezeEvent], referenceDate),
+    ).toEqual(freezeEvent);
+  });
+
+  it('retorna undefined no dia do freeze e dois dias depois', () => {
+    const freezeEvent = freeze('habit-1', '2026-06-09');
+
+    expect(
+      getFreezeForReassuranceDay(
+        'habit-1',
+        [freezeEvent],
+        new Date(2026, 5, 9),
+      ),
+    ).toBeUndefined();
+
+    expect(
+      getFreezeForReassuranceDay(
+        'habit-1',
+        [freezeEvent],
+        new Date(2026, 5, 11),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('ignora freeze de outro hábito', () => {
+    const freezeEvent = freeze('habit-2', '2026-06-09');
+
+    expect(
+      getFreezeForReassuranceDay(
+        'habit-1',
+        [freezeEvent],
+        new Date(2026, 5, 10),
+      ),
+    ).toBeUndefined();
   });
 });

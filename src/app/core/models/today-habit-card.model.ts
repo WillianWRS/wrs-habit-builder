@@ -18,7 +18,7 @@ export interface TodayHabitCard {
   bestStreak: number;
   totalCompletions: number;
   isDayOne: boolean;
-  /** Copy de reasseguramento quando freeze foi consumido na semana corrente. */
+  /** Copy de reasseguramento no dia civil seguinte ao freeze consumido. */
   freezeReassurance: string | null;
   dailyNote: string;
   completed: boolean;
