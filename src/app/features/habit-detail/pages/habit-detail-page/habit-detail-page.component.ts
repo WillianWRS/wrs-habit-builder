@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  HostListener,
   computed,
   effect,
   inject,
@@ -26,209 +27,40 @@ import {
   getStreakTierTitle,
 } from '../../../today/components/habit-card/habit-card-streak.utils';
 
+const PROTECTION_TOOLTIP_WIDTH_PX = 240;
+const PROTECTION_TOOLTIP_VIEWPORT_PADDING_PX = 16;
+const PROTECTION_TOOLTIP_GAP_PX = 8;
+
+function computeProtectionTooltipPosition(
+  anchor: HTMLElement,
+): { x: number; y: number } {
+  const rect = anchor.getBoundingClientRect();
+  const maxWidth = Math.min(
+    PROTECTION_TOOLTIP_WIDTH_PX,
+    window.innerWidth - PROTECTION_TOOLTIP_VIEWPORT_PADDING_PX * 2,
+  );
+  const halfWidth = maxWidth / 2;
+  let centerX = rect.left + rect.width / 2;
+
+  centerX = Math.max(
+    PROTECTION_TOOLTIP_VIEWPORT_PADDING_PX + halfWidth,
+    Math.min(
+      centerX,
+      window.innerWidth - PROTECTION_TOOLTIP_VIEWPORT_PADDING_PX - halfWidth,
+    ),
+  );
+
+  return {
+    x: centerX,
+    y: rect.top - PROTECTION_TOOLTIP_GAP_PX,
+  };
+}
+
 @Component({
   selector: 'app-habit-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppNavComponent, RouterLink, MonthHeatmapComponent, StreakLevelsModalComponent],
-  template: `
-    <app-nav activeTab="habits" />
-
-    <main
-      class="mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-4 pb-28 pt-6 md:px-6 md:pb-10 md:pt-10 lg:px-8"
-    >
-      <header class="mb-6 flex items-center justify-between gap-3 md:mb-8">
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-brand-light-text-secondary transition-colors hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:text-brand-text-secondary dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-          aria-label="Voltar para hábitos"
-          (click)="goBack()"
-        >
-          <i class="bi bi-arrow-left" aria-hidden="true"></i>
-          Voltar
-        </button>
-
-        @if (habit(); as currentHabit) {
-          <a
-            [routerLink]="['/habits', currentHabit.id, 'edit']"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-brand-light-border px-3 py-1.5 text-sm font-medium text-brand-light-text-secondary transition-colors hover:border-brand-light-primary/50 hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-primary/50 dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
-          >
-            <i class="bi bi-pencil" aria-hidden="true"></i>
-            Editar
-          </a>
-        }
-      </header>
-
-      @if (habit(); as currentHabit) {
-        <section class="mb-6 rounded-2xl border border-brand-light-card-border bg-brand-light-surface p-5 shadow-sm dark:border-brand-border dark:bg-brand-surface">
-          <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">
-            Progresso do hábito
-          </p>
-          <h1 class="mt-2 font-display text-2xl font-semibold text-brand-light-text-primary md:text-3xl dark:text-brand-text-primary">
-            {{ currentHabit.name }}
-          </h1>
-          <p class="mt-2 text-sm text-brand-light-text-secondary dark:text-brand-text-secondary">
-            {{ habitSummary() }}
-          </p>
-
-          <div class="mt-4 flex flex-wrap gap-2">
-            <span
-              class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
-              [attr.aria-label]="'Adesão ' + adherence().sevenDays.windowLabel"
-            >
-              {{ adherence().sevenDays.percentage }}% · {{ adherence().sevenDays.windowLabel }}
-            </span>
-            <span
-              class="inline-flex items-center rounded-full bg-brand-light-primary/10 px-3 py-1 text-xs font-semibold text-brand-light-primary dark:bg-brand-primary/15 dark:text-brand-primary"
-              [attr.aria-label]="'Adesão ' + adherence().thirtyDays.windowLabel"
-            >
-              {{ adherence().thirtyDays.percentage }}% · {{ adherence().thirtyDays.windowLabel }}
-            </span>
-          </div>
-        </section>
-
-        <section class="mb-6 flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.85fr)] lg:items-start lg:gap-5">
-          <div class="w-full md:max-w-lg md:self-start lg:max-w-xl lg:justify-self-start">
-            <app-month-heatmap
-              mode="habit"
-              [year]="visibleYear()"
-              [month]="visibleMonth()"
-              [habit]="currentHabit"
-              [habits]="[currentHabit]"
-              [completions]="habitCompletions()"
-              [freezeUsed]="habitFreezeUsed()"
-              [todayKey]="currentDay.todayKey()"
-              (monthChange)="onMonthChange($event)"
-            />
-
-            <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-              <span class="inline-flex items-center gap-1.5">
-                <span class="size-2.5 rounded-full bg-brand-light-primary dark:bg-brand-primary"></span>
-                Feito
-              </span>
-              <span class="inline-flex items-center gap-1.5">
-                <span class="size-2.5 rounded-full bg-sky-500/70 dark:bg-sky-400/70"></span>
-                Protegido
-              </span>
-              <span class="inline-flex items-center gap-1.5">
-                <span class="size-2.5 rounded-full bg-zinc-500/35 dark:bg-zinc-400/30"></span>
-                Perdido
-              </span>
-              <span class="inline-flex items-center gap-1.5">
-                <span class="size-2.5 rounded-full bg-brand-light-bg dark:bg-brand-bg"></span>
-                Não esperado
-              </span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-1">
-            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
-              <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Recorde</p>
-              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                {{ streak().bestStreak }} dias
-              </p>
-            </article>
-
-            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
-              <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Sequência atual</p>
-              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                {{ streak().currentStreak }} dias
-              </p>
-            </article>
-
-            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
-              <div class="flex items-start justify-between gap-2">
-                <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Nível atual
-                </p>
-                <button
-                  type="button"
-                  class="inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-brand-light-primary/60 text-[11px] font-semibold text-brand-light-primary transition-colors hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/60 dark:text-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
-                  aria-label="Entender níveis de sequência"
-                  (click)="openStreakLevelsModal()"
-                >
-                  ?
-                </button>
-              </div>
-              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                {{ streakLevelTitle() }}
-              </p>
-            </article>
-
-            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
-              <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Adesão 30d</p>
-              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                {{ adherence().thirtyDays.percentage }}%
-              </p>
-              <p class="mt-1 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                {{ adherence().thirtyDays.completedDays }} de
-                {{ adherence().thirtyDays.expectedDays }} dias feitos
-              </p>
-            </article>
-
-            <article class="rounded-xl border border-brand-light-border bg-brand-light-surface p-4 dark:border-brand-border dark:bg-brand-surface">
-              <div class="flex items-start justify-between gap-2">
-                <p class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">
-                  Proteção da semana
-                </p>
-                <div class="relative">
-                  <button
-                    type="button"
-                    class="inline-flex size-5 items-center justify-center rounded-full border border-brand-light-primary/60 text-[11px] font-semibold text-brand-light-primary transition-colors hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-primary/60 dark:text-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
-                    aria-label="Entender proteção da semana"
-                    [attr.aria-expanded]="showProtectionTooltip()"
-                    (click)="toggleProtectionTooltip()"
-                    (blur)="hideProtectionTooltip()"
-                  >
-                    ?
-                  </button>
-
-                  @if (showProtectionTooltip()) {
-                    <div
-                      role="tooltip"
-                      class="absolute bottom-full right-0 z-20 mb-2 w-60 rounded-md border border-brand-light-primary/45 bg-brand-light-surface px-3 py-2 text-[11px] font-medium leading-relaxed text-brand-light-primary shadow-lg dark:border-brand-primary/45 dark:bg-brand-surface dark:text-brand-primary"
-                    >
-                      A proteção cobre automaticamente uma falta em dia esperado
-                      na semana, mantendo sua sequência.
-                    </div>
-                  }
-                </div>
-              </div>
-              <p class="mt-2 text-xl font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-                {{ freezeBalance().available }}/{{ freezeBalance().cap }}
-              </p>
-              <p class="mt-1 text-xs text-brand-light-text-secondary dark:text-brand-text-secondary">
-                Total concluído: {{ streak().totalCompletions }}
-              </p>
-            </article>
-          </div>
-        </section>
-
-        @if (showStreakLevelsModal()) {
-          <app-streak-levels-modal (dismissed)="closeStreakLevelsModal()" />
-        }
-
-        <section class="rounded-2xl border border-brand-light-border bg-brand-light-surface p-5 dark:border-brand-border dark:bg-brand-surface">
-          <h2 class="font-display text-lg font-semibold text-brand-light-text-primary dark:text-brand-text-primary">
-            Contexto do hábito
-          </h2>
-          <dl class="mt-4 space-y-3">
-            <div>
-              <dt class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Gatilho</dt>
-              <dd class="mt-1 text-sm text-brand-light-text-primary dark:text-brand-text-primary">{{ triggerText() }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Ação mínima</dt>
-              <dd class="mt-1 text-sm text-brand-light-text-primary dark:text-brand-text-primary">{{ currentHabit.minimumAction }}</dd>
-            </div>
-            <div>
-              <dt class="text-xs uppercase tracking-wide text-brand-light-text-secondary dark:text-brand-text-secondary">Frequência</dt>
-              <dd class="mt-1 text-sm text-brand-light-text-primary dark:text-brand-text-primary">{{ scheduleLabel() }}</dd>
-            </div>
-          </dl>
-        </section>
-      }
-    </main>
-  `,
+  templateUrl: './habit-detail-page.component.html',
 })
 export class HabitDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
@@ -238,7 +70,9 @@ export class HabitDetailPageComponent {
 
   protected readonly visibleYear = signal(this.currentDay.today().getFullYear());
   protected readonly visibleMonth = signal(this.currentDay.today().getMonth());
-  protected readonly showProtectionTooltip = signal(false);
+  protected readonly protectionTooltip = signal<{ x: number; y: number } | null>(
+    null,
+  );
   protected readonly showStreakLevelsModal = signal(false);
 
   private readonly routeHabitId = toSignal(
@@ -407,12 +241,27 @@ export class HabitDetailPageComponent {
     void this.router.navigate(['/habits']);
   }
 
-  protected toggleProtectionTooltip(): void {
-    this.showProtectionTooltip.update((visible) => !visible);
+  protected toggleProtectionTooltip(anchor: EventTarget | null): void {
+    if (!(anchor instanceof HTMLElement)) {
+      return;
+    }
+
+    if (this.protectionTooltip()) {
+      this.protectionTooltip.set(null);
+      return;
+    }
+
+    this.protectionTooltip.set(computeProtectionTooltipPosition(anchor));
   }
 
   protected hideProtectionTooltip(): void {
-    this.showProtectionTooltip.set(false);
+    this.protectionTooltip.set(null);
+  }
+
+  @HostListener('document:scroll')
+  @HostListener('window:resize')
+  protected dismissProtectionTooltipOnViewportChange(): void {
+    this.protectionTooltip.set(null);
   }
 
   protected openStreakLevelsModal(): void {
