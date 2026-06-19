@@ -129,13 +129,13 @@ export function buildHabitMonthHeatmapCells(
     const inCurrentMonth = cursor.getMonth() === month;
     const isFuture = dateKey > todayKey;
     const expected = isExpectedScheduleDay(habit, dateKey);
-    const completed = expected && habitCompletionKeys.has(dateKey);
+    const hasCompletion = habitCompletionKeys.has(dateKey);
     const protectedByFreeze =
-      expected && !completed && habitFreezeKeys.has(dateKey);
+      expected && !hasCompletion && habitFreezeKeys.has(dateKey);
 
     const status = isFuture
       ? 'future'
-      : completed
+      : hasCompletion
         ? 'done'
         : protectedByFreeze
           ? 'protected'
@@ -148,9 +148,9 @@ export function buildHabitMonthHeatmapCells(
       dateKey,
       dayNumber: cursor.getDate(),
       inCurrentMonth,
-      completionCount: completed ? 1 : 0,
+      completionCount: hasCompletion ? 1 : 0,
       expectedCount: expected ? 1 : 0,
-      intensity: completed ? 3 : protectedByFreeze ? 1 : 0,
+      intensity: hasCompletion ? 3 : protectedByFreeze ? 1 : 0,
       status,
       isFuture,
       isClickable: inCurrentMonth && !isFuture,
@@ -159,6 +159,75 @@ export function buildHabitMonthHeatmapCells(
   }
 
   return cells;
+}
+
+export type HabitCorrectionDayIntent = 'mark' | 'unmark';
+
+export function resolveHabitCorrectionDayIntent(
+  cell: MonthHeatmapCell,
+  todayKey: string,
+  habitId: string,
+  completions: HabitCompletion[],
+): HabitCorrectionDayIntent | null {
+  if (!cell.inCurrentMonth || cell.dateKey >= todayKey) {
+    return null;
+  }
+
+  const isCompleted = completions.some(
+    (completion) =>
+      completion.habitId === habitId && completion.completedOn === cell.dateKey,
+  );
+
+  return isCompleted ? 'unmark' : 'mark';
+}
+
+export function formatCorrectionResultMessage(
+  markCount: number,
+  unmarkCount: number,
+): string {
+  const parts: string[] = [];
+
+  if (markCount > 0) {
+    parts.push(
+      markCount === 1 ? '1 dia marcado' : `${markCount} dias marcados`,
+    );
+  }
+
+  if (unmarkCount > 0) {
+    parts.push(
+      unmarkCount === 1 ? '1 dia desmarcado' : `${unmarkCount} dias desmarcados`,
+    );
+  }
+
+  if (parts.length === 0) {
+    return 'Correção efetivada com sucesso';
+  }
+
+  return `Correção efetivada: ${parts.join(' · ')}`;
+}
+
+export function formatCorrectionDayLabel(count: number, action: 'mark' | 'unmark'): string {
+  if (action === 'mark') {
+    return count === 1 ? '1 dia marcado' : `${count} dias marcados`;
+  }
+
+  return count === 1 ? '1 dia desmarcado' : `${count} dias desmarcados`;
+}
+
+export const CORRECTION_PULSE_DURATION_MS = 750;
+
+export function resolveCorrectionPulseDelay(
+  anchorMs: number | null,
+  nowMs = performance.now(),
+  durationMs = CORRECTION_PULSE_DURATION_MS,
+): string {
+  if (anchorMs === null) {
+    return '0ms';
+  }
+
+  const phase = (nowMs - anchorMs) % durationMs;
+
+  return `${-phase}ms`;
 }
 
 export function formatMonthYearLabel(year: number, month: number): string {

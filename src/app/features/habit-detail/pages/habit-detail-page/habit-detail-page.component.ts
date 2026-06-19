@@ -19,9 +19,12 @@ import {
   computeFreezeBalance,
   computeHabitStreakSnapshot,
 } from '../../../../core/utils/habit-streak.utils';
+import { formatCorrectionResultMessage } from '../../../../core/utils/month-heatmap.utils';
 import { AppNavComponent } from '../../../../shared/components/app-nav/app-nav.component';
 import { MonthHeatmapComponent } from '../../../progress/components/month-heatmap/month-heatmap.component';
+import { HabitCorrectionConfirmModalComponent } from '../../components/habit-correction-confirm-modal/habit-correction-confirm-modal.component';
 import { StreakLevelsModalComponent } from '../../components/streak-levels-modal/streak-levels-modal.component';
+import { ToastService } from '../../../../core/services/toast.service';
 import {
   getStreakTier,
   getStreakTierTitle,
@@ -59,13 +62,20 @@ function computeProtectionTooltipPosition(
 @Component({
   selector: 'app-habit-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppNavComponent, RouterLink, MonthHeatmapComponent, StreakLevelsModalComponent],
+  imports: [
+    AppNavComponent,
+    RouterLink,
+    MonthHeatmapComponent,
+    StreakLevelsModalComponent,
+    HabitCorrectionConfirmModalComponent,
+  ],
   templateUrl: './habit-detail-page.component.html',
 })
 export class HabitDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly storage = inject(HabitStorageService);
+  private readonly toast = inject(ToastService);
   protected readonly currentDay = inject(CurrentDayService);
 
   protected readonly visibleYear = signal(this.currentDay.today().getFullYear());
@@ -74,6 +84,11 @@ export class HabitDetailPageComponent {
     null,
   );
   protected readonly showStreakLevelsModal = signal(false);
+  protected readonly correctionMode = signal(false);
+  protected readonly pendingCorrectionMarkDates = signal<string[]>([]);
+  protected readonly pendingCorrectionUnmarkDates = signal<string[]>([]);
+  protected readonly showCorrectionConfirmModal = signal(false);
+  protected readonly correctionPulseAnchorMs = signal<number | null>(null);
 
   private readonly routeHabitId = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('id'))),
@@ -217,6 +232,20 @@ export class HabitDetailPageComponent {
     return visibleTriggers.join(' · ');
   });
 
+  protected readonly hasPendingCorrections = computed(
+    () =>
+      this.pendingCorrectionMarkDates().length > 0 ||
+      this.pendingCorrectionUnmarkDates().length > 0,
+  );
+
+  protected readonly pendingCorrectionMarkCount = computed(
+    () => this.pendingCorrectionMarkDates().length,
+  );
+
+  protected readonly pendingCorrectionUnmarkCount = computed(
+    () => this.pendingCorrectionUnmarkDates().length,
+  );
+
   constructor() {
     effect(() => {
       const id = this.routeHabitId();
@@ -270,5 +299,102 @@ export class HabitDetailPageComponent {
 
   protected closeStreakLevelsModal(): void {
     this.showStreakLevelsModal.set(false);
+  }
+
+  protected startCorrectionMode(): void {
+    if (this.correctionMode()) {
+      return;
+    }
+
+    this.correctionMode.set(true);
+    this.pendingCorrectionMarkDates.set([]);
+    this.pendingCorrectionUnmarkDates.set([]);
+    this.correctionPulseAnchorMs.set(performance.now());
+  }
+
+  protected cancelCorrectionMode(): void {
+    this.correctionMode.set(false);
+    this.pendingCorrectionMarkDates.set([]);
+    this.pendingCorrectionUnmarkDates.set([]);
+    this.showCorrectionConfirmModal.set(false);
+    this.correctionPulseAnchorMs.set(null);
+  }
+
+  protected onCorrectionDayClick(dateKey: string): void {
+    if (!this.correctionMode()) {
+      return;
+    }
+
+    if (dateKey >= this.currentDay.todayKey()) {
+      return;
+    }
+
+    const habit = this.habit();
+
+    if (!habit) {
+      return;
+    }
+
+    const isCompleted = this.storage.isCompleted(habit.id, dateKey);
+
+    if (isCompleted) {
+      this.pendingCorrectionUnmarkDates.update((dates) =>
+        dates.includes(dateKey)
+          ? dates.filter((entry) => entry !== dateKey)
+          : [...dates, dateKey],
+      );
+      return;
+    }
+
+    this.pendingCorrectionMarkDates.update((dates) =>
+      dates.includes(dateKey)
+        ? dates.filter((entry) => entry !== dateKey)
+        : [...dates, dateKey],
+    );
+  }
+
+  protected requestCorrectionSave(): void {
+    if (!this.hasPendingCorrections()) {
+      return;
+    }
+
+    this.showCorrectionConfirmModal.set(true);
+  }
+
+  protected dismissCorrectionConfirm(): void {
+    this.showCorrectionConfirmModal.set(false);
+  }
+
+  protected confirmCorrectionSave(): void {
+    const habit = this.habit();
+
+    if (!habit) {
+      return;
+    }
+
+    const markDates = this.pendingCorrectionMarkDates();
+    const unmarkDates = this.pendingCorrectionUnmarkDates();
+
+    for (const dateKey of markDates) {
+      if (!this.storage.isCompleted(habit.id, dateKey)) {
+        this.storage.toggleCompletion(habit.id, dateKey);
+      }
+    }
+
+    for (const dateKey of unmarkDates) {
+      if (this.storage.isCompleted(habit.id, dateKey)) {
+        this.storage.toggleCompletion(habit.id, dateKey);
+      }
+    }
+
+    this.showCorrectionConfirmModal.set(false);
+    this.correctionMode.set(false);
+    this.pendingCorrectionMarkDates.set([]);
+    this.pendingCorrectionUnmarkDates.set([]);
+    this.correctionPulseAnchorMs.set(null);
+
+    this.toast.showSuccess(
+      formatCorrectionResultMessage(markDates.length, unmarkDates.length),
+    );
   }
 }

@@ -63,6 +63,47 @@
       class="mb-6 flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.85fr)] lg:items-start lg:gap-5"
     >
       <div class="w-full md:max-w-lg md:self-start lg:max-w-xl lg:justify-self-start">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            class="inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-light-bg disabled:cursor-default disabled:opacity-100 dark:focus-visible:ring-brand-primary dark:focus-visible:ring-offset-brand-bg"
+            [class]="
+              correctionMode()
+                ? 'border-brand-light-primary bg-brand-light-primary/10 text-brand-light-primary dark:border-brand-primary dark:bg-brand-primary/10 dark:text-brand-primary'
+                : 'border-brand-light-primary text-brand-light-primary hover:bg-brand-light-primary/10 dark:border-brand-primary dark:text-brand-primary dark:hover:bg-brand-primary/10'
+            "
+            [disabled]="correctionMode()"
+            [attr.aria-pressed]="correctionMode()"
+            (click)="startCorrectionMode()"
+          >
+            <i class="bi bi-pencil-square text-base" aria-hidden="true"></i>
+            Corrigir marcação
+          </button>
+
+          @if (correctionMode()) {
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex size-9 items-center justify-center rounded-lg border border-brand-light-primary/45 text-brand-light-primary transition-colors hover:border-brand-light-primary hover:bg-brand-light-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-brand-primary/45 dark:text-brand-primary dark:hover:border-brand-primary dark:hover:bg-brand-primary/10 dark:focus-visible:ring-brand-primary"
+                aria-label="Confirmar correções selecionadas"
+                [disabled]="!hasPendingCorrections()"
+                (click)="requestCorrectionSave()"
+              >
+                <i class="bi bi-check-lg text-base" aria-hidden="true"></i>
+              </button>
+
+              <button
+                type="button"
+                class="inline-flex size-9 items-center justify-center rounded-lg border border-brand-light-border text-brand-light-text-secondary transition-colors hover:border-brand-light-text-secondary hover:bg-brand-light-bg hover:text-brand-light-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light-primary dark:border-brand-border dark:text-brand-text-secondary dark:hover:border-brand-text-secondary dark:hover:bg-brand-bg dark:hover:text-brand-text-primary dark:focus-visible:ring-brand-primary"
+                aria-label="Descartar correções"
+                (click)="cancelCorrectionMode()"
+              >
+                <i class="bi bi-x-lg text-base" aria-hidden="true"></i>
+              </button>
+            </div>
+          }
+        </div>
+
         <app-month-heatmap
           mode="habit"
           [year]="visibleYear()"
@@ -72,7 +113,12 @@
           [completions]="habitCompletions()"
           [freezeUsed]="habitFreezeUsed()"
           [todayKey]="currentDay.todayKey()"
+          [correctionMode]="correctionMode()"
+          [correctionMarkDates]="pendingCorrectionMarkDates()"
+          [correctionUnmarkDates]="pendingCorrectionUnmarkDates()"
+          [correctionPulseAnchorMs]="correctionPulseAnchorMs()"
           (monthChange)="onMonthChange($event)"
+          (dayClick)="onCorrectionDayClick($event)"
         />
 
         <div
@@ -207,6 +253,15 @@
 
     @if (showStreakLevelsModal()) {
       <app-streak-levels-modal (dismissed)="closeStreakLevelsModal()" />
+    }
+
+    @if (showCorrectionConfirmModal()) {
+      <app-habit-correction-confirm-modal
+        [markCount]="pendingCorrectionMarkCount()"
+        [unmarkCount]="pendingCorrectionUnmarkCount()"
+        (confirmed)="confirmCorrectionSave()"
+        (dismissed)="dismissCorrectionConfirm()"
+      />
     }
 
     <section

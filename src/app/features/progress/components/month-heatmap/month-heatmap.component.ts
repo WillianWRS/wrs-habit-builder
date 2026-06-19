@@ -8,8 +8,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import type { MonthHeatmapCell } from '../../../../core/models/day-history.model';
+import type { HabitCorrectionDayIntent } from '../../../../core/utils/month-heatmap.utils';
 import { WEEKDAY_SCHEDULE_ITEMS } from '../../../../core/constants/weekday-schedule.constants';
+import type { MonthHeatmapCell } from '../../../../core/models/day-history.model';
 import type { HabitCompletion } from '../../../../core/models/habit-completion.model';
 import type { HabitFreezeUsed } from '../../../../core/models/habit-freeze-used.model';
 import type { Habit } from '../../../../core/models/habit.model';
@@ -17,6 +18,8 @@ import {
   buildHabitMonthHeatmapCells,
   buildMonthHeatmapCells,
   formatMonthYearLabel,
+  resolveCorrectionPulseDelay,
+  resolveHabitCorrectionDayIntent,
 } from '../../../../core/utils/month-heatmap.utils';
 import { parseDateKey } from '../../../../core/utils/date.utils';
 import { HeatmapDayCellComponent } from '../heatmap-day-cell/heatmap-day-cell.component';
@@ -173,7 +176,14 @@ const MONTH_SLIDE_MS = 280;
                   [attr.aria-label]="'Calendário de ' + incomingMonthLabel()"
                 >
                   @for (cell of incomingCells(); track cell.dateKey) {
-                    <app-heatmap-day-cell [cell]="cell" />
+                    <app-heatmap-day-cell
+                      [cell]="cell"
+                      [correctionMode]="correctionMode()"
+                      [correctionIntent]="correctionIntent(cell)"
+                      [correctionSelected]="isCorrectionSelected(cell)"
+                      [correctionPulseDelay]="correctionPulseDelay()"
+                      (dayClick)="dayClick.emit($event)"
+                    />
                   }
                 </div>
                 <div
@@ -182,7 +192,14 @@ const MONTH_SLIDE_MS = 280;
                   aria-hidden="true"
                 >
                   @for (cell of outgoingCells(); track cell.dateKey) {
-                    <app-heatmap-day-cell [cell]="cell" />
+                    <app-heatmap-day-cell
+                      [cell]="cell"
+                      [correctionMode]="correctionMode()"
+                      [correctionIntent]="correctionIntent(cell)"
+                      [correctionSelected]="isCorrectionSelected(cell)"
+                      [correctionPulseDelay]="correctionPulseDelay()"
+                      (dayClick)="dayClick.emit($event)"
+                    />
                   }
                 </div>
               } @else {
@@ -192,7 +209,14 @@ const MONTH_SLIDE_MS = 280;
                   aria-hidden="true"
                 >
                   @for (cell of outgoingCells(); track cell.dateKey) {
-                    <app-heatmap-day-cell [cell]="cell" />
+                    <app-heatmap-day-cell
+                      [cell]="cell"
+                      [correctionMode]="correctionMode()"
+                      [correctionIntent]="correctionIntent(cell)"
+                      [correctionSelected]="isCorrectionSelected(cell)"
+                      [correctionPulseDelay]="correctionPulseDelay()"
+                      (dayClick)="dayClick.emit($event)"
+                    />
                   }
                 </div>
                 <div
@@ -201,7 +225,14 @@ const MONTH_SLIDE_MS = 280;
                   [attr.aria-label]="'Calendário de ' + incomingMonthLabel()"
                 >
                   @for (cell of incomingCells(); track cell.dateKey) {
-                    <app-heatmap-day-cell [cell]="cell" />
+                    <app-heatmap-day-cell
+                      [cell]="cell"
+                      [correctionMode]="correctionMode()"
+                      [correctionIntent]="correctionIntent(cell)"
+                      [correctionSelected]="isCorrectionSelected(cell)"
+                      [correctionPulseDelay]="correctionPulseDelay()"
+                      (dayClick)="dayClick.emit($event)"
+                    />
                   }
                 </div>
               }
@@ -215,6 +246,10 @@ const MONTH_SLIDE_MS = 280;
               @for (cell of cells(); track cell.dateKey) {
                 <app-heatmap-day-cell
                   [cell]="cell"
+                  [correctionMode]="correctionMode()"
+                  [correctionIntent]="correctionIntent(cell)"
+                  [correctionSelected]="isCorrectionSelected(cell)"
+                  [correctionPulseDelay]="correctionPulseDelay()"
                   (dayClick)="dayClick.emit($event)"
                 />
               }
@@ -273,6 +308,10 @@ export class MonthHeatmapComponent {
   readonly mode = input<'aggregate' | 'habit'>('aggregate');
   readonly habit = input<Habit | null>(null);
   readonly freezeUsed = input<HabitFreezeUsed[]>([]);
+  readonly correctionMode = input(false);
+  readonly correctionMarkDates = input<readonly string[]>([]);
+  readonly correctionUnmarkDates = input<readonly string[]>([]);
+  readonly correctionPulseAnchorMs = input<number | null>(null);
 
   readonly monthChange = output<{ year: number; month: number }>();
   readonly dayClick = output<string>();
@@ -308,6 +347,48 @@ export class MonthHeatmapComponent {
   protected readonly cells = computed(() =>
     this.buildCellsFor(this.year(), this.month()),
   );
+
+  protected readonly correctionPulseDelay = computed(() => {
+    this.year();
+    this.month();
+    this.correctionMode();
+    this.correctionMarkDates();
+    this.correctionUnmarkDates();
+    this.correctionPulseAnchorMs();
+
+    return resolveCorrectionPulseDelay(this.correctionPulseAnchorMs());
+  });
+
+  protected correctionIntent(cell: MonthHeatmapCell): HabitCorrectionDayIntent | null {
+    if (!this.correctionMode() || this.mode() !== 'habit') {
+      return null;
+    }
+
+    const habit = this.habit();
+
+    if (!habit) {
+      return null;
+    }
+
+    return resolveHabitCorrectionDayIntent(
+      cell,
+      this.todayKey(),
+      habit.id,
+      this.completions(),
+    );
+  }
+
+  protected isCorrectionSelected(cell: MonthHeatmapCell): boolean {
+    const intent = this.correctionIntent(cell);
+
+    if (!intent) {
+      return false;
+    }
+
+    return intent === 'mark'
+      ? this.correctionMarkDates().includes(cell.dateKey)
+      : this.correctionUnmarkDates().includes(cell.dateKey);
+  }
 
   protected previousMonth(): void {
     if (this.isAnimating()) {
