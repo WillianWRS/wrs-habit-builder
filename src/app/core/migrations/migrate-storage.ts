@@ -7,6 +7,8 @@ import { migrateV6ToV7 } from './migrate-v6-to-v7';
 import { migrateV7ToV8 } from './migrate-v7-to-v8';
 import { migrateV8ToV9 } from './migrate-v8-to-v9';
 import { migrateV9ToV10 } from './migrate-v9-to-v10';
+import { migrateV10ToV11 } from './migrate-v10-to-v11';
+import { DEFAULT_HABIT_CATEGORIES } from '../constants/habit-categories.constants';
 
 /** Versão mínima suportada — não há backups conhecidos anteriores. */
 export const OLDEST_SUPPORTED_STORAGE_VERSION = 5;
@@ -19,6 +21,7 @@ const MIGRATION_STEPS: Partial<Record<number, MigrationStep>> = {
   7: migrateV7ToV8,
   8: migrateV8ToV9,
   9: migrateV9ToV10,
+  10: migrateV10ToV11,
 };
 
 export interface MigrateStorageResult {
@@ -34,6 +37,7 @@ function createEmptyStorage(): AppStorage {
     completions: [],
     freezeUsed: [],
     habitNotes: [],
+    categories: [...DEFAULT_HABIT_CATEGORIES],
   };
 }
 
@@ -52,6 +56,7 @@ function parseStorageInput(raw: Record<string, unknown>, version: number): AppSt
     completions: (raw['completions'] as AppStorage['completions'] | undefined) ?? [],
     freezeUsed: (raw['freezeUsed'] as AppStorage['freezeUsed'] | undefined) ?? [],
     habitNotes: (raw['habitNotes'] as AppStorage['habitNotes'] | undefined) ?? [],
+    categories: (raw['categories'] as AppStorage['categories'] | undefined) ?? [],
   };
 }
 

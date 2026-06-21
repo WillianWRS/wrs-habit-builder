@@ -5,7 +5,7 @@ import type { HabitDailyNote } from './habit-daily-note.model';
 
 /** Chave legada do localStorage (pré-IndexedDB). Não é mais lida nem gravada pelo app. */
 export const LEGACY_LOCAL_STORAGE_KEY = 'wrs-habit-builder';
-export const CURRENT_STORAGE_VERSION = 10;
+export const CURRENT_STORAGE_VERSION = 11;
 
 export interface AppStorage {
   version: number;
@@ -13,4 +13,5 @@ export interface AppStorage {
   completions: HabitCompletion[];
   freezeUsed: HabitFreezeUsed[];
   habitNotes: HabitDailyNote[];
+  categories: string[];
 }

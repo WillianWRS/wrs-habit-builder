@@ -265,13 +265,9 @@
             <i class="bi bi-bookmark habit-form-label-icon" aria-hidden="true"></i>
             Categoria
           </label>
-          <input
-            id="habit-category"
-            type="text"
+          <app-habit-category-select
             formControlName="category"
-            autocomplete="off"
-            class="habit-form-field"
-            placeholder="Exemplo: Conhecimento"
+            controlId="habit-category"
           />
           @if (showError('category', 'required')) {
             <p class="mt-1 text-xs text-red-500">Informe a categoria.</p>

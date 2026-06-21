@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_HABIT_CATEGORIES } from '../constants/habit-categories.constants';
 import { CURRENT_STORAGE_VERSION } from '../models/app-storage.model';
 import { MemoryStorageBackend } from './memory-storage.backend';
 
@@ -11,6 +12,7 @@ describe('MemoryStorageBackend', () => {
       completions: [],
       freezeUsed: [],
       habitNotes: [],
+      categories: [...DEFAULT_HABIT_CATEGORIES],
     };
 
     await backend.write(payload);

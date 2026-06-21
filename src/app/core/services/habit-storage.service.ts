@@ -9,6 +9,7 @@ import {
   untracked,
 } from '@angular/core';
 import { CURRENT_STORAGE_VERSION, type AppStorage } from '../models/app-storage.model';
+import { DEFAULT_HABIT_CATEGORIES } from '../constants/habit-categories.constants';
 import type { HabitFreezeUsed } from '../models/habit-freeze-used.model';
 import type { HabitCompletion } from '../models/habit-completion.model';
 import type { HabitDailyNote } from '../models/habit-daily-note.model';
@@ -32,6 +33,10 @@ import { mapHabitToListCard, mapHabitToTodayCard } from '../utils/today-habit.ma
 import { STORAGE_BACKEND, StorageBackendError } from '../storage/storage-backend.model';
 import { CurrentDayService } from './current-day.service';
 import { ToastService } from './toast.service';
+import {
+  findCategoryMatch,
+  normalizeCategoryName,
+} from '../utils/habit-categories.utils';
 
 interface PendingDeleteSnapshot {
   habit: Habit;
@@ -55,6 +60,7 @@ export class HabitStorageService {
   private readonly completions = signal<HabitCompletion[]>([]);
   private readonly freezeUsed = signal<HabitFreezeUsed[]>([]);
   private readonly habitNotes = signal<HabitDailyNote[]>([]);
+  private readonly categories = signal<string[]>([...DEFAULT_HABIT_CATEGORIES]);
   private readonly pendingDeletes = new Map<string, PendingDeleteSnapshot>();
 
   /** true após initialize() concluir — evita flash de estado vazio no boot. */
@@ -64,6 +70,7 @@ export class HabitStorageService {
   readonly completionsReadonly = this.completions.asReadonly();
   readonly freezeUsedReadonly = this.freezeUsed.asReadonly();
   readonly habitNotesReadonly = this.habitNotes.asReadonly();
+  readonly categoriesReadonly = this.categories.asReadonly();
 
   readonly todayHabitCards = computed(() => {
     const date = this.currentDay.today();
@@ -85,6 +92,7 @@ export class HabitStorageService {
       this.completions();
       this.freezeUsed();
       this.habitNotes();
+      this.categories();
       const referenceDate = this.currentDay.today();
 
       untracked(() => this.applyAutomaticFreezes(referenceDate));
@@ -116,6 +124,29 @@ export class HabitStorageService {
 
   getHabitById(id: string): Habit | undefined {
     return this.habits().find((habit) => habit.id === id);
+  }
+
+  getCategories(): readonly string[] {
+    return this.categories();
+  }
+
+  ensureCategory(name: string): string {
+    const normalized = normalizeCategoryName(name);
+
+    if (!normalized) {
+      return '';
+    }
+
+    const existing = findCategoryMatch(this.categories(), normalized);
+
+    if (existing) {
+      return existing;
+    }
+
+    this.categories.update((list) => [...list, normalized]);
+    this.persist();
+
+    return normalized;
   }
 
   getActiveHabits(): Habit[] {
@@ -304,6 +335,8 @@ export class HabitStorageService {
       dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
     const todayKey = this.currentDay.todayKey();
 
+    const category = this.ensureCategory(dto.category.trim());
+
     const updated: Habit = {
       ...existing,
       name: dto.name.trim(),
@@ -315,7 +348,7 @@ export class HabitStorageService {
         minimumAction: entry.minimumAction.trim(),
         time: entry.time.trim(),
       })),
-      category: dto.category.trim(),
+      category,
       triggers: padSlots(
         dto.triggers.map((slot) => ({
           text: slot.text.trim(),
@@ -353,6 +386,8 @@ export class HabitStorageService {
       dto.scheduleDays.length > 0 ? [...dto.scheduleDays] : [...ALL_WEEKDAYS];
     const createdDateKey = this.currentDay.todayKey();
 
+    const category = this.ensureCategory(dto.category.trim());
+
     const habit: Habit = {
       id: crypto.randomUUID(),
       name: dto.name.trim(),
@@ -364,7 +399,7 @@ export class HabitStorageService {
         minimumAction: entry.minimumAction.trim(),
         time: entry.time.trim(),
       })),
-      category: dto.category.trim(),
+      category,
       triggers: padSlots(
         dto.triggers.map((slot) => ({
           text: slot.text.trim(),
@@ -399,6 +434,7 @@ export class HabitStorageService {
       completions: this.completions(),
       freezeUsed: this.freezeUsed(),
       habitNotes: this.habitNotes(),
+      categories: this.categories(),
     };
   }
 
@@ -414,6 +450,7 @@ export class HabitStorageService {
       completions: migrated.completions,
       freezeUsed: migrated.freezeUsed,
       habitNotes: migrated.habitNotes,
+      categories: migrated.categories,
     };
 
     try {
@@ -422,6 +459,7 @@ export class HabitStorageService {
       this.completions.set(migrated.completions);
       this.freezeUsed.set(migrated.freezeUsed);
       this.habitNotes.set(migrated.habitNotes);
+      this.categories.set(migrated.categories);
       return {
         ok: true,
         habitCount: migrated.habits.length,
@@ -480,6 +518,7 @@ export class HabitStorageService {
     this.completions.set(migrated.completions);
     this.freezeUsed.set(migrated.freezeUsed);
     this.habitNotes.set(migrated.habitNotes);
+    this.categories.set(migrated.categories);
     this.applyAutomaticFreezes(this.currentDay.today(), { persist: false });
 
     if (sourceVersion < CURRENT_STORAGE_VERSION) {
@@ -561,6 +600,7 @@ export class HabitStorageService {
     this.completions.set([]);
     this.freezeUsed.set([]);
     this.habitNotes.set([]);
+    this.categories.set([...DEFAULT_HABIT_CATEGORIES]);
   }
 
   private persist(): void {
@@ -585,6 +625,7 @@ export class HabitStorageService {
       completions: this.completions(),
       freezeUsed: this.freezeUsed(),
       habitNotes: this.habitNotes(),
+      categories: this.categories(),
     };
 
     await this.backend.write(payload);

@@ -47,6 +47,7 @@ import {
   isHabitFormSnapshotDirty,
   type HabitFormSnapshot,
 } from './habit-form-snapshot.utils';
+import { HabitCategorySelectComponent } from '../habit-category-select/habit-category-select.component';
 
 const MINIMUM_ACTION_MAX = 140;
 
@@ -59,6 +60,7 @@ const MINIMUM_ACTION_MAX = 140;
     HabitCardPreviewComponent,
     TriggerSlotsFieldsetComponent,
     ModalFocusTrapDirective,
+    HabitCategorySelectComponent,
   ],
   templateUrl: './habit-form.component.html',
   styleUrl: './habit-form.component.scss',

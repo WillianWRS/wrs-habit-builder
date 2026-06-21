@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.habit-form-field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--brand-light-input-border);
+  background-color: var(--brand-light-surface);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--brand-light-text-primary);
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.habit-form-field::placeholder {
+  color: var(--brand-light-text-secondary);
+}
+
+.habit-form-field:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent-light);
+}
+
+.habit-form-field:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+:host-context(.dark) .habit-form-field {
+  border-color: var(--brand-border);
+  background-color: var(--brand-surface);
+  color: var(--brand-text-primary);
+}
+
+:host-context(.dark) .habit-form-field::placeholder {
+  color: var(--brand-text-secondary);
+}
+
+:host-context(.dark) .habit-form-field:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 1px var(--accent-dark);
+}
